@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aviation Knowledge Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    :root {
+      --bg: #f0f0f0;
+      --text: #000;
+      --card: #fff;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #fff;
+      --card: #1e1e1e;
+    }
+
+    button, select, input[type="text"] {
+      padding: 0.5rem;
+      margin: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .knowledge {
+      background: var(--card);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    iframe {
+      margin-top: 0.5rem;
+      border: none;
+      width: 100%;
+      height: 200px;
+      border-radius: 8px;
+    }
+
+    .source {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>✈️ Aviation Knowledge Finder</h1>
+
+  <button onclick="generateKnowledge()">Generate Knowledge</button>
+  <button onclick="clearHistory()">🧹 Clear History</button>
+  <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+  <br />
+
+  <label>
+    Location Mode:
+    <select id="locationMode" onchange="toggleLocationInput()">
+      <option value="current">Use My Current Location</option>
+      <option value="manual">Enter Location Manually</option>
+    </select>
+  </label>
+  <input type="text" id="manualLocation" placeholder="e.g. Taipei or 25.03,121.56" style="display:none;" />
+
+  <br />
+  <input type="text" id="searchBox" placeholder="Search aviation knowledge..." oninput="renderHistory()" />
+
+  <div id="currentKnowledge"></div>
+
+  <div class="history">
+    <h2>📚 History</h2>
+    <div id="history"></div>
+  </div>
+
+  <script>
+    const aviationData = [
+      { category: "Aircraft", text: "The Airbus A320 uses fly-by-wire technology.", source: "https://en.wikipedia.org/wiki/Airbus_A320_family" },
+      { category: "Weather", text: "Wind shear can cause sudden changes in aircraft altitude or airspeed.", source: "https://aviationweather.gov" },
+      { category: "Performance & Limitation", text: "Density altitude affects takeoff performance significantly.", source: "https://skybrary.aero" },
+      { category: "Human Factors", text: "Fatigue can reduce a pilot's reaction time and decision-making ability.", source: "https://www.faa.gov" },
+      { category: "Aviation Psychology", text: "Situational awareness is critical for safe flight operations." },
+      { category: "Flight Operation & Procedure", text: "Standard Operating Procedures (SOPs) enhance crew coordination." }
+    ];
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("darkMode", document.body.classList.contains("dark") ? "true" : "false");
+    }
+
+    function toggleLocationInput() {
+      const mode = document.getElementById("locationMode").value;
+      document.getElementById("manualLocation").style.display = mode === "manual" ? "inline-block" : "none";
+    }
+
+    function clearHistory() {
+      if (confirm("Clear all stored knowledge history?")) {
+        localStorage.removeItem("aviationKnowledgeHistory");
+        renderHistory();
+      }
+    }
+
+    function saveToHistory(entry) {
+      const history = JSON.parse(localStorage.getItem("aviationKnowledgeHistory") || "[]");
+      history.unshift(entry);
+      localStorage.setItem("aviationKnowledgeHistory", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const searchTerm = document.getElementById("searchBox").value.toLowerCase();
+      const history = JSON.parse(localStorage.getItem("aviationKnowledgeHistory") || "[]");
+      const container = document.getElementById("history");
+      container.innerHTML = "";
+
+      const filtered = history.filter(item =>
+        item.text.toLowerCase().includes(searchTerm) ||
+        item.category.toLowerCase().includes(searchTerm)
+      );
+
+      filtered.forEach((entry, i) => {
+        const div = document.createElement("div");
+        div.className = "knowledge";
+        div.innerHTML = `
+          <strong>#${filtered.length - i} - ${entry.category}</strong><br>
+          ${entry.text}<br>
+          <small>${new Date(entry.timestamp).toLocaleString()}</small><br>
+          <div class="source">🔗 ${entry.source ? `<a href="${entry.source}" target="_blank">Source</a>` : "No source"}</div>
+          <iframe src="https://maps.google.com/maps?q=${entry.location}&z=13&output=embed"></iframe>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function generateKnowledge() {
+      const mode = document.getElementById("locationMode").value;
+      const entry = aviationData[Math.floor(Math.random() * aviationData.length)];
+
+      const useEntry = (locationStr) => {
+        const fullEntry = {
+          ...entry,
+          timestamp: new Date().toISOString(),
+          location: locationStr
+        };
+
+        document.getElementById("currentKnowledge").innerHTML = `
+          <div class="knowledge">
+            <strong>${fullEntry.category}</strong><br>
+            ${fullEntry.text}<br>
+            <div class="source">🔗 ${fullEntry.source ? `<a href="${fullEntry.source}" target="_blank">Source</a>` : "No source"}</div>
+            <iframe src="https://maps.google.com/maps?q=${locationStr}&z=13&output=embed"></iframe>
+          </div>
+        `;
+        saveToHistory(fullEntry);
+      };
+
+      if (mode === "manual") {
+        const manual = document.getElementById("manualLocation").value.trim();
+        if (manual) {
+          useEntry(manual);
+        } else {
+          alert("Please enter a location.");
+        }
+      } else {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const coords = `${pos.coords.latitude},${pos.coords.longitude}`;
+          useEntry(coords);
+        }, err => {
+          alert("Unable to get current location.");
+        });
+      }
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark");
+      }
+      renderHistory();
+    };
+  </script>
+</body>
+</html>
