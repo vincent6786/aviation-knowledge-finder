@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V35</title>
+    <title>Aviation Acronym V36</title>
     
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
@@ -16,7 +16,6 @@
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            /* Light Mode Defaults */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
@@ -30,16 +29,12 @@
             --note-bg: #fff9c4;
             --note-text: #5d4037;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
             --drawer-bg: #f8f9fa;
-            
-            --source-faa: #2980b9;
-            --source-sof: #e67e22;
-            
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
+            --cloud-color: #ecf0f1;
         }
 
         [data-theme="dark"] {
@@ -54,11 +49,9 @@
             --note-bg: #424242;
             --note-text: #fff9c4;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-
-            --source-faa: #3498db;
-            --source-sof: #d35400;
             --modal-bg: #1e272e;
             --drawer-bg: #1e272e;
+            --cloud-color: #bdc3c7;
         }
 
         /* BACKGROUNDS */
@@ -179,6 +172,7 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
+        
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -187,18 +181,34 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* HELP CONTENT */
+        /* HELP & QRH TABLES */
         .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
         .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
-        .help-content ul { padding-left: 20px; margin: 0; opacity: 0.85; }
-
-        /* QRH STYLES */
         .qrh-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
         .qrh-table th, .qrh-table td { padding: 8px; border: 1px solid rgba(150,150,150,0.3); text-align: left; }
         .qrh-table th { background: rgba(0,0,0,0.05); }
         .sig-green { color: #2ecc71; font-weight: bold; }
         .sig-red { color: #e74c3c; font-weight: bold; }
         .sig-white { color: #95a5a6; font-weight: bold; }
+
+        /* AIRSPACE VISUALIZER */
+        .airspace-vis {
+            width: 100%; height: 180px; background: linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 12px; position: relative; overflow: hidden; margin-top: 10px; border: 1px solid var(--glass-border);
+        }
+        .cloud {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 30px; background: var(--cloud-color); border-radius: 50px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+        .cloud::after, .cloud::before {
+            content: ''; position: absolute; background: var(--cloud-color); border-radius: 50%;
+        }
+        .cloud::after { width: 40px; height: 40px; top: -20px; left: 10px; }
+        .cloud::before { width: 30px; height: 30px; top: -15px; right: 10px; }
+        .plane-icon { position: absolute; font-size: 24px; }
+        .dist-line { position: absolute; background: var(--error); opacity: 0.7; }
+        .dist-label { position: absolute; color: var(--text); font-size: 0.75em; font-weight: bold; background: var(--glass-bg); padding: 2px 4px; border-radius: 4px; }
 
         /* RETRACTABLE FAB */
         .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
@@ -358,9 +368,10 @@
             </ul>
             <h4>👜 Flight Bag</h4>
             <ul>
-                <li><strong>QRH:</strong> Quick Reference charts for Lights, XPDR & V-Speeds.</li>
+                <li><strong>QRH:</strong> Quick Reference for Airspace, Lights & V-Speeds.</li>
+                <li><strong>Airspace Visualizer:</strong> See cloud clearances dynamically.</li>
                 <li><strong>METAR:</strong> Basic weather string decoder.</li>
-                <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
+                <li><strong>Scratchpad:</strong> Auto-saving notepad.</li>
             </ul>
             <h4>💾 Data Safety</h4>
             <ul>
@@ -375,14 +386,29 @@
     <div id="qrhModalOverlay" class="modal-overlay"></div>
     <div id="qrhModal" class="modal">
         <h3>📋 Cockpit QRH</h3>
-        <div style="display:flex; gap:5px; margin-bottom:15px;">
-            <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:8px; font-size:0.8em;">Lights</button>
-            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:8px; font-size:0.8em;">XPDR</button>
-            <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:8px; font-size:0.8em;">V-Spd</button>
+        <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
+            <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
+            <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
+            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
+            <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
         </div>
         
-        <div id="qrh-light">
-            <p><strong>Light Gun Signals </strong></p>
+        <div id="qrh-airspace">
+            <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
+                <option value="B">Class B</option>
+                <option value="C">Class C</option>
+                <option value="D">Class D</option>
+                <option value="E">Class E (<10k MSL)</option>
+                <option value="E10">Class E (>10k MSL)</option>
+                <option value="G">Class G (Day, <1200 AGL)</option>
+            </select>
+            <div class="airspace-vis" id="airspaceVis">
+                </div>
+            <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
+        </div>
+
+        <div id="qrh-light" style="display:none;">
+            <p><strong>Light Gun Signals</strong></p>
             <table class="qrh-table">
                 <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
                 <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
@@ -568,11 +594,70 @@
         window.showQRHTab = function(id) {
             document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
             document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
-            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none'; // NEW
+            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
+            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
         };
-        document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; });
+        document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+
+        // AIRSPACE VISUALIZER LOGIC
+        const airspaceSelect = document.getElementById('airspaceSelect');
+        const airspaceVis = document.getElementById('airspaceVis');
+        const airspaceText = document.getElementById('airspaceText');
+        
+        function renderAirspace() {
+            const val = airspaceSelect.value;
+            let html = '';
+            let text = '';
+            
+            // Common Plane
+            const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
+            const cloud = `<div class="cloud"></div>`;
+            
+            if (val === 'B') {
+                html = `${plane} ${cloud}`; // Just clear of clouds visual? Hard to draw "Clear".
+                // Better visual: Plane bumping cloud
+                html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`;
+                text = "3 SM, Clear of Clouds";
+            } else if (['C','D','E'].includes(val)) {
+                // 3-152 Triangle
+                html = `
+                    ${plane}
+                    <div class="cloud" style="top:20%; left:50%;"></div>
+                    <div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div>
+                    <div class="dist-label" style="top:35%; left:52%;">1000' Above</div>
+                    
+                    <div class="cloud" style="top:80%; left:50%;"></div>
+                    <div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div>
+                    <div class="dist-label" style="top:65%; left:52%;">500' Below</div>
+                    
+                    <div class="cloud" style="top:50%; left:85%;"></div>
+                    <div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div>
+                    <div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>
+                `;
+                text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
+            } else if (val === 'E10') {
+                // 5-111
+                html = `
+                    ${plane}
+                    <div class="cloud" style="top:10%; left:50%;"></div>
+                    <div class="dist-label" style="top:25%; left:52%;">1000' Above</div>
+                    <div class="cloud" style="top:90%; left:50%;"></div>
+                    <div class="dist-label" style="top:75%; left:52%;">1000' Below</div>
+                    <div class="cloud" style="top:50%; left:90%;"></div>
+                    <div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>
+                `;
+                text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
+            } else if (val === 'G') {
+                text = "1 SM, Clear of Clouds (Day)";
+                html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`;
+            }
+            
+            airspaceVis.innerHTML = html;
+            airspaceText.innerText = text;
+        }
+        airspaceSelect.addEventListener('change', renderAirspace);
 
         // NOTE LOGIC
         const noteOverlay = document.getElementById('noteModalOverlay');
@@ -748,26 +833,21 @@
         document.getElementById('metarInput').addEventListener('input', (e) => {
             const raw = e.target.value.toUpperCase();
             let decoded = [];
-            
             // Wind
             const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/);
             if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
-            
             // Vis
             if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)");
             else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
-            
             // Clouds
             if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)");
             if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)");
             if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
             if(raw.includes('FEW')) decoded.push("☁️ Clouds: Few");
             if(raw.includes('SCT')) decoded.push("☁️ Clouds: Scattered");
-            
             // Temp
             const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/);
             if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
-            
             // QNH
             const qnh = raw.match(/Q(\d{4})/);
             if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
