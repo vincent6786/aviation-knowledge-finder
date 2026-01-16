@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V39</title>
+    <title>Aviation Acronym V40</title>
     
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
@@ -15,7 +15,7 @@
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
             --accent: #00a8ff;
@@ -72,7 +72,7 @@
             overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- CONTROLS --- */
+        /* --- CONTROLS (HEADER) --- */
         .controls {
             position: sticky; top: var(--safe-top); z-index: 90;
             background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -81,16 +81,28 @@
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
-        .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
+        
+        /* COMPACT MODE (Scroll Down) */
+        .controls.compact {
+            padding: 10px;
+            border-radius: 0 0 16px 16px;
+            gap: 5px;
+        }
+        .controls.compact .hud-container,
+        .controls.compact .top-row,
+        .controls.compact #groupDesc {
+            display: none;
+        }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
         select {
             padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
             background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer;
             font-size: 0.9em; font-weight: 500; min-height: 40px; flex-grow: 1;
         }
         select option { background: var(--modal-bg); color: var(--text); }
+
         .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
@@ -105,20 +117,20 @@
         .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
 
+        /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
         .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
         .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
 
-        /* --- RESULTS & CARDS (UPDATED LAYOUT V39) --- */
+        /* --- CARDS (Bottom Toolbar Layout) --- */
         #results { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
         .card { 
             background: var(--glass-bg); backdrop-filter: blur(5px); 
             border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; 
-            /* CHANGE: Column layout for card itself */
-            display: flex; flex-direction: column; 
-            gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            display: flex; flex-direction: column; gap: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
             animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; 
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -144,18 +156,14 @@
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
         
-        /* NEW ACTION BAR (BOTTOM ROW) */
+        /* BOTTOM ACTION BAR */
         .card-actions { 
             display: flex; flex-direction: row; 
             width: 100%; box-sizing: border-box;
             padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1);
             justify-content: flex-end; gap: 15px; 
         }
-        
-        /* Mobile spacing for buttons */
-        @media (max-width: 600px) {
-            .card-actions { justify-content: space-between; gap: 0; }
-        }
+        @media (max-width: 600px) { .card-actions { justify-content: space-between; gap: 0; } }
 
         .action-btn { font-size: 1.4em; cursor: pointer; opacity: 0.5; transition: 0.2s; border: none; background: none; padding: 5px 10px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
@@ -167,7 +175,18 @@
         .note-icon-small { font-size: 1.1em; opacity: 0.6; }
         .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
 
-        /* --- DRAWER (Flight Bag) --- */
+        /* --- RETRACTABLE FAB --- */
+        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
+        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
+        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
+        .fab-mini:active { transform: scale(0.9); }
+        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .fab-container.active .fab-mini:hover::after { opacity: 1; }
+
+        /* --- DRAWER --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.open { transform: translateY(0); }
@@ -218,21 +237,7 @@
         .dist-line { position: absolute; background: var(--error); opacity: 0.7; }
         .dist-label { position: absolute; color: var(--text); font-size: 0.75em; font-weight: bold; background: var(--glass-bg); padding: 2px 4px; border-radius: 4px; }
 
-        /* RETRACTABLE FAB */
-        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
-        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
-        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
-        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
-        .fab-mini:active { transform: scale(0.9); }
-        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-        .fab-container.active .fab-mini:hover::after { opacity: 1; }
-
-        /* Report List & Loader */
-        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .report-item.missed { color: var(--error); }
+        /* TOAST & LOADER */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
@@ -242,7 +247,7 @@
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-        /* Flashcard */
+        /* FLASHCARD */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 300px; perspective: 1000px; z-index: 2001; }
         .flashcard { width: 100%; height: 260px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
@@ -315,7 +320,6 @@
                 <option value="faa">🇺🇸 FAA</option>
                 <option value="both">🌎 ALL</option>
             </select>
-            
             <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -363,7 +367,7 @@
         <button class="fab-main" id="fabTrigger" title="Menu">＋</button>
         <div class="fab-items">
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
-            <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
@@ -386,16 +390,16 @@
                 <li><strong>Flashcards (🎲):</strong> Quizzes you based on your current filter.</li>
                 <li><strong>Rank:</strong> Mark cards "Got It" to gain XP and rank up from Student to Captain.</li>
             </ul>
-            <h4>👜 Flight Bag</h4>
+            <h4>👜 Flight Bag & Tools</h4>
             <ul>
+                <li><strong>Adv. Weather (🌤️):</strong> Open full Notion METAR decoder.</li>
                 <li><strong>QRH:</strong> Quick Reference for Airspace, Lights & V-Speeds.</li>
                 <li><strong>Airspace Visualizer:</strong> See cloud clearances dynamically.</li>
-                <li><strong>METAR:</strong> Basic weather string decoder.</li>
                 <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
             </ul>
             <h4>💾 Data Safety</h4>
             <ul>
-                <li>All data (Notes, Rank, History) is local. Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup.</li>
+                <li>All data is local. Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
@@ -422,13 +426,11 @@
                 <option value="E10">Class E (>10k MSL)</option>
                 <option value="G">Class G (Day, <1200 AGL)</option>
             </select>
-            <div class="airspace-vis" id="airspaceVis">
-                </div>
+            <div class="airspace-vis" id="airspaceVis"></div>
             <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
         </div>
 
         <div id="qrh-light" style="display:none;">
-            <p><strong>Light Gun Signals</strong></p>
             <table class="qrh-table">
                 <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
                 <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
@@ -440,7 +442,6 @@
         </div>
         
         <div id="qrh-xpdr" style="display:none;">
-            <p><strong>Transponder Codes</strong></p>
             <table class="qrh-table">
                 <tr><th>Code</th><th>Meaning</th></tr>
                 <tr><td>7500</td><td class="sig-red">Hijack</td></tr>
@@ -451,7 +452,6 @@
         </div>
 
         <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
-            <p><strong>Standard V-Speeds</strong></p>
             <table class="qrh-table">
                 <tr><th>Speed</th><th>Description</th></tr>
                 <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
@@ -599,7 +599,7 @@
             else if(type==='error'){osc.type='sawtooth';osc.frequency.setValueAtTime(150,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(100,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
         }
 
-        // Theme Toggle Fix
+        // Theme
         function toggleTheme() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -615,7 +615,7 @@
         document.getElementById('closeHelpBtn').addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
         helpOverlay.addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
 
-        // QRH Modal Logic
+        // QRH Logic
         const qrhOverlay = document.getElementById('qrhModalOverlay');
         const qrhModal = document.getElementById('qrhModal');
         window.showQRHTab = function(id) {
@@ -628,89 +628,47 @@
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
 
-        // AIRSPACE VISUALIZER LOGIC
+        // Airspace Vis
         const airspaceSelect = document.getElementById('airspaceSelect');
         const airspaceVis = document.getElementById('airspaceVis');
         const airspaceText = document.getElementById('airspaceText');
-        
         function renderAirspace() {
             const val = airspaceSelect.value;
-            let html = '';
-            let text = '';
-            
-            // Common Plane
+            let html = '', text = '';
             const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
             const cloud = `<div class="cloud"></div>`;
-            
-            if (val === 'B') {
-                html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`;
-                text = "3 SM, Clear of Clouds";
-            } else if (['C','D','E'].includes(val)) {
-                // 3-152 Triangle
-                html = `
-                    ${plane}
-                    <div class="cloud" style="top:20%; left:50%;"></div>
-                    <div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div>
-                    <div class="dist-label" style="top:35%; left:52%;">1000' Above</div>
-                    
-                    <div class="cloud" style="top:80%; left:50%;"></div>
-                    <div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div>
-                    <div class="dist-label" style="top:65%; left:52%;">500' Below</div>
-                    
-                    <div class="cloud" style="top:50%; left:85%;"></div>
-                    <div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div>
-                    <div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>
-                `;
+            if (val === 'B') { html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; text = "3 SM, Clear of Clouds"; } 
+            else if (['C','D','E'].includes(val)) {
+                html = `${plane}<div class="cloud" style="top:20%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div><div class="dist-label" style="top:35%; left:52%;">1000' Above</div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div><div class="dist-label" style="top:65%; left:52%;">500' Below</div><div class="cloud" style="top:50%; left:85%;"></div><div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div><div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>`;
                 text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
             } else if (val === 'E10') {
-                // 5-111
-                html = `
-                    ${plane}
-                    <div class="cloud" style="top:10%; left:50%;"></div>
-                    <div class="dist-label" style="top:25%; left:52%;">1000' Above</div>
-                    <div class="cloud" style="top:90%; left:50%;"></div>
-                    <div class="dist-label" style="top:75%; left:52%;">1000' Below</div>
-                    <div class="cloud" style="top:50%; left:90%;"></div>
-                    <div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>
-                `;
+                html = `${plane}<div class="cloud" style="top:10%; left:50%;"></div><div class="dist-label" style="top:25%; left:52%;">1000' Above</div><div class="cloud" style="top:90%; left:50%;"></div><div class="dist-label" style="top:75%; left:52%;">1000' Below</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>`;
                 text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
-            } else if (val === 'G') {
-                text = "1 SM, Clear of Clouds (Day)";
-                html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`;
-            }
-            
-            airspaceVis.innerHTML = html;
-            airspaceText.innerText = text;
+            } else if (val === 'G') { text = "1 SM, Clear of Clouds (Day)"; html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; }
+            airspaceVis.innerHTML = html; airspaceText.innerText = text;
         }
         airspaceSelect.addEventListener('change', renderAirspace);
 
-        // NOTE LOGIC
+        // Note Logic
         const noteOverlay = document.getElementById('noteModalOverlay');
         const noteModal = document.getElementById('noteModal');
         window.openNoteModal = function(acronym) {
             currentNoteAcronym = acronym;
             document.getElementById('noteTargetAcronym').innerText = acronym;
             document.getElementById('noteContent').value = pilotNotes[acronym] || "";
-            noteOverlay.style.display = 'block';
-            noteModal.style.display = 'block';
+            noteOverlay.style.display = 'block'; noteModal.style.display = 'block';
         };
         document.getElementById('saveNoteBtn').addEventListener('click', () => {
             const txt = document.getElementById('noteContent').value.trim();
-            if(txt) pilotNotes[currentNoteAcronym] = txt;
-            else delete pilotNotes[currentNoteAcronym];
+            if(txt) pilotNotes[currentNoteAcronym] = txt; else delete pilotNotes[currentNoteAcronym];
             localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
             noteOverlay.style.display='none'; noteModal.style.display='none';
             runSearch(); showToast("Note Saved");
         });
-        document.getElementById('deleteNoteBtn').addEventListener('click', () => {
-            delete pilotNotes[currentNoteAcronym];
-            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
-            noteOverlay.style.display='none'; noteModal.style.display='none';
-            runSearch(); showToast("Note Deleted");
-        });
+        document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
         document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
 
-        // CORE
+        // Core Functions
         function updateBackground() { document.body.className=''; if(settings.weather!=='auto'){document.body.classList.add(settings.weather);return;} const h=new Date().getHours(); if(h>=5&&h<8)document.body.classList.add('bg-sunrise');else if(h>=8&&h<17)document.body.classList.add('bg-day');else if(h>=17&&h<20)document.body.classList.add('bg-sunset');else document.body.classList.add('bg-night'); }
         setInterval(updateBackground,60000); updateBackground();
 
@@ -719,13 +677,8 @@
             document.getElementById('results').innerHTML=`<div class="loader-container"><div class="radar"></div></div>`;
             let p=[]; if(m==='faa')p.push(fetchSheet(LINKS.faa,'FAA')); else if(m==='sofema')p.push(fetchSheet(LINKS.sofema,'SOFEMA')); else if(m==='both'){p.push(fetchSheet(LINKS.faa,'FAA'));p.push(fetchSheet(LINKS.sofema,'SOFEMA'));}
             Promise.all(p).then(r=>{
-                let csvData = r.flat();
-                allData = [...customData, ...csvData];
-                acronymSet=new Set(allData.map(i=>i.acronym));
-                activeGroup='All';
-                // No more chip init needed, we use select
-                filteredData=[...allData];
-                updateRankHUD();
+                let csvData = r.flat(); allData = [...customData, ...csvData]; acronymSet=new Set(allData.map(i=>i.acronym));
+                activeGroup='All'; filteredData=[...allData]; updateRankHUD();
                 if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
             }).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
         }
@@ -743,14 +696,10 @@
         document.getElementById('scratchpad').value=scratchpadText;document.getElementById('weatherSelect').value=settings.weather||'auto';document.getElementById('toggleSfx').checked=settings.sfx;
         loadData('sofema');
 
-        // NEW: Scroll Logic for Collapse
+        // Scroll Collapse
         window.addEventListener('scroll', () => {
             const controls = document.getElementById('controls');
-            if (window.scrollY > 50) {
-                controls.classList.add('compact');
-            } else {
-                controls.classList.remove('compact');
-            }
+            if (window.scrollY > 50) controls.classList.add('compact'); else controls.classList.remove('compact');
         });
 
         function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','My Acronyms','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
@@ -764,8 +713,6 @@
         function runSearch(){
             const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim(), mode=document.getElementById('searchMode').value, sort=document.getElementById('sortSelect').value;
             res.innerHTML=''; let tf=allData;
-            
-            // Sync activeGroup with Select if changed via select event
             if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup==='My Acronyms') tf=customData; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
             if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
             if(term) tf=tf.filter(i=>{const a=i.acronym.toLowerCase(),m=i.meaning.toLowerCase();if(mode==='starts')return a.startsWith(term);if(mode==='exact')return a===term;return a.includes(term)||m.includes(term);});
@@ -781,27 +728,7 @@
                     if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
                     let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
 
-                    // UPDATED CARD LAYOUT (V39)
-                    c.innerHTML=`
-                    <div class="card-content">
-                        <div class="acronym-header">
-                            <span class="acronym-badge">${i.acronym}</span>
-                            <div class="meta-tags">
-                                <span class="source-tag ${i.source}">${i.source}</span>
-                                <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
-                                ${isM?'<span class="mastered-dot"></span>':''}
-                            </div>
-                        </div>
-                        <div class="meaning">${autoLink(dm)}</div>
-                        ${noteHTML}
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
-                        <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
-                        <button class="action-btn speak">🔊</button>
-                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
-                        ${actionBtn}
-                    </div>`;
+                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
                     if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
                     c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
                     res.appendChild(c);
@@ -811,13 +738,7 @@
 
         // Category Select Event
         document.getElementById('categorySelect').addEventListener('change', (e) => {
-            activeGroup = e.target.value;
-            exactCategoryFilter = null; // Clear raw filter if broad filter used
-            document.getElementById('groupDesc').innerText = GROUP_CONFIG[activeGroup] ? GROUP_CONFIG[activeGroup].desc : "";
-            searchStack = [];
-            document.getElementById('backBtn').style.display='none';
-            runSearch();
-            playSound('click');
+            activeGroup = e.target.value; exactCategoryFilter = null; document.getElementById('groupDesc').innerText = GROUP_CONFIG[activeGroup] ? GROUP_CONFIG[activeGroup].desc : ""; searchStack = []; document.getElementById('backBtn').style.display='none'; runSearch(); playSound('click');
         });
 
         // FAB
@@ -826,21 +747,17 @@
         document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
         document.addEventListener('scroll',()=>{fabCont.classList.remove('active');});
 
+        // Weather Link Button (NEW)
+        document.getElementById('weatherToolBtn').addEventListener('click', () => { window.open('https://vincent6786.github.io/Notion_metar_advanced/metarv46.html', '_blank'); });
+
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
         document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
         document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
-            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
-            const mean = document.getElementById('newMeaning').value.trim();
-            const cat = document.getElementById('newCategory').value;
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
             if(!acr || !mean) { showToast("Fill all fields"); return; }
             const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
-            customData.unshift(newItem);
-            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-            loadData(document.getElementById('dbSource').value); 
-            showToast("Saved!");
-            addOverlay.style.display='none'; addModal.style.display='none';
-            document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
         });
 
         const fo=document.getElementById('flashcardOverlay'), tfc=document.getElementById('theFlashcard'), dbo=document.getElementById('debriefOverlay'), dbm=document.getElementById('debriefModal');
@@ -891,31 +808,19 @@
         
         document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
         
-        // NATO
         document.getElementById('natoInput').addEventListener('input',(e)=>{
-            const v=e.target.value.toUpperCase();
-            let r=[]; for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));
+            const v=e.target.value.toUpperCase(); let r=[]; for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));
             document.getElementById('natoResult').innerText=r.join(' ');
         });
         document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
 
-        // METAR (Simple Regex)
         document.getElementById('metarInput').addEventListener('input', (e) => {
-            const raw = e.target.value.toUpperCase();
-            let decoded = [];
-            const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/);
-            if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
-            if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)");
-            else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
-            if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)");
-            if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)");
-            if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
-            if(raw.includes('FEW')) decoded.push("☁️ Clouds: Few");
-            if(raw.includes('SCT')) decoded.push("☁️ Clouds: Scattered");
-            const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/);
-            if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
-            const qnh = raw.match(/Q(\d{4})/);
-            if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
+            const raw = e.target.value.toUpperCase(); let decoded = [];
+            const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/); if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
+            if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)"); else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
+            if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)"); if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)"); if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
+            const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/); if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
+            const qnh = raw.match(/Q(\d{4})/); if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
             document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
         });
 
