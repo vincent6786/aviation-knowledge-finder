@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Aero Database</title>
+    <title>Pilot's Database V20</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            /* Light Mode: Frosted Sky */
+            /* Light Mode */
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
-            --accent: #00a8ff; /* Sky Blue */
-            --badge-bg: rgba(0, 168, 255, 0.15);
+            --accent: #00a8ff;
+            --star-color: #f1c40f;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             
             --source-faa: #2980b9;
@@ -24,13 +24,13 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Mode: Night Cockpit */
+            /* Dark Mode */
             --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
-            --glass-bg: rgba(20, 25, 30, 0.75);
+            --glass-bg: rgba(20, 25, 30, 0.65);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text: #ecf0f1;
-            --accent: #00d2d3; /* Cyan glow */
-            --badge-bg: rgba(0, 210, 211, 0.15);
+            --accent: #00d2d3;
+            --star-color: #f39c12;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 
             --source-faa: #3498db;
@@ -40,26 +40,19 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 20px; 
-            margin: 0;
-            color: var(--text);
-            background: var(--bg-gradient);
-            background-attachment: fixed; /* Keeps gradient steady */
-            min-height: 100vh;
-            transition: color 0.3s;
+            padding: 20px; margin: 0; color: var(--text);
+            background: var(--bg-gradient); background-attachment: fixed;
+            min-height: 100vh; transition: color 0.3s;
         }
 
-        /* --- GLASSMORPHISM CONTROLS --- */
+        /* --- CONTROLS --- */
         .controls {
             position: sticky; top: 10px; z-index: 100;
             background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: var(--shadow);
-            display: flex; flex-direction: column; gap: 12px;
-            margin-bottom: 20px;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 15px; box-shadow: var(--shadow);
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
         }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -68,28 +61,22 @@
             padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(150,150,150,0.3);
             background: rgba(255,255,255,0.1); color: var(--text); 
             outline: none; cursor: pointer; font-size: 0.85em; font-weight: 500;
-            backdrop-filter: blur(4px);
         }
-        select:hover { border-color: var(--accent); }
-        select option { background: var(--modal-bg); color: var(--text); } /* Fix dropdown readability */
+        select option { background: var(--modal-bg); color: var(--text); }
 
         .icon-btn {
             background: none; border: none; cursor: pointer; font-size: 1.2rem;
             padding: 6px; border-radius: 50%; transition: transform 0.2s;
         }
-        .icon-btn:hover { transform: scale(1.2) rotate(10deg); background: rgba(255,255,255,0.2); }
+        .icon-btn:hover { transform: scale(1.2); background: rgba(255,255,255,0.2); }
 
         .search-wrapper {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.2); 
-            border: 1px solid rgba(150,150,150,0.2);
-            border-radius: 50px; padding: 4px; 
-            transition: all 0.3s;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2);
+            border-radius: 50px; padding: 4px; transition: all 0.3s;
         }
         .search-wrapper:focus-within { 
-            background: rgba(255,255,255,0.8);
-            box-shadow: 0 0 15px var(--accent);
-            border-color: var(--accent);
+            background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent);
         }
         [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
 
@@ -114,104 +101,86 @@
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 6px 14px; font-size: 0.85em; 
-            background: rgba(150,150,150,0.15); 
-            border: 1px solid transparent;
-            border-radius: 12px; cursor: pointer; white-space: nowrap; transition: 0.3s; font-weight: 600;
+            padding: 6px 14px; font-size: 0.85em; background: rgba(150,150,150,0.15); 
+            border: 1px solid transparent; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: 0.3s; font-weight: 600;
         }
         .chip:hover { transform: translateY(-2px); }
-        .chip.active { 
-            background: var(--accent); color: white; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+        .chip.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        /* Favorites Chip Style */
+        .chip.favorites { border: 1px solid var(--star-color); color: var(--text); }
+        .chip.favorites.active { background: var(--star-color); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
-        .group-desc {
-            font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em;
-        }
+        .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
 
-        /* --- CARDS & ANIMATION --- */
+        /* --- RESULTS --- */
         #results { margin-top: 10px; padding-bottom: 60px; display: flex; flex-direction: column; gap: 10px; }
 
         .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(5px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 16px;
+            background: var(--glass-bg); backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px;
             display: flex; justify-content: space-between; gap: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            
-            /* Animation */
-            animation: slideUp 0.3s ease forwards;
-            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideUp 0.3s ease forwards; transition: transform 0.2s;
+            position: relative;
         }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
         
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border-color: var(--accent);
-        }
-        
-        .card-content { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-        
+        .card-content { display: flex; flex-direction: column; gap: 6px; width: 100%; padding-right: 30px; }
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .acronym-badge {
-            font-weight: 800; color: var(--accent); font-size: 1.1em; letter-spacing: 0.5px;
-        }
-        
+        .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.1em; letter-spacing: 0.5px; }
         .meta-tags { display: flex; gap: 6px; align-items: center; }
         .category-tag { font-size: 0.65em; opacity: 0.7; border: 1px solid var(--text); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
-        
-        .source-tag { 
-            font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; 
-        }
+        .source-tag { font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
 
-        .meaning { line-height: 1.5; font-size: 0.95em; opacity: 0.9; }
+        .meaning { 
+            line-height: 1.5; font-size: 0.95em; opacity: 0.9; cursor: pointer; 
+            transition: color 0.2s; position: relative;
+        }
+        .meaning:hover { color: var(--accent); }
+        .meaning:active { transform: scale(0.99); }
         
-        .report-btn { font-size: 1.2em; cursor: pointer; opacity: 0.2; transition: 0.2s; border: none; background: none; padding: 0; }
-        .card:hover .report-btn { opacity: 1; }
-        .report-btn:hover { opacity: 1; transform: scale(1.2); }
+        /* Action Buttons on Card */
+        .card-actions {
+            display: flex; flex-direction: column; gap: 8px; align-items: center;
+        }
+        .action-btn {
+            font-size: 1.1em; cursor: pointer; opacity: 0.3; transition: 0.2s;
+            border: none; background: none; padding: 4px;
+        }
+        .action-btn:hover { opacity: 1; transform: scale(1.1); }
+        .action-btn.star.active { opacity: 1; filter: drop-shadow(0 0 5px var(--star-color)); }
+
+        /* --- TOAST NOTIFICATION --- */
+        #toast {
+            visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 8px; padding: 12px; position: fixed;
+            z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%);
+            font-size: 0.9em; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
         /* --- RADAR LOADER --- */
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
         .radar {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 2px solid var(--accent);
-            position: relative;
-            box-shadow: 0 0 10px var(--accent);
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent);
+            position: relative; box-shadow: 0 0 10px var(--accent);
         }
         .radar::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%);
+            border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%);
             animation: scan 1.5s linear infinite;
         }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .loader-text { margin-top: 10px; font-size: 0.8em; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase;}
 
-        /* --- FOOTER --- */
-        .search-footer {
-            margin-top: 25px; padding: 20px; 
-            background: rgba(0,0,0,0.05); border-radius: 12px;
-            text-align: center; border: 1px dashed rgba(150,150,150,0.4);
-        }
-        .footer-title { font-size: 0.8em; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .footer-buttons { display: flex; justify-content: center; gap: 10px; }
-        .ext-btn {
-            text-decoration: none; padding: 8px 16px; background: var(--glass-bg); border: 1px solid rgba(150,150,150,0.3);
-            border-radius: 8px; color: var(--text); font-size: 0.85em; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
-        }
-        .ext-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-
         /* --- MODAL --- */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; backdrop-filter: blur(3px); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; backdrop-filter: blur(5px); }
         .modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: var(--modal-bg); padding: 25px; border-radius: 16px;
@@ -230,7 +199,30 @@
         .modal-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9em; border: none; font-weight: 600; }
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
-        .modal-btn.send:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0, 168, 255, 0.4); }
+        
+        /* --- FLASHCARD 3D --- */
+        #flashcardOverlay { display: none; z-index: 2000; }
+        .flashcard-wrapper {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 320px; height: 220px; perspective: 1000px; z-index: 2001;
+        }
+        .flashcard {
+            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer;
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 20px; background: var(--modal-bg); border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        .card-face.front { z-index: 2; }
+        .card-face.back { transform: rotateY(180deg); background: var(--bg-gradient); color: var(--text); }
+        .fc-acronym { font-size: 2.5em; font-weight: 800; color: var(--accent); margin: 0; }
+        .fc-hint { font-size: 0.8em; opacity: 0.5; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .fc-meaning { font-size: 1.1em; line-height: 1.4; font-weight: 500; }
+        .fc-controls { position: absolute; top: 110%; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; }
 
     </style>
 </head>
@@ -250,7 +242,7 @@
             </select>
             
             <div style="display:flex; gap: 5px; margin-left: auto;">
-                <button class="icon-btn" id="randomBtn" title="Random Acronym">🎲</button>
+                <button class="icon-btn" id="randomBtn" title="Study Mode (Flashcards)">🎲</button>
                 <button class="icon-btn" id="themeBtn" title="Toggle Theme">🌗</button>
             </div>
         </div>
@@ -274,6 +266,8 @@
         </div>
     </div>
 
+    <div id="toast">Copied to clipboard!</div>
+
     <div id="modalOverlay" class="modal-overlay"></div>
     <div id="reportModal" class="modal">
         <h3 id="modalTitle">Report Error</h3>
@@ -284,8 +278,27 @@
         </div>
     </div>
 
+    <div id="flashcardOverlay" class="modal-overlay">
+        <div class="flashcard-wrapper">
+            <div class="flashcard" id="theFlashcard">
+                <div class="card-face front">
+                    <span class="source-tag" id="fcSource">FAA</span>
+                    <h1 class="fc-acronym" id="fcAcronym">VASI</h1>
+                    <div class="fc-hint">Click to Flip</div>
+                </div>
+                <div class="card-face back">
+                    <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
+                </div>
+            </div>
+            <div class="fc-controls">
+                <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black;">Exit</button>
+                <button id="nextFcBtn" class="modal-btn send">Next Card 🎲</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // CONFIG
+        // --- CONFIG ---
         const LINKS = {
             faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv",
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
@@ -300,25 +313,27 @@
             "Regulations": { desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment", keywords: ["Regulat", "Safety", "Standard"] },
             "Business": { desc: "Includes: Commercial, Airline Ops, IT, Training & Military", keywords: ["Airline", "Commerc", "Training", "Military"] },
             "All": { desc: "Searching entire database." },
+            "Favorites": { desc: "Your saved acronyms (stored locally)." },
             "Other": { desc: "Uncategorized terms." }
         };
 
-        // STATE
+        // --- STATE ---
         let allData = [];
         let activeGroup = 'All';
         let currentReportItem = null;
+        let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
 
-        // THEME
+        // Theme Init
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // --- HELPER FUNCTIONS ---
+        // --- HELPERS ---
         function getGroup(rawCat) {
             if (!rawCat) return "Other";
             const cat = rawCat.toString();
             for (const [groupName, config] of Object.entries(GROUP_CONFIG)) {
-                if (groupName === 'All' || groupName === 'Other') continue;
+                if (groupName === 'All' || groupName === 'Favorites' || groupName === 'Other') continue;
                 for (const key of config.keywords) {
                     if (cat.includes(key)) return groupName;
                 }
@@ -326,6 +341,50 @@
             return "Other"; 
         }
 
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.className = "show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
+        // --- FAVORITES LOGIC ---
+        function toggleFavorite(acronym) {
+            const index = favorites.indexOf(acronym);
+            if (index === -1) {
+                favorites.push(acronym);
+                showToast("Added to Favorites");
+            } else {
+                favorites.splice(index, 1);
+                showToast("Removed from Favorites");
+            }
+            localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
+            
+            // Refresh if currently viewing favorites
+            if (activeGroup === 'Favorites') runSearch();
+            else {
+                // Just update the UI for this button
+                const btns = document.querySelectorAll(`[data-acr="${acronym}"]`);
+                btns.forEach(btn => {
+                    btn.textContent = index === -1 ? "⭐" : "☆";
+                    btn.classList.toggle('active');
+                });
+            }
+        }
+
+        // --- TTS LOGIC ---
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop previous
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9; // Slightly slower for clarity
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("TTS not supported");
+            }
+        }
+
+        // --- DATA LOADING ---
         function fetchSheet(url, sourceName) {
             return fetch(url).then(res => res.text()).then(text => {
                 const rows = parseCSV(text);
@@ -335,11 +394,7 @@
 
         function loadData(mode) {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
-                <div class="loader-container">
-                    <div class="radar"></div>
-                    <div class="loader-text">SCANNING DATABASES...</div>
-                </div>`;
+            resultsDiv.innerHTML = `<div class="loader-container"><div class="radar"></div><div class="loader-text">SCANNING DATABASES...</div></div>`;
             
             let promises = [];
             if (mode === 'faa') promises.push(fetchSheet(LINKS.faa, 'FAA'));
@@ -355,9 +410,7 @@
                 initGroupChips();
                 const currentTerm = document.getElementById('searchBox').value;
                 if(currentTerm.length > 0) runSearch();
-                else {
-                    resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.<br>ENTER QUERY OR ROLL DICE.</div>';
-                }
+                else resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.<br>ENTER QUERY OR USE DICE 🎲</div>';
             }).catch(err => {
                 resultsDiv.innerHTML = '<div class="loader-text">CONNECTION ERROR</div>';
             });
@@ -365,33 +418,29 @@
 
         loadData('sofema'); 
 
-        // --- DOM ELEMENTS ---
+        // --- EVENTS ---
         const dbSource = document.getElementById('dbSource');
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
         const randomBtn = document.getElementById('randomBtn');
-        const groupDesc = document.getElementById('groupDesc');
         const filterContainer = document.getElementById('filterContainer');
+        const groupDesc = document.getElementById('groupDesc');
 
-        // --- EVENTS ---
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
-        
         searchBox.addEventListener('input', () => {
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
+            if (activeGroup === 'Favorites') activeGroup = 'All'; // Auto switch to all on search
             runSearch();
         });
-        
         searchMode.addEventListener('change', runSearch);
-        
         clearBtn.addEventListener('click', () => {
             searchBox.value = '';
             clearBtn.style.display = 'none';
             searchBox.focus();
             document.getElementById('results').innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
         });
-        
         themeBtn.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -399,19 +448,7 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- RANDOMIZER FUNCTION ---
-        randomBtn.addEventListener('click', () => {
-            if (allData.length === 0) return;
-            const randomIndex = Math.floor(Math.random() * allData.length);
-            const randomItem = allData[randomIndex];
-            
-            // Set search box to this item so we can "reveal" it
-            searchBox.value = randomItem.acronym;
-            clearBtn.style.display = 'block';
-            runSearch();
-        });
-
-        // --- PARSING ---
+        // --- PARSE CSV ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -433,12 +470,12 @@
 
         // --- UI LOGIC ---
         function initGroupChips() {
-            const groups = ['All', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
+            const groups = ['All', 'Favorites', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             filterContainer.innerHTML = '';
             groups.forEach(grp => {
                 const chip = document.createElement('div');
-                chip.className = `chip ${grp === 'All' ? 'active' : ''}`;
-                chip.textContent = grp;
+                chip.className = `chip ${grp === 'All' ? 'active' : ''} ${grp === 'Favorites' ? 'favorites' : ''}`;
+                chip.textContent = grp === 'Favorites' ? '⭐ Favorites' : grp;
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
@@ -456,38 +493,46 @@
             const term = searchBox.value.toLowerCase().trim();
             const mode = searchMode.value;
 
-            if (term === '') {
-                resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
-                return;
-            }
-
             resultsDiv.innerHTML = '';
 
-            const filtered = allData.filter(item => {
-                const matchesGroup = (activeGroup === 'All') || (item.group === activeGroup);
-                if (!matchesGroup) return false;
-                
-                const acr = item.acronym.toLowerCase();
-                const mean = item.meaning.toLowerCase();
+            let filtered = allData;
 
-                if (mode === 'starts') return acr.startsWith(term);
-                else if (mode === 'exact') return acr === term;
-                else return acr.includes(term) || mean.includes(term);
-            });
+            // 1. Filter by Group
+            if (activeGroup === 'Favorites') {
+                filtered = filtered.filter(item => favorites.includes(item.acronym));
+                if (filtered.length === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO FAVORITES SAVED YET.</div>';
+                    return;
+                }
+            } else if (activeGroup !== 'All') {
+                filtered = filtered.filter(item => item.group === activeGroup);
+            }
+
+            // 2. Filter by Search Term (if exists)
+            if (term !== '') {
+                filtered = filtered.filter(item => {
+                    const acr = item.acronym.toLowerCase();
+                    const mean = item.meaning.toLowerCase();
+                    if (mode === 'starts') return acr.startsWith(term);
+                    else if (mode === 'exact') return acr === term;
+                    else return acr.includes(term) || mean.includes(term);
+                });
+            } else if (activeGroup === 'All') {
+                // If no term and 'All', show nothing
+                 resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
+                 return;
+            }
 
             if (filtered.length > 0) {
-                // Limit large results for performance
-                const displayLimit = 50;
-                const subset = filtered.slice(0, displayLimit);
-                
+                const subset = filtered.slice(0, 50);
                 subset.forEach((item, index) => {
+                    const isFav = favorites.includes(item.acronym);
                     const card = document.createElement('div');
                     card.className = 'card';
-                    // Stagger animation
                     card.style.animationDelay = `${index * 0.05}s`;
                     
                     let displayMeaning = item.meaning;
-                    if (mode === 'contains') {
+                    if (term && mode === 'contains') {
                         const regex = new RegExp(`(${term})`, 'gi');
                         displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 168, 255, 0.3); color:inherit;">$1</span>');
                     }
@@ -501,54 +546,81 @@
                                     <span class="category-tag">${item.category}</span>
                                 </div>
                             </div>
-                            <div class="meaning">${displayMeaning}</div>
+                            <div class="meaning" title="Click to copy">${displayMeaning}</div>
                         </div>
-                        <button class="report-btn" title="Report Error">🚩</button>
+                        <div class="card-actions">
+                            <button class="action-btn star ${isFav ? 'active' : ''}" data-acr="${item.acronym}" title="Toggle Favorite">${isFav ? '⭐' : '☆'}</button>
+                            <button class="action-btn speak" title="Listen">🔊</button>
+                            <button class="action-btn report" title="Report Error">🚩</button>
+                        </div>
                     `;
                     
-                    card.querySelector('.report-btn').addEventListener('click', () => openModal(item));
+                    // Events
+                    card.querySelector('.report').addEventListener('click', () => openReportModal(item));
+                    
+                    card.querySelector('.star').addEventListener('click', (e) => {
+                        toggleFavorite(item.acronym);
+                    });
+                    
+                    card.querySelector('.speak').addEventListener('click', (e) => {
+                        speakText(item.meaning);
+                    });
+
+                    card.querySelector('.meaning').addEventListener('click', () => {
+                        navigator.clipboard.writeText(item.meaning);
+                        showToast("Definition copied!");
+                    });
+
                     resultsDiv.appendChild(card);
                 });
                 
-                if (filtered.length > displayLimit) {
-                    const moreDiv = document.createElement('div');
-                    moreDiv.style.textAlign = 'center'; moreDiv.style.opacity = '0.6'; moreDiv.style.fontSize = '0.8em';
-                    moreDiv.innerText = `Showing ${displayLimit} of ${filtered.length} matches. Refine search.`;
-                    resultsDiv.appendChild(moreDiv);
+                if (filtered.length > 50) {
+                     const moreDiv = document.createElement('div');
+                     moreDiv.style.textAlign = 'center'; moreDiv.style.opacity = '0.6'; moreDiv.style.fontSize = '0.8em';
+                     moreDiv.innerText = `Showing 50 of ${filtered.length} matches. Refine search.`;
+                     resultsDiv.appendChild(moreDiv);
                 }
-
             } else {
                 resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO TARGETS FOUND.</div>';
             }
-
-            const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
-            const sofemaLink = SOFEMA_URL;
-
-            const footer = document.createElement('div');
-            footer.className = 'search-footer';
-            footer.innerHTML = `
-                <div class="footer-title">EXTEND SEARCH RANGE</div>
-                <div class="footer-buttons">
-                    <a href="${sofemaLink}" target="_blank" class="ext-btn">
-                        ✈️ Sofema
-                    </a>
-                    <a href="${webSearchLink}" target="_blank" class="ext-btn">
-                        🌐 Web Search
-                    </a>
-                </div>
-            `;
-            resultsDiv.appendChild(footer);
         }
 
-        // --- MODAL LOGIC ---
+        // --- FLASHCARD LOGIC ---
+        const flashcardOverlay = document.getElementById('flashcardOverlay');
+        const theFlashcard = document.getElementById('theFlashcard');
+        const fcAcronym = document.getElementById('fcAcronym');
+        const fcMeaning = document.getElementById('fcMeaning');
+        const fcSource = document.getElementById('fcSource');
+        const closeFcBtn = document.getElementById('closeFcBtn');
+        const nextFcBtn = document.getElementById('nextFcBtn');
+
+        function showFlashcard() {
+            if (allData.length === 0) return;
+            const randomItem = allData[Math.floor(Math.random() * allData.length)];
+            
+            fcAcronym.textContent = randomItem.acronym;
+            fcMeaning.textContent = randomItem.meaning;
+            fcSource.textContent = randomItem.source;
+            fcSource.className = `source-tag ${randomItem.source}`;
+            
+            theFlashcard.classList.remove('flipped');
+            flashcardOverlay.style.display = 'block';
+        }
+
+        randomBtn.addEventListener('click', showFlashcard);
+        theFlashcard.addEventListener('click', () => theFlashcard.classList.toggle('flipped'));
+        nextFcBtn.addEventListener('click', (e) => { e.stopPropagation(); showFlashcard(); });
+        closeFcBtn.addEventListener('click', () => { flashcardOverlay.style.display = 'none'; });
+
+        // --- REPORT MODAL ---
         const modalOverlay = document.getElementById('modalOverlay');
         const reportModal = document.getElementById('reportModal');
-        const modalTitle = document.getElementById('modalTitle');
         const reportComment = document.getElementById('reportComment');
+        const modalTitle = document.getElementById('modalTitle');
         const cancelModalBtn = document.getElementById('cancelModalBtn');
         const sendEmailBtn = document.getElementById('sendEmailBtn');
 
-        function openModal(item) {
+        function openReportModal(item) {
             currentReportItem = item;
             modalTitle.innerText = `Report: ${item.acronym}`;
             reportComment.value = ""; 
@@ -557,24 +629,23 @@
             reportComment.focus();
         }
 
-        function closeModal() {
+        function closeReportModal() {
             modalOverlay.style.display = 'none';
             reportModal.style.display = 'none';
             currentReportItem = null;
         }
 
-        cancelModalBtn.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', closeModal);
-
+        cancelModalBtn.addEventListener('click', closeReportModal);
+        modalOverlay.addEventListener('click', closeReportModal);
         sendEmailBtn.addEventListener('click', () => {
             if (!currentReportItem) return;
             const comment = reportComment.value;
             const subject = `Correction for ${currentReportItem.acronym}`;
             const body = `Hi,\n\nI found an error in the acronym "${currentReportItem.acronym}" (${currentReportItem.source}).\n\nUser Comment:\n${comment}`;
-            const mailtoLink = `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(mailtoLink, '_blank');
-            closeModal();
+            window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+            closeReportModal();
         });
+
     </script>
 </body>
 </html>
