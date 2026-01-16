@@ -2,38 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
-    <title>Pilot's Database V30</title>
+    
+    <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
+    <title>Aviation Acronym</title>
+
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/984/984233.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/984/984233.png">
+
     <style>
         /* --- THEME VARIABLES --- */
         :root {
+            /* Light Mode Defaults */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
             --accent: #00a8ff;
             --star-color: #f1c40f;
-            --user-color: #9b59b6; /* Purple for User Data */
+            --user-color: #9b59b6;
             --history-color: #34495e;
             --link-color: #2980b9;
             --success: #2ecc71;
             --error: #e74c3c;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             
+            --modal-overlay: rgba(15, 15, 15, 0.6);
+            --modal-bg: #ffffff;
+            --drawer-bg: #f8f9fa; /* Slightly off-white for contrast */
+            
             --source-faa: #2980b9;
             --source-sof: #e67e22;
             
-            --modal-overlay: rgba(15, 15, 15, 0.6);
-            --modal-bg: #ffffff;
-            --drawer-bg: #ffffff;
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
         }
 
         [data-theme="dark"] {
-            --glass-bg: rgba(20, 25, 30, 0.70);
+            --glass-bg: rgba(20, 25, 30, 0.75);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text: #ecf0f1;
             --accent: #00d2d3;
@@ -49,11 +58,11 @@
             --drawer-bg: #1e272e;
         }
 
-        /* BACKGROUNDS */
-        .bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
-        .bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
-        .bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .bg-night { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); }
+        /* DYNAMIC BACKGROUNDS */
+        body.bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+        body.bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        body.bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        body.bg-night { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -78,15 +87,15 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 
         select {
-            padding: 8px 12px; border-radius: 20px; border: 1px solid rgba(150,150,150,0.3);
+            padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
             background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500; min-height: 40px;
         }
         select option { background: var(--modal-bg); color: var(--text); }
 
         .icon-btn {
-            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s;
+            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text);
         }
-        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
         .search-wrapper {
             display: flex; align-items: center; gap: 8px;
@@ -114,14 +123,12 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
-        
         .fab-items {
-            display: flex; flex-direction: column-reverse; gap: 10px;
+            display: flex; flex-direction: column-reverse; gap: 12px;
             opacity: 0; pointer-events: none; transform: translateY(20px);
             transition: all 0.3s ease;
         }
         .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        
         .fab-mini {
             width: 48px; height: 48px; border-radius: 50%; border: none;
             background: var(--glass-bg); color: var(--text); font-size: 1.2rem;
@@ -130,8 +137,6 @@
             transition: transform 0.2s; position: relative;
         }
         .fab-mini:active { transform: scale(0.9); }
-        
-        /* Tooltips for FAB (Desktop hover) */
         .fab-mini::after {
             content: attr(data-label); position: absolute; right: 60px;
             background: rgba(0,0,0,0.7); color: white; padding: 4px 8px;
@@ -157,7 +162,6 @@
         .chip.history.active { background: var(--history-color); color: #fff; }
         .chip.my-data { border: 1px solid var(--user-color); color: var(--text); }
         .chip.my-data.active { background: var(--user-color); color: #fff; }
-
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
         .reset-filter-link { color: var(--accent); text-decoration: underline; cursor: pointer; margin-left: 5px; font-weight: bold; }
 
@@ -169,20 +173,16 @@
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.2em; letter-spacing: 0.5px; }
         .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
-
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.USER { background: var(--user-color); }
-
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
         .meaning { line-height: 1.5; font-size: 1em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
-        
         .card-actions { display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center; }
         .action-btn { font-size: 1.3em; cursor: pointer; opacity: 0.4; transition: 0.2s; border: none; background: none; padding: 5px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
@@ -190,11 +190,20 @@
         .action-btn.delete { color: var(--error); opacity: 0.6; }
         .action-btn.delete:active { opacity: 1; }
 
-        /* --- DRAWER --- */
+        /* --- DRAWER (Flight Bag) --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
-        .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
+        .drawer {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh;
+            background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px;
+            z-index: 2000; padding: 20px; box-sizing: border-box;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%);
+            display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
+        }
         .drawer.open { transform: translateY(0); }
-        .drawer h3 { margin: 0; font-size: 1.2em; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+        
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .drawer h3 { margin: 0; font-size: 1.4em; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
         #scratchpad { width: 100%; height: 150px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
@@ -205,7 +214,6 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
-        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
         .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
@@ -213,6 +221,7 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
+        
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -221,18 +230,22 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* TOAST & LOADER */
+        /* Report List */
+        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .report-item.missed { color: var(--error); }
+
+        /* Toast & Loader */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
         .radar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); position: relative; box-shadow: 0 0 10px var(--accent); }
         .radar::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%); animation: scan 1.5s linear infinite; }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-        /* FLASHCARD & REPORT */
-        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .report-item.missed { color: var(--error); }
+        /* Flashcard */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 300px; perspective: 1000px; z-index: 2001; }
         .flashcard { width: 100%; height: 260px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
@@ -254,10 +267,6 @@
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
         .score-display { position: absolute; top: -40px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1em; }
-        
-        /* KEYFRAMES */
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
     </style>
 </head>
@@ -265,8 +274,10 @@
 
     <div id="drawerOverlay" class="drawer-overlay"></div>
     <div id="sideDrawer" class="drawer">
-        <div style="width: 40px; height: 4px; background: #ccc; border-radius: 2px; align-self: center; margin-bottom: 10px;"></div>
-        <h3>👜 Flight Bag</h3>
+        <div class="drawer-header">
+            <h3>👜 Flight Bag</h3>
+            <button class="icon-btn" id="closeDrawerBtn" style="font-size:1.2em;">✕</button>
+        </div>
         <div class="tool-section">
             <span class="tool-label">SCRATCHPAD</span>
             <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
@@ -383,7 +394,6 @@
             <label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label>
         </div>
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
-        <p style="font-size:0.8em; opacity:0.7;">Includes history, mastery, and your custom acronyms.</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
@@ -426,13 +436,13 @@
     </div>
 
     <script>
-        // CONFIG
+        // --- CONSTANTS ---
         const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
         const GROUP_CONFIG = { "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics, Maint, Infra", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] }, "Regulations": { desc: "ICAO, Safety, Rules", keywords: ["Regulat", "Safety", "Standard"] }, "Business": { desc: "Airline, Commercial, IT", keywords: ["Airline", "Commerc", "Training", "Military"] }, "All": { desc: "Searching DB." }, "Favorites": { desc: "Saved." }, "History": { desc: "Recent." }, "My Acronyms": { desc: "User defined." }, "Other": { desc: "Uncategorized." } };
         const NATO_MAP = { 'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot', 'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima', 'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo', 'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray', 'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four', '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal' };
 
-        // STATE
+        // --- STATE ---
         let allData=[], acronymSet=new Set(), filteredData=[], activeGroup='All', exactCategoryFilter=null, currentReportItem=null, currentFlashcardItem=null, searchStack=[];
         let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"", customData=JSON.parse(localStorage.getItem('pilotCustomDB'))||[];
         let sessionStats={total:0,correct:0,missedItems:[]};
@@ -447,6 +457,16 @@
             else if(type==='error'){osc.type='sawtooth';osc.frequency.setValueAtTime(150,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(100,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
         }
 
+        // Theme Toggle Fix
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+        // --- CORE FUNCTIONS ---
         function updateBackground() { document.body.className=''; if(settings.weather!=='auto'){document.body.classList.add(settings.weather);return;} const h=new Date().getHours(); if(h>=5&&h<8)document.body.classList.add('bg-sunrise');else if(h>=8&&h<17)document.body.classList.add('bg-day');else if(h>=17&&h<20)document.body.classList.add('bg-sunset');else document.body.classList.add('bg-night'); }
         setInterval(updateBackground,60000); updateBackground();
 
@@ -456,7 +476,6 @@
             let p=[]; if(m==='faa')p.push(fetchSheet(LINKS.faa,'FAA')); else if(m==='sofema')p.push(fetchSheet(LINKS.sofema,'SOFEMA')); else if(m==='both'){p.push(fetchSheet(LINKS.faa,'FAA'));p.push(fetchSheet(LINKS.sofema,'SOFEMA'));}
             Promise.all(p).then(r=>{
                 let csvData = r.flat();
-                // Merge Custom Data
                 allData = [...customData, ...csvData];
                 acronymSet=new Set(allData.map(i=>i.acronym));
                 activeGroup='All';initGroupChips();filteredData=[...allData];updateRankHUD();if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
@@ -470,7 +489,14 @@
         window.filterByRawCategory=function(c){exactCategoryFilter=c;activeGroup='All';document.getElementById('searchBox').value='';document.getElementById('groupDesc').innerHTML=`Filtering: <b>${c}</b> <span class="reset-filter-link" onclick="clearRawCategory()">[Clear]</span>`;document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));document.querySelector('.chip').classList.add('active');runSearch();playSound('click');};
         window.clearRawCategory=function(){exactCategoryFilter=null;document.getElementById('groupDesc').textContent="Searching entire database.";runSearch();playSound('click');};
 
-        if(localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.setAttribute('data-theme','dark');
+        // Init
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-theme', storedTheme);
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+        
         document.getElementById('scratchpad').value=scratchpadText;document.getElementById('weatherSelect').value=settings.weather||'auto';document.getElementById('toggleSfx').checked=settings.sfx;
         loadData('sofema');
 
@@ -509,13 +535,12 @@
             } else res.innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
         }
 
-        // FAB LOGIC
+        // FAB
         const fabCont=document.getElementById('fabContainer');
         document.getElementById('fabTrigger').addEventListener('click',(e)=>{e.stopPropagation();fabCont.classList.toggle('active');});
         document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
         document.addEventListener('scroll',()=>{fabCont.classList.remove('active');});
 
-        // Add Acronym Logic
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
         document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
@@ -524,11 +549,10 @@
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             if(!acr || !mean) { showToast("Fill all fields"); return; }
-            
             const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
             customData.unshift(newItem);
             localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-            loadData(document.getElementById('dbSource').value); // Reload to merge
+            loadData(document.getElementById('dbSource').value); 
             showToast("Saved!");
             addOverlay.style.display='none'; addModal.style.display='none';
             document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
@@ -592,7 +616,6 @@
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
-        document.getElementById('themeBtn').addEventListener('click',()=>{const d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('theme',d?'light':'dark');});
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
     </script>
