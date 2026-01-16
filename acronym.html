@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V6</title>
+    <title>Pilot's Database V7</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -12,7 +12,6 @@
             --input-bg: #f7f9fb;
             --border: #e0e0e0;
             --accent: #00b0ff;
-            --accent-hover: #009be0;
             --badge-bg: rgba(235, 236, 237, 0.6);
             --chip-bg: #e0e0e0;
             --chip-active: #00b0ff;
@@ -87,7 +86,7 @@
             background: none; border: none;
             color: #999; font-weight: 600; font-size: 0.75em;
             cursor: pointer; margin-right: 8px;
-            display: none; /* Hidden by default */
+            display: none; 
         }
 
         .filter-container {
@@ -122,7 +121,7 @@
         .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; }
         .card:hover .report-btn { opacity: 1; }
 
-        /* --- EXTERNAL SEARCH FOOTER --- */
+        /* --- SEARCH FOOTER --- */
         .search-footer {
             margin-top: 25px;
             padding: 15px;
@@ -182,6 +181,9 @@
         // ==========================================
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
+        
+        // External Links
+        const SOFEMA_URL = "https://github.com/vincent6786/aviation-knowledge-finder/blob/b568684404a70f46ab1ad9a01d30bcad44e00a9e/acronym.html";
         // ==========================================
 
         let allData = [];
@@ -246,7 +248,6 @@
         const resultsDiv = document.getElementById('results');
 
         searchBox.addEventListener('input', () => {
-             // Show/Hide Clear Button
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
             runSearch();
         });
@@ -324,19 +325,22 @@
                 resultsDiv.innerHTML = '<div class="loading">No local matches found.</div>';
             }
 
-            // 3. ALWAYS Append External Search Footer (The "Pop out" logic)
-            const sofemaLink = `https://www.google.com/search?q=site:sofemaonline.com/aviation-abbreviations-glossary+"${term}"`;
-            const broadLink = `https://www.google.com/search?q=define+aviation+term+"${term}"`;
+            // 3. Footer Links (Updated Logic)
+            // Web Search: Uses the exact text from the search bar
+            const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+            
+            // Sofema: Points to the static GitHub link provided
+            const sofemaLink = SOFEMA_URL;
 
             const footer = document.createElement('div');
             footer.className = 'search-footer';
             footer.innerHTML = `
-                <div class="footer-title">Not the result you wanted?</div>
+                <div class="footer-title">External Search</div>
                 <div class="footer-buttons">
-                    <a href="${sofemaLink}" target="_blank" class="ext-btn">
-                        ✈️ Sofema
+                    <a href="${sofemaLink}" target="_blank" class="ext-btn" title="Open Aviation Knowledge Finder">
+                        ✈️ Sofema List
                     </a>
-                    <a href="${broadLink}" target="_blank" class="ext-btn">
+                    <a href="${webSearchLink}" target="_blank" class="ext-btn" title="Search Google for '${term}'">
                         🌐 Web Search
                     </a>
                 </div>
