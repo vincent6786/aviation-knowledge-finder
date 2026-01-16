@@ -2,22 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
-    
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V33</title>
-
+    <title>Aviation Acronym V34</title>
+    
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
 
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            /* Light Mode Defaults */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
@@ -28,15 +25,14 @@
             --link-color: #2980b9;
             --success: #2ecc71;
             --error: #e74c3c;
+            --note-bg: #fff9c4; /* Sticky Note Yellow */
+            --note-text: #5d4037;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
             --drawer-bg: #f8f9fa;
-            
             --source-faa: #2980b9;
             --source-sof: #e67e22;
-            
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
         }
@@ -50,15 +46,16 @@
             --user-color: #8e44ad;
             --history-color: #95a5a6;
             --link-color: #48dbfb;
+            --note-bg: #424242; /* Dark Note */
+            --note-text: #fff9c4;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-
             --source-faa: #3498db;
             --source-sof: #d35400;
             --modal-bg: #1e272e;
             --drawer-bg: #1e272e;
         }
 
-        /* DYNAMIC BACKGROUNDS */
+        /* BACKGROUNDS */
         body.bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
         body.bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
         body.bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
@@ -83,67 +80,18 @@
             padding: 15px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
         }
-
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-
-        select {
-            padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
-            background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500; min-height: 40px;
-        }
+        select { padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500; min-height: 40px; }
         select option { background: var(--modal-bg); color: var(--text); }
-
-        .icon-btn {
-            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text);
-        }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
-
-        .search-wrapper {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2);
-            border-radius: 50px; padding: 6px; transition: all 0.3s;
-        }
+        .search-wrapper { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; }
         .search-wrapper:focus-within { background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
         [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
-
         #searchBox { flex-grow: 1; border: none; background: transparent; padding: 8px 10px; font-size: 16px; color: var(--text); outline: none; }
         #searchBtn { background-color: var(--accent); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.8em; cursor: pointer; margin-right: 8px; display: none; padding: 10px;}
         #backBtn { background: none; border: none; color: var(--accent); font-weight: 700; font-size: 1.2em; cursor: pointer; padding-left: 10px; display: none; }
-
-        /* --- RETRACTABLE FAB --- */
-        .fab-container {
-            position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100;
-            display: flex; flex-direction: column-reverse; align-items: center; gap: 12px;
-        }
-        .fab-main {
-            width: 56px; height: 56px; border-radius: 50%; border: none;
-            background: var(--accent); color: white; font-size: 1.8rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
-        .fab-items {
-            display: flex; flex-direction: column-reverse; gap: 12px;
-            opacity: 0; pointer-events: none; transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .fab-mini {
-            width: 48px; height: 48px; border-radius: 50%; border: none;
-            background: var(--glass-bg); color: var(--text); font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
-            backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s; position: relative;
-        }
-        .fab-mini:active { transform: scale(0.9); }
-        .fab-mini::after {
-            content: attr(data-label); position: absolute; right: 60px;
-            background: rgba(0,0,0,0.7); color: white; padding: 4px 8px;
-            border-radius: 4px; font-size: 0.8em; white-space: nowrap;
-            opacity: 0; pointer-events: none; transition: opacity 0.2s;
-        }
-        .fab-container.active .fab-mini:hover::after { opacity: 1; }
 
         /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; margin-bottom: 5px;}
@@ -165,53 +113,51 @@
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
         .reset-filter-link { color: var(--accent); text-decoration: underline; cursor: pointer; margin-left: 5px; font-weight: bold; }
 
-        /* --- RESULTS --- */
+        /* --- RESULTS & CARDS --- */
         #results { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
         .card { background: var(--glass-bg); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
         .card-content { display: flex; flex-direction: column; gap: 6px; width: 100%; padding-right: 10px; }
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.2em; letter-spacing: 0.5px; }
         .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
-
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.USER { background: var(--user-color); }
-
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
         .meaning { line-height: 1.5; font-size: 1em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
-        
         .card-actions { display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center; }
         .action-btn { font-size: 1.3em; cursor: pointer; opacity: 0.4; transition: 0.2s; border: none; background: none; padding: 5px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
         .action-btn.star.active { opacity: 1; filter: drop-shadow(0 0 5px var(--star-color)); }
         .action-btn.delete { color: var(--error); opacity: 0.6; }
         .action-btn.delete:active { opacity: 1; }
+        
+        /* STICKY NOTES */
+        .sticky-note-box {
+            background: var(--note-bg); color: var(--note-text);
+            padding: 8px; border-radius: 6px; font-size: 0.85em;
+            margin-top: 5px; border-left: 3px solid #f1c40f;
+            display: flex; align-items: flex-start; gap: 5px;
+        }
+        .note-icon-small { font-size: 1em; opacity: 0.6; }
+        .action-btn.note.active { opacity: 1; color: #f1c40f; }
 
         /* --- DRAWER (Flight Bag) --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
-        .drawer {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh;
-            background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px;
-            z-index: 2000; padding: 20px; box-sizing: border-box;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%);
-            display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
-        }
+        .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.open { transform: translateY(0); }
-        
-        /* Updated Sidebar Header with Top-Right Close Button */
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .drawer h3 { margin: 0; font-size: 1.4em; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
-        #scratchpad { width: 100%; height: 150px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
+        #scratchpad { width: 100%; height: 100px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
         #natoInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
         #natoResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; }
 
@@ -219,6 +165,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
+        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
         .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
@@ -226,12 +173,6 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
-        
-        /* HELP MODAL SPECIFIC */
-        .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
-        .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
-        .help-content ul { padding-left: 20px; margin: 0; opacity: 0.85; }
-        
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -240,12 +181,34 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* Report List */
+        /* HELP CONTENT */
+        .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
+        .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
+        .help-content ul { padding-left: 20px; margin: 0; opacity: 0.85; }
+
+        /* QRH STYLES */
+        .qrh-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        .qrh-table th, .qrh-table td { padding: 8px; border: 1px solid rgba(150,150,150,0.3); text-align: left; }
+        .qrh-table th { background: rgba(0,0,0,0.05); }
+        .sig-green { color: #2ecc71; font-weight: bold; }
+        .sig-red { color: #e74c3c; font-weight: bold; }
+        .sig-white { color: #95a5a6; font-weight: bold; }
+
+        /* RETRACTABLE FAB */
+        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
+        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
+        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
+        .fab-mini:active { transform: scale(0.9); }
+        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .fab-container.active .fab-mini:hover::after { opacity: 1; }
+
+        /* Report List & Loader */
         .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
         .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
         .report-item.missed { color: var(--error); }
-
-        /* Toast & Loader */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
@@ -288,15 +251,20 @@
             <h3>👜 Flight Bag</h3>
             <button class="icon-btn" id="closeDrawerBtn" style="font-size:1.2em;">✕</button>
         </div>
-        <div class="tool-section">
-            <span class="tool-label">SCRATCHPAD</span>
-            <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
-        </div>
-        <div class="tool-section">
-            <span class="tool-label">NATO PHONETIC</span>
-            <input type="text" id="natoInput" placeholder="Type text here..." autocomplete="off">
-            <div id="natoResult">...</div>
-            <button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button>
+        
+        <div style="flex-grow:1; overflow-y:auto; display:flex; flex-direction:column; gap:20px;">
+            <button class="modal-btn full" id="openQRHBtn" style="background:var(--history-color); color:white;">📋 Cockpit QRH</button>
+
+            <div class="tool-section">
+                <span class="tool-label">SCRATCHPAD</span>
+                <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
+            </div>
+            <div class="tool-section">
+                <span class="tool-label">NATO PHONETIC</span>
+                <input type="text" id="natoInput" placeholder="Type text here..." autocomplete="off">
+                <div id="natoResult">...</div>
+                <button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button>
+            </div>
         </div>
     </div>
 
@@ -316,7 +284,6 @@
                 <option value="faa">🇺🇸 FAA</option>
                 <option value="both">🌎 ALL</option>
             </select>
-            
             <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -364,39 +331,77 @@
     <div id="helpModal" class="modal">
         <h3>Flight Manual 📘</h3>
         <div class="help-content">
-            <h4>🔍 Search & Filter</h4>
+            <h4>🔍 Search & Study</h4>
             <ul>
-                <li><strong>Smart Links:</strong> Click highlighted acronyms (e.g. <u>IFR</u>) in definitions to jump to them. Use <strong>⬅</strong> to go back.</li>
-                <li><strong>Categories:</strong> Click the [TAGS] on cards to filter by that category instantly.</li>
+                <li><strong>Search:</strong> Type definitions or acronyms. Use filter chips to narrow by category.</li>
+                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them. Use <strong>⬅</strong> to go back.</li>
+                <li><strong>Notes (📝):</strong> Click the memo icon on any card to add personal sticky notes.</li>
             </ul>
-            
-            <h4>✈️ Study Mode (🎲)</h4>
+            <h4>✈️ Training</h4>
             <ul>
-                <li>Opens Flashcards based on your current filter (e.g., if you are in 'Weather', it quizzes Weather).</li>
-                <li><strong>Spacebar:</strong> Flip Card.</li>
-                <li><strong>Arrows:</strong> Left (Missed), Right (Got It).</li>
-                <li>Completing cards earns XP and increases your Pilot Rank.</li>
+                <li><strong>Flashcards (🎲):</strong> Quizzes you based on your current filter.</li>
+                <li><strong>Rank:</strong> Mark cards "Got It" to gain XP and rank up from Student to Captain.</li>
             </ul>
-
             <h4>👜 Flight Bag</h4>
             <ul>
-                <li><strong>Scratchpad:</strong> Auto-saves anything you type. Useful for ATIS or Clearances.</li>
-                <li><strong>NATO:</strong> Type to convert text to Phonetic Alphabet.</li>
+                <li><strong>QRH:</strong> Quick Reference charts for Light Signals & Transponder codes.</li>
+                <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
             </ul>
-
-            <h4>💾 Data & Backup</h4>
+            <h4>💾 Data Safety</h4>
             <ul>
-                <li>Your history, favorites, and rank are saved in <strong>this browser</strong>.</li>
-                <li>Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup file if you switch devices.</li>
-            </ul>
-            
-            <h4>📱 Mobile Pro Tip</h4>
-            <ul>
-                <li>Tap <strong>Share > Add to Home Screen</strong> on your phone to install this as a full-screen app.</li>
+                <li>All data (Notes, Rank, History) is local. Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
             <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+        </div>
+    </div>
+
+    <div id="qrhModalOverlay" class="modal-overlay"></div>
+    <div id="qrhModal" class="modal">
+        <h3>📋 Cockpit QRH</h3>
+        <div style="display:flex; gap:5px; margin-bottom:15px;">
+            <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:8px; font-size:0.8em;">Lights</button>
+            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:8px; font-size:0.8em;">XPDR</button>
+        </div>
+        
+        <div id="qrh-light">
+            <p><strong>Light Gun Signals</strong></p>
+            <table class="qrh-table">
+                <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
+                <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
+                <tr><td class="sig-green">Flash Green</td><td>Return for Land</td><td>Cleared Taxi</td></tr>
+                <tr><td class="sig-red">Steady Red</td><td>Give Way / Circle</td><td>STOP</td></tr>
+                <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
+                <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
+            </table>
+        </div>
+        
+        <div id="qrh-xpdr" style="display:none;">
+            <p><strong>Transponder Codes</strong></p>
+            <table class="qrh-table">
+                <tr><th>Code</th><th>Meaning</th></tr>
+                <tr><td>7500</td><td class="sig-red">Hijack</td></tr>
+                <tr><td>7600</td><td class="sig-red">Radio Failure</td></tr>
+                <tr><td>7700</td><td class="sig-red">Emergency</td></tr>
+                <tr><td>1200</td><td>VFR</td></tr>
+            </table>
+        </div>
+
+        <div class="modal-buttons" style="margin-top:15px;">
+            <button id="closeQRHBtn" class="modal-btn cancel full">Close</button>
+        </div>
+    </div>
+
+    <div id="noteModalOverlay" class="modal-overlay"></div>
+    <div id="noteModal" class="modal">
+        <h3>Add Note</h3>
+        <p id="noteTargetAcronym" style="font-weight:bold; color:var(--accent);">V1</p>
+        <textarea id="noteContent" placeholder="Enter your personal note here..."></textarea>
+        <div class="modal-buttons">
+            <button id="deleteNoteBtn" class="modal-btn" style="color:var(--error); margin-right:auto;">Delete</button>
+            <button id="closeNoteBtn" class="modal-btn cancel">Cancel</button>
+            <button id="saveNoteBtn" class="modal-btn send">Save Note</button>
         </div>
     </div>
 
@@ -420,7 +425,7 @@
 
     <div id="modalOverlay" class="modal-overlay"></div>
     <div id="reportModal" class="modal">
-        <h3>Report Error</h3>
+        <h3 id="modalTitle">Report Error</h3>
         <textarea id="reportComment" placeholder="Describe the error..."></textarea>
         <div class="modal-buttons">
             <button id="cancelModalBtn" class="modal-btn cancel">Cancel</button>
@@ -497,6 +502,8 @@
         // STATE
         let allData=[], acronymSet=new Set(), filteredData=[], activeGroup='All', exactCategoryFilter=null, currentReportItem=null, currentFlashcardItem=null, searchStack=[];
         let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"", customData=JSON.parse(localStorage.getItem('pilotCustomDB'))||[];
+        let pilotNotes = JSON.parse(localStorage.getItem('pilotNotes')) || {}; // NEW: Notes
+        let currentNoteAcronym = null; // Track editing note
         let sessionStats={total:0,correct:0,missedItems:[]};
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -518,12 +525,55 @@
         }
         document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
-        // Help Modal Logic
+        // Help Modal
         const helpOverlay = document.getElementById('helpModalOverlay');
         const helpModal = document.getElementById('helpModal');
         document.getElementById('helpBtn').addEventListener('click', () => { helpOverlay.style.display='block'; helpModal.style.display='block'; });
         document.getElementById('closeHelpBtn').addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
         helpOverlay.addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
+
+        // QRH Modal Logic
+        const qrhOverlay = document.getElementById('qrhModalOverlay');
+        const qrhModal = document.getElementById('qrhModal');
+        window.showQRHTab = function(id) {
+            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
+            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
+        };
+        document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; });
+        document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+        qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+
+        // --- NOTE LOGIC ---
+        const noteOverlay = document.getElementById('noteModalOverlay');
+        const noteModal = document.getElementById('noteModal');
+        
+        window.openNoteModal = function(acronym) {
+            currentNoteAcronym = acronym;
+            document.getElementById('noteTargetAcronym').innerText = acronym;
+            document.getElementById('noteContent').value = pilotNotes[acronym] || "";
+            noteOverlay.style.display = 'block';
+            noteModal.style.display = 'block';
+        };
+        
+        document.getElementById('saveNoteBtn').addEventListener('click', () => {
+            const txt = document.getElementById('noteContent').value.trim();
+            if(txt) pilotNotes[currentNoteAcronym] = txt;
+            else delete pilotNotes[currentNoteAcronym];
+            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+            noteOverlay.style.display='none'; noteModal.style.display='none';
+            runSearch(); // Refresh to show note
+            showToast("Note Saved");
+        });
+        
+        document.getElementById('deleteNoteBtn').addEventListener('click', () => {
+            delete pilotNotes[currentNoteAcronym];
+            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+            noteOverlay.style.display='none'; noteModal.style.display='none';
+            runSearch();
+            showToast("Note Deleted");
+        });
+        
+        document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
 
         // --- CORE FUNCTIONS ---
         function updateBackground() { document.body.className=''; if(settings.weather!=='auto'){document.body.classList.add(settings.weather);return;} const h=new Date().getHours(); if(h>=5&&h<8)document.body.classList.add('bg-sunrise');else if(h>=8&&h<17)document.body.classList.add('bg-day');else if(h>=17&&h<20)document.body.classList.add('bg-sunset');else document.body.classList.add('bg-night'); }
@@ -580,13 +630,40 @@
             if(tf.length>0){
                 tf.slice(0,50).forEach((i,idx)=>{
                     const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER';
+                    const hasNote = pilotNotes[i.acronym]; // Check for note
+                    
                     const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
                     let dm=i.meaning; if(term&&mode==='contains') dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
                     
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
 
-                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div></div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
+                    // RENDER NOTE IF EXISTS
+                    let noteHTML = '';
+                    if(hasNote) {
+                        noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`;
+                    }
+
+                    c.innerHTML=`
+                    <div class="card-content">
+                        <div class="acronym-header">
+                            <span class="acronym-badge">${i.acronym}</span>
+                            <div class="meta-tags">
+                                <span class="source-tag ${i.source}">${i.source}</span>
+                                <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                ${isM?'<span class="mastered-dot"></span>':''}
+                            </div>
+                        </div>
+                        <div class="meaning">${autoLink(dm)}</div>
+                        ${noteHTML}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
+                        <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
+                        <button class="action-btn speak">🔊</button>
+                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                        ${actionBtn}
+                    </div>`;
                     if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
                     c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
                     res.appendChild(c);
@@ -668,9 +745,9 @@
         document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
         document.getElementById('natoInput').addEventListener('input',(e)=>{const v=e.target.value.toUpperCase(),r=[];for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));document.getElementById('natoResult').innerText=r.join(' ');});
         document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
-        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
+        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData,notes:pilotNotes},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
         document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
-        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
+        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.notes)pilotNotes=d.notes;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotNotes',JSON.stringify(pilotNotes));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
 
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
