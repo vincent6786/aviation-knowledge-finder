@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V38</title>
+    <title>Aviation Acronym V39</title>
     
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
@@ -15,7 +15,7 @@
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.85); /* Slightly more opaque for sticky header */
+            --glass-bg: rgba(255, 255, 255, 0.9);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
             --accent: #00a8ff;
@@ -39,7 +39,7 @@
         }
 
         [data-theme="dark"] {
-            --glass-bg: rgba(20, 25, 30, 0.90);
+            --glass-bg: rgba(20, 25, 30, 0.95);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text: #ecf0f1;
             --accent: #00d2d3;
@@ -72,7 +72,7 @@
             overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- CONTROLS (HEADER) --- */
+        /* --- CONTROLS --- */
         .controls {
             position: sticky; top: var(--safe-top); z-index: 90;
             background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -81,29 +81,16 @@
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        /* COMPACT MODE (Applied via JS on Scroll) */
-        .controls.compact {
-            padding: 10px;
-            border-radius: 0 0 16px 16px; /* Flatten top corners */
-            gap: 5px;
-        }
-        .controls.compact .hud-container,
-        .controls.compact .top-row,
-        .controls.compact #groupDesc {
-            display: none;
-        }
+        .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
+        .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-
-        /* Universal Select Style */
         select {
             padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
             background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer;
             font-size: 0.9em; font-weight: 500; min-height: 40px; flex-grow: 1;
         }
         select option { background: var(--modal-bg); color: var(--text); }
-
         .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
@@ -115,37 +102,33 @@
         #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.8em; cursor: pointer; margin-right: 8px; display: none; padding: 10px;}
         #backBtn { background: none; border: none; color: var(--accent); font-weight: 700; font-size: 1.2em; cursor: pointer; padding-left: 10px; display: none; }
 
-        /* FILTER ROW (New Layout) */
-        .filter-row {
-            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-        }
-        /* Mobile optimization: First row is category + search mode, Second row is sort */
-        @media (max-width: 400px) {
-            .filter-row select { font-size: 0.85em; padding: 6px 8px; }
-        }
+        .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
 
-        /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
         .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
         .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
 
-        /* --- RESULTS & CARDS --- */
-        #results { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+        /* --- RESULTS & CARDS (UPDATED LAYOUT V39) --- */
+        #results { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
         .card { 
             background: var(--glass-bg); backdrop-filter: blur(5px); 
             border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; 
-            display: flex; justify-content: space-between; align-items: flex-start; 
-            gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            /* CHANGE: Column layout for card itself */
+            display: flex; flex-direction: column; 
+            gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
             animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; 
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .card:hover { transform: translateY(-2px); border-color: var(--accent); }
-        .card-content { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; padding-right: 5px; }
+        
+        .card-content { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.2em; letter-spacing: 0.5px; word-break: break-all; }
+        .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.3em; letter-spacing: 0.5px; word-break: break-all; }
         .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
@@ -153,18 +136,36 @@
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.USER { background: var(--user-color); }
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
-        .meaning { line-height: 1.5; font-size: 1em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; word-wrap: break-word; }
+        
+        .meaning { 
+            line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; 
+            transition: color 0.2s; position: relative; word-wrap: break-word; 
+        }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
-        .card-actions { display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center; flex-shrink: 0; width: 40px; padding-left: 5px; border-left: 1px solid rgba(150,150,150,0.1); }
-        .action-btn { font-size: 1.3em; cursor: pointer; opacity: 0.4; transition: 0.2s; border: none; background: none; padding: 5px; }
+        
+        /* NEW ACTION BAR (BOTTOM ROW) */
+        .card-actions { 
+            display: flex; flex-direction: row; 
+            width: 100%; box-sizing: border-box;
+            padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1);
+            justify-content: flex-end; gap: 15px; 
+        }
+        
+        /* Mobile spacing for buttons */
+        @media (max-width: 600px) {
+            .card-actions { justify-content: space-between; gap: 0; }
+        }
+
+        .action-btn { font-size: 1.4em; cursor: pointer; opacity: 0.5; transition: 0.2s; border: none; background: none; padding: 5px 10px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
-        .action-btn.star.active { opacity: 1; filter: drop-shadow(0 0 5px var(--star-color)); }
+        .action-btn.star.active { opacity: 1; color: var(--star-color); filter: drop-shadow(0 0 2px var(--star-color)); }
         .action-btn.delete { color: var(--error); opacity: 0.6; }
         .action-btn.delete:active { opacity: 1; }
-        .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.85em; margin-top: 5px; border-left: 3px solid #f1c40f; display: flex; align-items: flex-start; gap: 5px; }
-        .note-icon-small { font-size: 1em; opacity: 0.6; }
-        .action-btn.note.active { opacity: 1; color: #f1c40f; }
+        
+        .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
+        .note-icon-small { font-size: 1.1em; opacity: 0.6; }
+        .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
 
         /* --- DRAWER (Flight Bag) --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
@@ -182,7 +183,6 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
-        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
         .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
@@ -229,6 +229,7 @@
         .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .fab-container.active .fab-mini:hover::after { opacity: 1; }
 
+        /* Report List & Loader */
         .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
         .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
         .report-item.missed { color: var(--error); }
@@ -780,7 +781,27 @@
                     if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
                     let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
 
-                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
+                    // UPDATED CARD LAYOUT (V39)
+                    c.innerHTML=`
+                    <div class="card-content">
+                        <div class="acronym-header">
+                            <span class="acronym-badge">${i.acronym}</span>
+                            <div class="meta-tags">
+                                <span class="source-tag ${i.source}">${i.source}</span>
+                                <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                ${isM?'<span class="mastered-dot"></span>':''}
+                            </div>
+                        </div>
+                        <div class="meaning">${autoLink(dm)}</div>
+                        ${noteHTML}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
+                        <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
+                        <button class="action-btn speak">🔊</button>
+                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                        ${actionBtn}
+                    </div>`;
                     if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
                     c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
                     res.appendChild(c);
