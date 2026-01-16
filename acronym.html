@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Flight Sim DB</title>
+    <title>Pilot's Database V22</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -23,6 +23,11 @@
             
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
+            
+            /* Rank Colors */
+            --rank-bronze: #cd7f32;
+            --rank-silver: #95a5a6;
+            --rank-gold: #f1c40f;
         }
 
         [data-theme="dark"] {
@@ -50,7 +55,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px; margin: 0; color: var(--text);
             background: var(--bg-gradient); 
-            background-size: 400% 400%; /* For breathing animation */
+            background-size: 400% 400%;
             animation: breathe 15s ease infinite;
             min-height: 100vh; transition: color 0.3s;
         }
@@ -104,6 +109,15 @@
             background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.7em; cursor: pointer; margin-right: 8px; display: none; 
         }
 
+        /* --- PILOT HUD (STATS) --- */
+        .hud-container {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 5px; font-size: 0.85em; opacity: 0.9;
+        }
+        .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+        .progress-bar { width: 100px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
+
         /* --- CHIPS --- */
         .filter-container {
             display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none;
@@ -116,7 +130,6 @@
         }
         .chip:hover { transform: translateY(-2px); }
         .chip.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        
         .chip.favorites { border: 1px solid var(--star-color); color: var(--text); }
         .chip.favorites.active { background: var(--star-color); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
@@ -130,8 +143,7 @@
             border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px;
             display: flex; justify-content: space-between; gap: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            animation: slideUp 0.3s ease forwards; transition: transform 0.2s;
-            position: relative;
+            animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .card:hover { transform: translateY(-2px); border-color: var(--accent); }
@@ -144,6 +156,9 @@
         .source-tag { font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
+        
+        /* Mastery Indicator on Card */
+        .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
 
         .meaning { 
             line-height: 1.5; font-size: 0.95em; opacity: 0.9; cursor: pointer; 
@@ -167,7 +182,7 @@
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-        /* --- RADAR LOADER --- */
+        /* --- LOADER --- */
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
         .radar {
             width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent);
@@ -201,7 +216,7 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         
-        /* --- FLASHCARD 3D & GAMIFICATION --- */
+        /* --- FLASHCARD 3D --- */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -213,7 +228,6 @@
         }
         .flashcard.flipped { transform: rotateY(180deg); }
         
-        /* Animations for correct/incorrect */
         .shake { animation: shake 0.5s; }
         .pulse-green { animation: pulseGreen 0.5s; }
         @keyframes shake { 0% { transform: rotateY(180deg) translateX(0); } 25% { transform: rotateY(180deg) translateX(-10px); } 75% { transform: rotateY(180deg) translateX(10px); } 100% { transform: rotateY(180deg) translateX(0); } }
@@ -231,14 +245,13 @@
         .fc-hint { font-size: 0.8em; opacity: 0.5; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .fc-meaning { font-size: 1.1em; line-height: 1.4; font-weight: 500; }
         
-        /* Gamification Controls */
         .fc-controls { 
             margin-top: 15px; width: 100%; display: flex; justify-content: space-between; align-items: center; 
             opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         .flashcard.flipped ~ .fc-controls { opacity: 1; pointer-events: auto; }
         
-        .game-btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: transform 0.1s;}
+        .game-btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .game-btn:active { transform: scale(0.95); }
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
@@ -247,12 +260,24 @@
             position: absolute; top: -30px; width: 100%; text-align: center; 
             color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9em;
         }
+        
+        /* Keyboard Hint */
+        .kb-hint { position: absolute; bottom: -30px; width: 100%; text-align: center; font-size: 0.7em; opacity: 0.7; color: var(--text); }
 
     </style>
 </head>
 <body>
 
     <div class="controls">
+        <div class="hud-container">
+            <div class="rank-badge" id="rankBadge">👨‍✈️ Student Pilot</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span>Mastery:</span>
+                <div class="progress-bar"><div class="progress-fill" id="rankProgress"></div></div>
+                <span id="rankPct">0%</span>
+            </div>
+        </div>
+
         <div class="top-row">
             <select id="dbSource" title="Select Database">
                 <option value="sofema" selected>🇪🇺 SOFEMA</option>
@@ -266,7 +291,7 @@
             </select>
             
             <div style="display:flex; gap: 5px; margin-left: auto;">
-                <button class="icon-btn" id="randomBtn" title="Check Ride Mode (Flashcards)">🎲</button>
+                <button class="icon-btn" id="randomBtn" title="Study Mode (Flashcards)">🎲</button>
                 <button class="icon-btn" id="themeBtn" title="Toggle Theme">🌗</button>
             </div>
         </div>
@@ -286,6 +311,7 @@
     <div id="results">
         <div class="loader-container">
             <div class="radar"></div>
+            <div class="loader-text">SCANNING DATABASE...</div>
         </div>
     </div>
 
@@ -308,7 +334,7 @@
                 <div class="card-face front">
                     <span class="source-tag" id="fcSource">FAA</span>
                     <h1 class="fc-acronym" id="fcAcronym">VASI</h1>
-                    <div class="fc-hint">Click to Flip</div>
+                    <div class="fc-hint">Spacebar to Flip</div>
                 </div>
                 <div class="card-face back">
                     <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
@@ -316,10 +342,11 @@
             </div>
             
             <div class="fc-controls">
-                <button id="missBtn" class="game-btn miss">❌ Missed</button>
+                <button id="missBtn" class="game-btn miss">⬅️ Missed</button>
                 <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black; font-size:0.8em;">Exit</button>
-                <button id="gotBtn" class="game-btn got">✅ Got it</button>
+                <button id="gotBtn" class="game-btn got">Got it ➡️</button>
             </div>
+            <div class="kb-hint">Keyboard: Space (Flip) | Left Arrow (Miss) | Right Arrow (Got)</div>
         </div>
     </div>
 
@@ -344,15 +371,19 @@
         };
 
         // --- STATE ---
-        let allData = []; // Raw data
-        let filteredData = []; // Current working set (for flashcards)
+        let allData = [];
+        let filteredData = [];
         let activeGroup = 'All';
         let currentReportItem = null;
+        
+        // Persistent Data
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
+        let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; // {"VASI": true, ...}
         
         // Game State
         let sessionCorrect = 0;
         let sessionTotal = 0;
+        let currentFlashcardItem = null;
 
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -391,6 +422,41 @@
                 });
             }
         }
+        
+        function updateMastery(acronym, isCorrect) {
+            if (isCorrect) {
+                mastery[acronym] = true;
+                localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+            } else {
+                // If missed, un-master it if it was mastered
+                if (mastery[acronym]) {
+                    delete mastery[acronym];
+                    localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+                }
+            }
+            updateRankHUD();
+        }
+        
+        function updateRankHUD() {
+            const totalMastered = Object.keys(mastery).length;
+            // Define Ranks
+            let rank = "Student Pilot";
+            let pct = 0;
+            
+            // Just arbitrary thresholds for fun
+            if (totalMastered > 200) rank = "👨‍✈️ Captain";
+            else if (totalMastered > 100) rank = "👨‍✈️ First Officer";
+            else if (totalMastered > 50) rank = "✈️ Commercial Pilot";
+            else if (totalMastered > 10) rank = "🛩️ Private Pilot";
+            
+            // Calculate % of total DB (approx 1000 items)
+            const totalDB = allData.length || 1000; 
+            pct = Math.min(100, Math.round((totalMastered / totalDB) * 100));
+            
+            document.getElementById('rankBadge').innerText = rank;
+            document.getElementById('rankProgress').style.width = `${pct}%`;
+            document.getElementById('rankPct').innerText = `${totalMastered} Mastered`;
+        }
 
         function speakText(text) {
             if ('speechSynthesis' in window) {
@@ -425,8 +491,8 @@
                 allData = results.flat();
                 activeGroup = 'All';
                 initGroupChips();
-                // Initialize filteredData with everything first
-                filteredData = [...allData]; 
+                filteredData = [...allData];
+                updateRankHUD();
                 
                 const currentTerm = document.getElementById('searchBox').value;
                 if(currentTerm.length > 0) runSearch();
@@ -468,6 +534,7 @@
             localStorage.setItem('theme', newTheme);
         });
 
+        // --- PARSE CSV ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -487,6 +554,7 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
+        // --- UI LOGIC ---
         function initGroupChips() {
             const groups = ['All', 'Favorites', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             filterContainer.innerHTML = '';
@@ -506,32 +574,29 @@
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
-        // --- SEARCH CORE ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
             const term = searchBox.value.toLowerCase().trim();
             const mode = searchMode.value;
-            resultsDiv.innerHTML = '';
 
-            // Update Global Filtered Data (Used for Flashcards)
+            resultsDiv.innerHTML = '';
             let tempFiltered = allData;
-            
+
             // 1. Filter by Group
             if (activeGroup === 'Favorites') {
                 tempFiltered = tempFiltered.filter(item => favorites.includes(item.acronym));
                 if (tempFiltered.length === 0) {
                     resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO FAVORITES SAVED YET.</div>';
-                    filteredData = []; // Clear flashcard queue
+                    filteredData = []; 
                     return;
                 }
             } else if (activeGroup !== 'All') {
                 tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
             
-            // Save this state for flashcards
-            filteredData = [...tempFiltered];
+            filteredData = [...tempFiltered]; // Save for flashcards
 
-            // 2. Filter by Search Term (Visuals only)
+            // 2. Filter by Search Term
             if (term !== '') {
                 tempFiltered = tempFiltered.filter(item => {
                     const acr = item.acronym.toLowerCase();
@@ -545,11 +610,11 @@
                  return;
             }
 
-            // Render
             if (tempFiltered.length > 0) {
                 const subset = tempFiltered.slice(0, 50);
                 subset.forEach((item, index) => {
                     const isFav = favorites.includes(item.acronym);
+                    const isMastered = mastery[item.acronym];
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.style.animationDelay = `${index * 0.05}s`;
@@ -567,6 +632,7 @@
                                 <div class="meta-tags">
                                     <span class="source-tag ${item.source}">${item.source}</span>
                                     <span class="category-tag">${item.category}</span>
+                                    ${isMastered ? '<span class="mastered-dot" title="Mastered"></span>' : ''}
                                 </div>
                             </div>
                             <div class="meaning" title="Click to copy">${displayMeaning}</div>
@@ -613,20 +679,34 @@
             updateScoreUI();
             showNextCard();
             flashcardOverlay.style.display = 'block';
+            window.addEventListener('keydown', handleKeyboard);
+        }
+        
+        function endFlashcardSession() {
+            flashcardOverlay.style.display = 'none';
+            window.removeEventListener('keydown', handleKeyboard);
+            // Refresh search to show new mastery dots
+            runSearch();
         }
 
         function showNextCard() {
-            // Pick from filteredData (which respects current group!)
-            const randomItem = filteredData[Math.floor(Math.random() * filteredData.length)];
+            // Prioritize non-mastered items (80% chance)
+            let pool = filteredData;
+            const unmastered = filteredData.filter(i => !mastery[i.acronym]);
+            
+            if (unmastered.length > 0 && Math.random() > 0.2) {
+                pool = unmastered;
+            }
+
+            const randomItem = pool[Math.floor(Math.random() * pool.length)];
+            currentFlashcardItem = randomItem;
             
             fcAcronym.textContent = randomItem.acronym;
             fcMeaning.textContent = randomItem.meaning;
             fcSource.textContent = randomItem.source;
             fcSource.className = `source-tag ${randomItem.source}`;
             
-            theFlashcard.classList.remove('flipped');
-            // Remove animations
-            theFlashcard.classList.remove('shake', 'pulse-green');
+            theFlashcard.classList.remove('flipped', 'shake', 'pulse-green');
         }
 
         function updateScoreUI() {
@@ -642,22 +722,41 @@
             } else {
                 theFlashcard.classList.add('shake');
             }
+            
+            // Save Mastery Progress
+            if(currentFlashcardItem) {
+                updateMastery(currentFlashcardItem.acronym, correct);
+            }
+            
             updateScoreUI();
             
-            // Delay next card slightly to show animation
+            // Delay next card slightly
             setTimeout(() => {
                 showNextCard();
             }, 600);
         }
 
+        // Keyboard Controls
+        function handleKeyboard(e) {
+            if (flashcardOverlay.style.display !== 'block') return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                theFlashcard.classList.toggle('flipped');
+            } else if (e.code === 'ArrowRight') {
+                if (theFlashcard.classList.contains('flipped')) handleGameResult(true);
+            } else if (e.code === 'ArrowLeft') {
+                if (theFlashcard.classList.contains('flipped')) handleGameResult(false);
+            } else if (e.code === 'Escape') {
+                endFlashcardSession();
+            }
+        }
+
         randomBtn.addEventListener('click', startFlashcardSession);
-        
         theFlashcard.addEventListener('click', () => theFlashcard.classList.toggle('flipped'));
-        
         missBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(false); });
         gotBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(true); });
-        
-        closeFcBtn.addEventListener('click', () => { flashcardOverlay.style.display = 'none'; });
+        closeFcBtn.addEventListener('click', endFlashcardSession);
 
         // --- REPORT MODAL ---
         const modalOverlay = document.getElementById('modalOverlay');
