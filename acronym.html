@@ -5,157 +5,203 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acronym Search</title>
     <style>
-        /* Notion-like Styling */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-            padding: 20px;
-            color: #37352f;
-            background-color: transparent; /* Matches Notion background */
-            margin: 0;
+        /* --- CSS VARIABLES FOR THEMES --- */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #37352f;
+            --input-bg: #f7f9fb;
+            --input-border: rgba(55, 53, 47, 0.16);
+            --card-border: rgba(55, 53, 47, 0.09);
+            --badge-bg: rgba(235, 236, 237, 0.6);
+            --badge-text: #37352f;
+            --secondary-text: #6b6b6b;
+            --accent-color: #2eaadc;
         }
 
-        /* Search Input Styling */
-        .search-container {
+        [data-theme="dark"] {
+            --bg-color: #191919;
+            --text-color: rgba(255, 255, 255, 0.9);
+            --input-bg: #262626;
+            --input-border: #3f3f3f;
+            --card-border: #2f2f2f;
+            --badge-bg: rgba(255, 255, 255, 0.1);
+            --badge-text: rgba(255, 255, 255, 0.9);
+            --secondary-text: rgba(255, 255, 255, 0.5);
+            --accent-color: #1a7f9b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Top Bar Layout */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             position: sticky;
             top: 0;
-            background: white;
+            background: var(--bg-color);
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+            border-bottom: 1px solid var(--card-border);
+            z-index: 10;
+            transition: background-color 0.3s ease;
         }
 
         input {
-            width: 100%;
+            flex-grow: 1;
             padding: 10px 12px;
             font-size: 16px;
-            border: 1px solid rgba(55, 53, 47, 0.16);
+            border: 1px solid var(--input-border);
             border-radius: 6px;
-            box-sizing: border-box;
             outline: none;
-            background: #f7f9fb;
+            background: var(--input-bg);
+            color: var(--text-color);
             transition: all 0.2s ease;
         }
 
         input:focus {
-            background: white;
-            border-color: #2eaadc;
-            box-shadow: 0 0 0 2px rgba(46, 170, 220, 0.2);
+            border-color: var(--accent-color);
         }
 
-        /* Results Styling */
-        #results {
-            margin-top: 15px;
+        /* Toggle Button */
+        .theme-toggle {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        .theme-toggle:hover {
+            background: var(--badge-bg);
+        }
+
+        /* Results */
+        #results { margin-top: 15px; }
 
         .card {
             padding: 12px 4px;
-            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+            border-bottom: 1px solid var(--card-border);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
-        .acronym-title {
-            font-weight: 600;
-            font-size: 1.05em;
-            color: #37352f;
-            background-color: rgba(235, 236, 237, 0.6);
-            padding: 2px 6px;
+        .acronym-header {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .acronym-badge {
+            font-weight: 700;
+            font-size: 1em;
+            color: var(--badge-text);
+            background-color: var(--badge-bg);
+            padding: 4px 8px;
             border-radius: 4px;
-            align-self: flex-start; /* Keeps the badge small */
         }
 
         .meaning-text {
-            color: #4f4e4b;
+            color: var(--text-color);
             font-size: 0.95em;
             line-height: 1.5;
-            padding-left: 2px;
         }
 
-        .loading, .no-results {
-            color: rgba(55, 53, 47, 0.5);
-            font-size: 0.9em;
+        .no-results {
+            color: var(--secondary-text);
             text-align: center;
-            padding: 20px;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
 
-    <div class="search-container">
-        <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
+    <div class="top-bar">
+        <input type="text" id="searchBox" placeholder="Search dictionary..." autocomplete="off">
+        <button class="theme-toggle" id="themeBtn" title="Toggle Theme">🌗</button>
     </div>
 
     <div id="results">
-        <div class="loading">Loading dictionary...</div>
+        <div class="no-results">Loading database...</div>
     </div>
 
     <script>
-        // YOUR SPECIFIC GOOGLE SHEET LINK
+        // --- 1. CONFIGURATION ---
         const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
 
+        // --- 2. THEME LOGIC ---
+        const themeBtn = document.getElementById('themeBtn');
+        
+        // Check saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // --- 3. DATA & SEARCH LOGIC ---
         let dictionaryData = [];
         const resultsDiv = document.getElementById('results');
         const searchBox = document.getElementById('searchBox');
 
-        // Robust CSV Parser (Handles commas inside meanings)
         function parseCSV(text) {
             const rows = [];
-            // This regex matches a CSV field: either quoted content OR non-comma content
-            const pattern = /(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g; 
-            
             const lines = text.split('\n');
-            
-            // Skip header (i=1 instead of 0)
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i];
-                if (!line.trim()) continue; // Skip empty lines
-                
-                // Matches the line against the CSV pattern
-                // If simple split fails, this regex handles quotes: "Meaning, with comma"
+                if (!line.trim()) continue;
+                // Regex to handle "Text, with comma"
                 let matches = line.match(/(".*?"|[^",]+)(?=\s*,|\s*)/g);
-                
                 if (matches && matches.length >= 2) {
-                    // Clean up quotes if they exist (e.g. "Text" -> Text)
-                    const cleanAcronym = matches[0].replace(/^"|"$/g, '').trim();
-                    const cleanMeaning = matches[1].replace(/^"|"$/g, '').trim();
-                    
-                    rows.push({ acronym: cleanAcronym, meaning: cleanMeaning });
+                    rows.push({
+                        acronym: matches[0].replace(/^"|"$/g, '').trim(),
+                        meaning: matches[1].replace(/^"|"$/g, '').trim()
+                    });
                 }
             }
             return rows;
         }
 
-        // Fetch Data
         fetch(sheetUrl)
             .then(res => res.text())
             .then(text => {
                 dictionaryData = parseCSV(text);
                 resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
-                console.log("Loaded " + dictionaryData.length + " entries.");
-            })
-            .catch(err => {
-                resultsDiv.innerHTML = '<div class="no-results">Error loading data. Check console.</div>';
-                console.error(err);
             });
 
-        // Search Logic
         searchBox.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase().trim();
             resultsDiv.innerHTML = '';
 
-            // 1. If empty, show nothing (cleaner interface)
             if (term.length === 0) {
                 resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
                 return;
             }
 
-            // 2. Filter logic
             const filtered = dictionaryData.filter(item => 
                 item.acronym.toLowerCase().includes(term) || 
                 item.meaning.toLowerCase().includes(term)
             );
 
-            // 3. Display Results
             if (filtered.length === 0) {
                 resultsDiv.innerHTML = '<div class="no-results">No matches found</div>';
                 return;
@@ -164,9 +210,14 @@
             filtered.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
+                // Simple highlight logic
+                const highlightedMeaning = item.meaning.replace(new RegExp(term, "gi"), (match) => `<span style="background:rgba(255, 255, 0, 0.3); color: inherit;">${match}</span>`);
+
                 card.innerHTML = `
-                    <div class="acronym-title">${item.acronym}</div>
-                    <div class="meaning-text">${item.meaning}</div>
+                    <div class="acronym-header">
+                        <span class="acronym-badge">${item.acronym}</span>
+                    </div>
+                    <div class="meaning-text">${highlightedMeaning}</div>
                 `;
                 resultsDiv.appendChild(card);
             });
