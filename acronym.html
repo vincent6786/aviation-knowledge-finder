@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V11</title>
+    <title>Pilot's Database V12</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -18,8 +18,10 @@
             --chip-text-active: #ffffff;
             --footer-bg: #f7f9fb;
             --select-bg: #ffffff;
-            --source-tag-faa: #3498db;    /* Blue for FAA */
-            --source-tag-sof: #e67e22;    /* Orange for SOFEMA */
+            --desc-text: #888888;
+            /* Source Tags */
+            --source-faa: #3498db;
+            --source-sof: #e67e22;
         }
 
         [data-theme="dark"] {
@@ -33,8 +35,9 @@
             --chip-active: #00b0ff;
             --footer-bg: #222;
             --select-bg: #262626;
-            --source-tag-faa: #2980b9;
-            --source-tag-sof: #d35400;
+            --desc-text: #aaaaaa;
+            --source-faa: #2980b9;
+            --source-sof: #d35400;
         }
 
         body {
@@ -45,8 +48,9 @@
 
         /* --- CONTROLS --- */
         .controls {
-            position: sticky; top: 0; background: var(--bg); padding-bottom: 10px; z-index: 10;
+            position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; z-index: 10;
             display: flex; flex-direction: column; gap: 10px;
+            border-bottom: 1px solid var(--border); /* Added separator */
         }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -89,13 +93,20 @@
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 4px 12px; font-size: 0.8em; background: var(--chip-bg); border-radius: 12px;
-            cursor: pointer; white-space: nowrap; transition: 0.2s;
+            padding: 4px 12px; font-size: 0.85em; background: var(--chip-bg); border-radius: 12px;
+            cursor: pointer; white-space: nowrap; transition: 0.2s; font-weight: 500;
         }
         .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
+        /* NEW: Group Description Text */
+        .group-desc {
+            font-size: 0.75em; color: var(--desc-text); padding-left: 4px; font-style: italic;
+            min-height: 1.2em; /* Prevents layout jump */
+            transition: opacity 0.3s;
+        }
+
         /* --- RESULTS --- */
-        #results { margin-top: 10px; padding-bottom: 60px; }
+        #results { margin-top: 15px; padding-bottom: 60px; }
 
         .card {
             padding: 12px 4px; border-bottom: 1px solid var(--border);
@@ -117,8 +128,8 @@
         .source-tag { 
             font-size: 0.65em; font-weight: bold; color: white; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; 
         }
-        .source-tag.FAA { background: var(--source-tag-faa); }
-        .source-tag.SOFEMA { background: var(--source-tag-sof); }
+        .source-tag.FAA { background: var(--source-faa); }
+        .source-tag.SOFEMA { background: var(--source-sof); }
 
         .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
         .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; }
@@ -168,6 +179,8 @@
         </div>
         
         <div class="filter-container" id="filterContainer"></div>
+        
+        <div id="groupDesc" class="group-desc">Searching entire database.</div>
     </div>
 
     <div id="results">
@@ -178,43 +191,44 @@
         // ==========================================
         // CONFIGURATION
         // ==========================================
-        
         const LINKS = {
             faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv",
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
         };
-
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
 
-        // --- THE MAPPING LOGIC ---
-        // We match "Key Words" in the category to assign a "Group"
-        // Order matters! 
-        const CATEGORY_RULES = [
-            { key: "Weather", group: "WX" },
-            { key: "Meteorology", group: "WX" },
-            { key: "Navigation", group: "OPS" },
-            { key: "Flight Op", group: "OPS" },
-            { key: "Traffic", group: "OPS" },
-            { key: "Avionics", group: "SYS" },
-            { key: "System", group: "SYS" },
-            { key: "Maintenance", group: "SYS" },
-            { key: "Infrastruct", group: "SYS" },
-            { key: "Regulat", group: "REGS" },
-            { key: "Safety", group: "REGS" },
-            { key: "Standard", group: "REGS" },
-            { key: "Airline", group: "BIZ" },
-            { key: "Commerc", group: "BIZ" },
-            { key: "Training", group: "BIZ" },
-            { key: "Military", group: "BIZ" }
-        ];
+        // --- GROUP DEFINITIONS (Rules + Descriptions) ---
+        const GROUP_CONFIG = {
+            "OPS": {
+                desc: "Includes: Navigation, Flight Ops, ATC, & Airspace",
+                keywords: ["Navigation", "Flight Op", "Traffic"]
+            },
+            "WX": {
+                desc: "Includes: Meteorology, Weather Codes, Forecasts & Icing",
+                keywords: ["Weather", "Meteorology"]
+            },
+            "SYS": {
+                desc: "Includes: Avionics, Systems, Hydraulics, Maintenance & Infrastructure",
+                keywords: ["Avionics", "System", "Maintenance", "Infrastruct"]
+            },
+            "REGS": {
+                desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment",
+                keywords: ["Regulat", "Safety", "Standard"]
+            },
+            "BIZ": {
+                desc: "Includes: Commercial, Airline Ops, IT, Training & Military",
+                keywords: ["Airline", "Commerc", "Training", "Military"]
+            },
+            "All": { desc: "Searching entire database." },
+            "Other": { desc: "Uncategorized terms." }
+        };
 
         // ==========================================
 
         let allData = [];
-        let activeGroup = 'All'; // Now we filter by GROUP, not raw category
+        let activeGroup = 'All';
 
-        // Theme Init
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
@@ -224,8 +238,12 @@
             if (!rawCat) return "Other";
             const cat = rawCat.toString();
             
-            for (let rule of CATEGORY_RULES) {
-                if (cat.includes(rule.key)) return rule.group;
+            // Check keywords in our config
+            for (const [groupName, config] of Object.entries(GROUP_CONFIG)) {
+                if (groupName === 'All' || groupName === 'Other') continue;
+                for (const key of config.keywords) {
+                    if (cat.includes(key)) return groupName;
+                }
             }
             return "Other"; 
         }
@@ -239,7 +257,7 @@
                     return rows.map(item => ({ 
                         ...item, 
                         source: sourceName,
-                        group: getGroup(item.category) // Assign simplified group here
+                        group: getGroup(item.category)
                     }));
                 });
         }
@@ -260,7 +278,7 @@
                 .then(results => {
                     allData = results.flat();
                     activeGroup = 'All';
-                    initGroupChips(allData);
+                    initGroupChips(); // Re-init chips
                     
                     const currentTerm = document.getElementById('searchBox').value;
                     if(currentTerm.length > 0) runSearch();
@@ -280,6 +298,7 @@
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
+        const groupDesc = document.getElementById('groupDesc'); // The text element
 
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
         searchBox.addEventListener('input', () => {
@@ -300,7 +319,7 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- CSV PARSING ---
+        // --- CSV PARSER ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -320,33 +339,39 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- NEW: GROUP CHIPS ---
-        function initGroupChips(data) {
-            // Collect all unique groups
-            const groups = new Set(['All']);
-            data.forEach(item => groups.add(item.group));
-
-            // Custom Sort Order for Pilots
-            const preferredOrder = ['All', 'OPS', 'WX', 'SYS', 'REGS', 'BIZ', 'Other'];
-            const sortedGroups = Array.from(groups).sort((a, b) => {
-                return preferredOrder.indexOf(a) - preferredOrder.indexOf(b);
-            });
-
+        // --- GROUP CHIPS & DESCRIPTION LOGIC ---
+        function initGroupChips() {
+            // Fixed order for better UX
+            const groups = ['All', 'OPS', 'WX', 'SYS', 'REGS', 'BIZ', 'Other'];
             const container = document.getElementById('filterContainer');
             container.innerHTML = '';
 
-            sortedGroups.forEach(grp => {
+            groups.forEach(grp => {
+                // Only show chips if data actually exists for them (optional, but cleaner)
+                // For now we show all so the user learns the system.
+                
                 const chip = document.createElement('div');
                 chip.className = `chip ${grp === 'All' ? 'active' : ''}`;
                 chip.textContent = grp;
+                
                 chip.addEventListener('click', () => {
+                    // Update Active Chip UI
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
+                    
+                    // Update State
                     activeGroup = grp;
+                    
+                    // Update Description Text
+                    groupDesc.textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
+                    
                     runSearch();
                 });
                 container.appendChild(chip);
             });
+            
+            // Reset description text
+            groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
         // --- SEARCH LOGIC ---
@@ -362,7 +387,6 @@
 
             resultsDiv.innerHTML = '';
 
-            // Filter by Term AND by GROUP
             const filtered = allData.filter(item => {
                 const matchesGroup = (activeGroup === 'All') || (item.group === activeGroup);
                 if (!matchesGroup) return false;
