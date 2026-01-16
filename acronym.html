@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V20</title>
+    <title>Pilot's Flight Sim DB</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
             /* Light Mode */
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
             --accent: #00a8ff;
             --star-color: #f1c40f;
+            --success: #2ecc71;
+            --error: #e74c3c;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
             
             --source-faa: #2980b9;
@@ -26,7 +28,7 @@
         [data-theme="dark"] {
             /* Dark Mode */
             --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
-            --glass-bg: rgba(20, 25, 30, 0.65);
+            --glass-bg: rgba(20, 25, 30, 0.70);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text: #ecf0f1;
             --accent: #00d2d3;
@@ -38,10 +40,18 @@
             --modal-bg: #1e272e;
         }
 
+        @keyframes breathe {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px; margin: 0; color: var(--text);
-            background: var(--bg-gradient); background-attachment: fixed;
+            background: var(--bg-gradient); 
+            background-size: 400% 400%; /* For breathing animation */
+            animation: breathe 15s ease infinite;
             min-height: 100vh; transition: color 0.3s;
         }
 
@@ -107,7 +117,6 @@
         .chip:hover { transform: translateY(-2px); }
         .chip.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
-        /* Favorites Chip Style */
         .chip.favorites { border: 1px solid var(--star-color); color: var(--text); }
         .chip.favorites.active { background: var(--star-color); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
@@ -141,20 +150,13 @@
             transition: color 0.2s; position: relative;
         }
         .meaning:hover { color: var(--accent); }
-        .meaning:active { transform: scale(0.99); }
         
-        /* Action Buttons on Card */
-        .card-actions {
-            display: flex; flex-direction: column; gap: 8px; align-items: center;
-        }
-        .action-btn {
-            font-size: 1.1em; cursor: pointer; opacity: 0.3; transition: 0.2s;
-            border: none; background: none; padding: 4px;
-        }
+        .card-actions { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .action-btn { font-size: 1.1em; cursor: pointer; opacity: 0.3; transition: 0.2s; border: none; background: none; padding: 4px; }
         .action-btn:hover { opacity: 1; transform: scale(1.1); }
         .action-btn.star.active { opacity: 1; filter: drop-shadow(0 0 5px var(--star-color)); }
 
-        /* --- TOAST NOTIFICATION --- */
+        /* --- TOAST --- */
         #toast {
             visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
             text-align: center; border-radius: 8px; padding: 12px; position: fixed;
@@ -177,7 +179,6 @@
             animation: scan 1.5s linear infinite;
         }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .loader-text { margin-top: 10px; font-size: 0.8em; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase;}
 
         /* --- MODAL --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; backdrop-filter: blur(5px); }
@@ -200,17 +201,24 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         
-        /* --- FLASHCARD 3D --- */
+        /* --- FLASHCARD 3D & GAMIFICATION --- */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 320px; height: 220px; perspective: 1000px; z-index: 2001;
+            width: 320px; height: 260px; perspective: 1000px; z-index: 2001;
         }
         .flashcard {
-            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+            width: 100%; height: 220px; position: relative; transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer;
         }
         .flashcard.flipped { transform: rotateY(180deg); }
+        
+        /* Animations for correct/incorrect */
+        .shake { animation: shake 0.5s; }
+        .pulse-green { animation: pulseGreen 0.5s; }
+        @keyframes shake { 0% { transform: rotateY(180deg) translateX(0); } 25% { transform: rotateY(180deg) translateX(-10px); } 75% { transform: rotateY(180deg) translateX(10px); } 100% { transform: rotateY(180deg) translateX(0); } }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+
         .card-face {
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
             border-radius: 20px; background: var(--modal-bg); border: 1px solid var(--glass-border);
@@ -222,7 +230,23 @@
         .fc-acronym { font-size: 2.5em; font-weight: 800; color: var(--accent); margin: 0; }
         .fc-hint { font-size: 0.8em; opacity: 0.5; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .fc-meaning { font-size: 1.1em; line-height: 1.4; font-weight: 500; }
-        .fc-controls { position: absolute; top: 110%; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; }
+        
+        /* Gamification Controls */
+        .fc-controls { 
+            margin-top: 15px; width: 100%; display: flex; justify-content: space-between; align-items: center; 
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .flashcard.flipped ~ .fc-controls { opacity: 1; pointer-events: auto; }
+        
+        .game-btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: transform 0.1s;}
+        .game-btn:active { transform: scale(0.95); }
+        .game-btn.miss { background: var(--error); }
+        .game-btn.got { background: var(--success); }
+        
+        .score-display { 
+            position: absolute; top: -30px; width: 100%; text-align: center; 
+            color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9em;
+        }
 
     </style>
 </head>
@@ -242,7 +266,7 @@
             </select>
             
             <div style="display:flex; gap: 5px; margin-left: auto;">
-                <button class="icon-btn" id="randomBtn" title="Study Mode (Flashcards)">🎲</button>
+                <button class="icon-btn" id="randomBtn" title="Check Ride Mode (Flashcards)">🎲</button>
                 <button class="icon-btn" id="themeBtn" title="Toggle Theme">🌗</button>
             </div>
         </div>
@@ -262,7 +286,6 @@
     <div id="results">
         <div class="loader-container">
             <div class="radar"></div>
-            <div class="loader-text">SCANNING DATABASE...</div>
         </div>
     </div>
 
@@ -280,6 +303,7 @@
 
     <div id="flashcardOverlay" class="modal-overlay">
         <div class="flashcard-wrapper">
+            <div class="score-display" id="sessionScore">Session Accuracy: 0%</div>
             <div class="flashcard" id="theFlashcard">
                 <div class="card-face front">
                     <span class="source-tag" id="fcSource">FAA</span>
@@ -290,9 +314,11 @@
                     <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
                 </div>
             </div>
+            
             <div class="fc-controls">
-                <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black;">Exit</button>
-                <button id="nextFcBtn" class="modal-btn send">Next Card 🎲</button>
+                <button id="missBtn" class="game-btn miss">❌ Missed</button>
+                <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black; font-size:0.8em;">Exit</button>
+                <button id="gotBtn" class="game-btn got">✅ Got it</button>
             </div>
         </div>
     </div>
@@ -313,17 +339,21 @@
             "Regulations": { desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment", keywords: ["Regulat", "Safety", "Standard"] },
             "Business": { desc: "Includes: Commercial, Airline Ops, IT, Training & Military", keywords: ["Airline", "Commerc", "Training", "Military"] },
             "All": { desc: "Searching entire database." },
-            "Favorites": { desc: "Your saved acronyms (stored locally)." },
+            "Favorites": { desc: "Your saved acronyms." },
             "Other": { desc: "Uncategorized terms." }
         };
 
         // --- STATE ---
-        let allData = [];
+        let allData = []; // Raw data
+        let filteredData = []; // Current working set (for flashcards)
         let activeGroup = 'All';
         let currentReportItem = null;
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
+        
+        // Game State
+        let sessionCorrect = 0;
+        let sessionTotal = 0;
 
-        // Theme Init
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
@@ -343,44 +373,31 @@
 
         function showToast(msg) {
             const t = document.getElementById("toast");
-            t.textContent = msg;
-            t.className = "show";
+            t.textContent = msg; t.className = "show";
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
-        // --- FAVORITES LOGIC ---
         function toggleFavorite(acronym) {
             const index = favorites.indexOf(acronym);
-            if (index === -1) {
-                favorites.push(acronym);
-                showToast("Added to Favorites");
-            } else {
-                favorites.splice(index, 1);
-                showToast("Removed from Favorites");
-            }
+            if (index === -1) { favorites.push(acronym); showToast("Added to Favorites"); } 
+            else { favorites.splice(index, 1); showToast("Removed from Favorites"); }
             localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
             
-            // Refresh if currently viewing favorites
             if (activeGroup === 'Favorites') runSearch();
             else {
-                // Just update the UI for this button
-                const btns = document.querySelectorAll(`[data-acr="${acronym}"]`);
-                btns.forEach(btn => {
+                document.querySelectorAll(`[data-acr="${acronym}"]`).forEach(btn => {
                     btn.textContent = index === -1 ? "⭐" : "☆";
                     btn.classList.toggle('active');
                 });
             }
         }
 
-        // --- TTS LOGIC ---
         function speakText(text) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Stop previous
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.9; // Slightly slower for clarity
+                utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
-            } else {
-                showToast("TTS not supported");
             }
         }
 
@@ -408,6 +425,9 @@
                 allData = results.flat();
                 activeGroup = 'All';
                 initGroupChips();
+                // Initialize filteredData with everything first
+                filteredData = [...allData]; 
+                
                 const currentTerm = document.getElementById('searchBox').value;
                 if(currentTerm.length > 0) runSearch();
                 else resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.<br>ENTER QUERY OR USE DICE 🎲</div>';
@@ -431,7 +451,7 @@
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
         searchBox.addEventListener('input', () => {
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
-            if (activeGroup === 'Favorites') activeGroup = 'All'; // Auto switch to all on search
+            if (activeGroup === 'Favorites') activeGroup = 'All';
             runSearch();
         });
         searchMode.addEventListener('change', runSearch);
@@ -448,7 +468,6 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- PARSE CSV ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -468,7 +487,6 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- UI LOGIC ---
         function initGroupChips() {
             const groups = ['All', 'Favorites', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             filterContainer.innerHTML = '';
@@ -488,29 +506,34 @@
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
+        // --- SEARCH CORE ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
             const term = searchBox.value.toLowerCase().trim();
             const mode = searchMode.value;
-
             resultsDiv.innerHTML = '';
 
-            let filtered = allData;
-
+            // Update Global Filtered Data (Used for Flashcards)
+            let tempFiltered = allData;
+            
             // 1. Filter by Group
             if (activeGroup === 'Favorites') {
-                filtered = filtered.filter(item => favorites.includes(item.acronym));
-                if (filtered.length === 0) {
+                tempFiltered = tempFiltered.filter(item => favorites.includes(item.acronym));
+                if (tempFiltered.length === 0) {
                     resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO FAVORITES SAVED YET.</div>';
+                    filteredData = []; // Clear flashcard queue
                     return;
                 }
             } else if (activeGroup !== 'All') {
-                filtered = filtered.filter(item => item.group === activeGroup);
+                tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
+            
+            // Save this state for flashcards
+            filteredData = [...tempFiltered];
 
-            // 2. Filter by Search Term (if exists)
+            // 2. Filter by Search Term (Visuals only)
             if (term !== '') {
-                filtered = filtered.filter(item => {
+                tempFiltered = tempFiltered.filter(item => {
                     const acr = item.acronym.toLowerCase();
                     const mean = item.meaning.toLowerCase();
                     if (mode === 'starts') return acr.startsWith(term);
@@ -518,13 +541,13 @@
                     else return acr.includes(term) || mean.includes(term);
                 });
             } else if (activeGroup === 'All') {
-                // If no term and 'All', show nothing
                  resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
                  return;
             }
 
-            if (filtered.length > 0) {
-                const subset = filtered.slice(0, 50);
+            // Render
+            if (tempFiltered.length > 0) {
+                const subset = tempFiltered.slice(0, 50);
                 subset.forEach((item, index) => {
                     const isFav = favorites.includes(item.acronym);
                     const card = document.createElement('div');
@@ -555,31 +578,15 @@
                         </div>
                     `;
                     
-                    // Events
                     card.querySelector('.report').addEventListener('click', () => openReportModal(item));
-                    
-                    card.querySelector('.star').addEventListener('click', (e) => {
-                        toggleFavorite(item.acronym);
-                    });
-                    
-                    card.querySelector('.speak').addEventListener('click', (e) => {
-                        speakText(item.meaning);
-                    });
-
+                    card.querySelector('.star').addEventListener('click', () => toggleFavorite(item.acronym));
+                    card.querySelector('.speak').addEventListener('click', () => speakText(item.meaning));
                     card.querySelector('.meaning').addEventListener('click', () => {
                         navigator.clipboard.writeText(item.meaning);
                         showToast("Definition copied!");
                     });
-
                     resultsDiv.appendChild(card);
                 });
-                
-                if (filtered.length > 50) {
-                     const moreDiv = document.createElement('div');
-                     moreDiv.style.textAlign = 'center'; moreDiv.style.opacity = '0.6'; moreDiv.style.fontSize = '0.8em';
-                     moreDiv.innerText = `Showing 50 of ${filtered.length} matches. Refine search.`;
-                     resultsDiv.appendChild(moreDiv);
-                }
             } else {
                 resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO TARGETS FOUND.</div>';
             }
@@ -592,11 +599,25 @@
         const fcMeaning = document.getElementById('fcMeaning');
         const fcSource = document.getElementById('fcSource');
         const closeFcBtn = document.getElementById('closeFcBtn');
-        const nextFcBtn = document.getElementById('nextFcBtn');
+        const missBtn = document.getElementById('missBtn');
+        const gotBtn = document.getElementById('gotBtn');
+        const sessionScore = document.getElementById('sessionScore');
 
-        function showFlashcard() {
-            if (allData.length === 0) return;
-            const randomItem = allData[Math.floor(Math.random() * allData.length)];
+        function startFlashcardSession() {
+            if (filteredData.length === 0) {
+                showToast("No cards available in this filter/group.");
+                return;
+            }
+            sessionCorrect = 0;
+            sessionTotal = 0;
+            updateScoreUI();
+            showNextCard();
+            flashcardOverlay.style.display = 'block';
+        }
+
+        function showNextCard() {
+            // Pick from filteredData (which respects current group!)
+            const randomItem = filteredData[Math.floor(Math.random() * filteredData.length)];
             
             fcAcronym.textContent = randomItem.acronym;
             fcMeaning.textContent = randomItem.meaning;
@@ -604,12 +625,38 @@
             fcSource.className = `source-tag ${randomItem.source}`;
             
             theFlashcard.classList.remove('flipped');
-            flashcardOverlay.style.display = 'block';
+            // Remove animations
+            theFlashcard.classList.remove('shake', 'pulse-green');
         }
 
-        randomBtn.addEventListener('click', showFlashcard);
+        function updateScoreUI() {
+            const pct = sessionTotal === 0 ? 0 : Math.round((sessionCorrect / sessionTotal) * 100);
+            sessionScore.innerText = `Session Accuracy: ${pct}% (${sessionCorrect}/${sessionTotal})`;
+        }
+
+        function handleGameResult(correct) {
+            sessionTotal++;
+            if (correct) {
+                sessionCorrect++;
+                theFlashcard.classList.add('pulse-green');
+            } else {
+                theFlashcard.classList.add('shake');
+            }
+            updateScoreUI();
+            
+            // Delay next card slightly to show animation
+            setTimeout(() => {
+                showNextCard();
+            }, 600);
+        }
+
+        randomBtn.addEventListener('click', startFlashcardSession);
+        
         theFlashcard.addEventListener('click', () => theFlashcard.classList.toggle('flipped'));
-        nextFcBtn.addEventListener('click', (e) => { e.stopPropagation(); showFlashcard(); });
+        
+        missBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(false); });
+        gotBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(true); });
+        
         closeFcBtn.addEventListener('click', () => { flashcardOverlay.style.display = 'none'; });
 
         // --- REPORT MODAL ---
