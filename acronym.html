@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V10</title>
+    <title>Pilot's Database V11</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -18,7 +18,8 @@
             --chip-text-active: #ffffff;
             --footer-bg: #f7f9fb;
             --select-bg: #ffffff;
-            --source-tag-color: #e67e22; /* Orange for Source */
+            --source-tag-faa: #3498db;    /* Blue for FAA */
+            --source-tag-sof: #e67e22;    /* Orange for SOFEMA */
         }
 
         [data-theme="dark"] {
@@ -32,28 +33,20 @@
             --chip-active: #00b0ff;
             --footer-bg: #222;
             --select-bg: #262626;
-            --source-tag-color: #d35400;
+            --source-tag-faa: #2980b9;
+            --source-tag-sof: #d35400;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 20px;
-            color: var(--text);
-            background-color: var(--bg);
-            margin: 0;
+            padding: 20px; color: var(--text); background-color: var(--bg); margin: 0;
             transition: background 0.3s, color 0.3s;
         }
 
         /* --- CONTROLS --- */
         .controls {
-            position: sticky;
-            top: 0;
-            background: var(--bg);
-            padding-bottom: 10px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            position: sticky; top: 0; background: var(--bg); padding-bottom: 10px; z-index: 10;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -78,32 +71,26 @@
         .search-wrapper:focus-within { box-shadow: 0 0 0 2px rgba(0, 176, 255, 0.2); border-color: var(--accent); }
 
         #searchBox {
-            flex-grow: 1; border: none; background: transparent;
-            padding: 8px 16px; font-size: 16px; color: var(--text); outline: none;
+            flex-grow: 1; border: none; background: transparent; padding: 8px 16px; font-size: 16px; color: var(--text); outline: none;
         }
 
         #searchBtn {
-            background-color: var(--accent); border: none; border-radius: 50%;
-            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: white;
+            background-color: var(--accent); border: none; border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
         }
 
         #clearBtn {
-            background: none; border: none;
-            color: #999; font-weight: 600; font-size: 0.75em;
-            cursor: pointer; margin-right: 8px;
-            display: none; 
+            background: none; border: none; color: #999; font-weight: 600; font-size: 0.75em; cursor: pointer; margin-right: 8px; display: none; 
         }
 
         .filter-container {
-            display: flex; gap: 6px; overflow-x: auto; padding: 2px 0;
-            scrollbar-width: none;
+            display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scrollbar-width: none;
         }
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 4px 10px; font-size: 0.8em; background: var(--chip-bg);
-            border-radius: 12px; cursor: pointer; white-space: nowrap; transition: 0.2s;
+            padding: 4px 12px; font-size: 0.8em; background: var(--chip-bg); border-radius: 12px;
+            cursor: pointer; white-space: nowrap; transition: 0.2s;
         }
         .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
@@ -123,16 +110,15 @@
             padding: 2px 6px; border-radius: 4px; font-size: 0.95em;
         }
         
-        /* Tag Styles */
         .meta-tags { display: flex; gap: 6px; align-items: center; }
         
         .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
         
         .source-tag { 
-            font-size: 0.65em; font-weight: bold; color: white; 
-            background: var(--source-tag-color); padding: 1px 5px; border-radius: 3px; 
-            text-transform: uppercase; 
+            font-size: 0.65em; font-weight: bold; color: white; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; 
         }
+        .source-tag.FAA { background: var(--source-tag-faa); }
+        .source-tag.SOFEMA { background: var(--source-tag-sof); }
 
         .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
         .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; }
@@ -144,20 +130,16 @@
             border-radius: 8px; border: 1px dashed var(--border); text-align: center;
         }
         .footer-title {
-            font-size: 0.85em; color: #888; margin-bottom: 10px;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 0.85em; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .footer-buttons { display: flex; justify-content: center; gap: 10px; }
         .ext-btn {
-            text-decoration: none; padding: 8px 14px;
-            background: var(--bg); border: 1px solid var(--border);
-            border-radius: 6px; color: var(--text); font-size: 0.85em;
-            display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+            text-decoration: none; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 6px; color: var(--text); font-size: 0.85em; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
         }
         .ext-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         .loading { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
-
     </style>
 </head>
 <body>
@@ -169,13 +151,11 @@
                 <option value="sofema">🇪🇺 SOFEMA</option>
                 <option value="both">🌎 ALL SOURCES</option>
             </select>
-
             <select id="searchMode" title="Search Mode">
                 <option value="contains">Contains</option>
                 <option value="starts">Begin with</option>
                 <option value="exact">Exact term</option>
             </select>
-
             <button class="theme-btn" id="themeBtn">🌗</button>
         </div>
 
@@ -186,6 +166,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
         </div>
+        
         <div class="filter-container" id="filterContainer"></div>
     </div>
 
@@ -206,26 +187,60 @@
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
 
+        // --- THE MAPPING LOGIC ---
+        // We match "Key Words" in the category to assign a "Group"
+        // Order matters! 
+        const CATEGORY_RULES = [
+            { key: "Weather", group: "WX" },
+            { key: "Meteorology", group: "WX" },
+            { key: "Navigation", group: "OPS" },
+            { key: "Flight Op", group: "OPS" },
+            { key: "Traffic", group: "OPS" },
+            { key: "Avionics", group: "SYS" },
+            { key: "System", group: "SYS" },
+            { key: "Maintenance", group: "SYS" },
+            { key: "Infrastruct", group: "SYS" },
+            { key: "Regulat", group: "REGS" },
+            { key: "Safety", group: "REGS" },
+            { key: "Standard", group: "REGS" },
+            { key: "Airline", group: "BIZ" },
+            { key: "Commerc", group: "BIZ" },
+            { key: "Training", group: "BIZ" },
+            { key: "Military", group: "BIZ" }
+        ];
+
         // ==========================================
 
         let allData = [];
-        let activeCategory = 'All';
+        let activeGroup = 'All'; // Now we filter by GROUP, not raw category
 
         // Theme Init
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // --- 1. DATA LOADING ENGINE ---
-        
-        // Helper to fetch one sheet and tag it
+        // --- HELPER: ASSIGN GROUP ---
+        function getGroup(rawCat) {
+            if (!rawCat) return "Other";
+            const cat = rawCat.toString();
+            
+            for (let rule of CATEGORY_RULES) {
+                if (cat.includes(rule.key)) return rule.group;
+            }
+            return "Other"; 
+        }
+
+        // --- DATA LOADING ---
         function fetchSheet(url, sourceName) {
             return fetch(url)
                 .then(res => res.text())
                 .then(text => {
                     const rows = parseCSV(text);
-                    // Add the "source" property to every item
-                    return rows.map(item => ({ ...item, source: sourceName }));
+                    return rows.map(item => ({ 
+                        ...item, 
+                        source: sourceName,
+                        group: getGroup(item.category) // Assign simplified group here
+                    }));
                 });
         }
 
@@ -234,66 +249,50 @@
             resultsDiv.innerHTML = '<div class="loading">Fetching databases...</div>';
             
             let promises = [];
-
-            if (mode === 'faa') {
-                promises.push(fetchSheet(LINKS.faa, 'FAA'));
-            } else if (mode === 'sofema') {
-                promises.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
-            } else if (mode === 'both') {
+            if (mode === 'faa') promises.push(fetchSheet(LINKS.faa, 'FAA'));
+            else if (mode === 'sofema') promises.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
+            else if (mode === 'both') {
                 promises.push(fetchSheet(LINKS.faa, 'FAA'));
                 promises.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
             }
 
             Promise.all(promises)
                 .then(results => {
-                    // Flatten array of arrays into one single list
                     allData = results.flat();
+                    activeGroup = 'All';
+                    initGroupChips(allData);
                     
-                    activeCategory = 'All';
-                    initCategories(allData);
-                    
-                    // Refresh Search
                     const currentTerm = document.getElementById('searchBox').value;
-                    if(currentTerm.length > 0) {
-                        runSearch();
-                    } else {
-                        resultsDiv.innerHTML = '<div class="loading">Ready. Type to search.</div>';
-                    }
+                    if(currentTerm.length > 0) runSearch();
+                    else resultsDiv.innerHTML = '<div class="loading">Ready. Type to search.</div>';
                 })
                 .catch(err => {
-                    resultsDiv.innerHTML = '<div class="loading">Error loading data.</div>';
                     console.error(err);
+                    resultsDiv.innerHTML = '<div class="loading">Error loading data.</div>';
                 });
         }
 
-        // Initial Load
-        loadData('faa'); // Default to FAA
+        loadData('faa'); // Initial Load
 
-        // --- 2. CONTROLS ---
+        // --- CONTROLS ---
         const dbSource = document.getElementById('dbSource');
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
 
-        dbSource.addEventListener('change', (e) => {
-            loadData(e.target.value);
-        });
-
+        dbSource.addEventListener('change', (e) => loadData(e.target.value));
         searchBox.addEventListener('input', () => {
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
             runSearch();
         });
-        
         searchMode.addEventListener('change', runSearch);
-        
         clearBtn.addEventListener('click', () => {
             searchBox.value = '';
             clearBtn.style.display = 'none';
             searchBox.focus();
             document.getElementById('results').innerHTML = '<div class="loading">Type to search...</div>';
         });
-
         themeBtn.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -301,7 +300,7 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- 3. CSV PARSER ---
+        // --- CSV PARSING ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -321,30 +320,39 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        function initCategories(data) {
-            const categories = new Set(['All']);
-            data.forEach(item => { if(item.category) categories.add(item.category); });
+        // --- NEW: GROUP CHIPS ---
+        function initGroupChips(data) {
+            // Collect all unique groups
+            const groups = new Set(['All']);
+            data.forEach(item => groups.add(item.group));
+
+            // Custom Sort Order for Pilots
+            const preferredOrder = ['All', 'OPS', 'WX', 'SYS', 'REGS', 'BIZ', 'Other'];
+            const sortedGroups = Array.from(groups).sort((a, b) => {
+                return preferredOrder.indexOf(a) - preferredOrder.indexOf(b);
+            });
+
             const container = document.getElementById('filterContainer');
             container.innerHTML = '';
-            categories.forEach(cat => {
+
+            sortedGroups.forEach(grp => {
                 const chip = document.createElement('div');
-                chip.className = `chip ${cat === 'All' ? 'active' : ''}`;
-                chip.textContent = cat;
+                chip.className = `chip ${grp === 'All' ? 'active' : ''}`;
+                chip.textContent = grp;
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
-                    activeCategory = cat;
+                    activeGroup = grp;
                     runSearch();
                 });
                 container.appendChild(chip);
             });
         }
 
-        // --- 4. SEARCH LOGIC ---
+        // --- SEARCH LOGIC ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
-            const rawTerm = searchBox.value;
-            const term = rawTerm.toLowerCase().trim();
+            const term = searchBox.value.toLowerCase().trim();
             const mode = searchMode.value;
 
             if (term === '') {
@@ -354,9 +362,10 @@
 
             resultsDiv.innerHTML = '';
 
+            // Filter by Term AND by GROUP
             const filtered = allData.filter(item => {
-                const matchesCat = (activeCategory === 'All') || (item.category === activeCategory);
-                if (!matchesCat) return false;
+                const matchesGroup = (activeGroup === 'All') || (item.group === activeGroup);
+                if (!matchesGroup) return false;
                 
                 const acr = item.acronym.toLowerCase();
                 const mean = item.meaning.toLowerCase();
@@ -382,16 +391,12 @@
                         reportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
                     }
 
-                    // Dynamically set source badge color? 
-                    // No need, CSS handles one color, but the text changes.
-                    // We simply add <span class="source-tag">${item.source}</span>
-
                     card.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
                                 <span class="acronym-badge">${item.acronym}</span>
                                 <div class="meta-tags">
-                                    <span class="source-tag">${item.source}</span>
+                                    <span class="source-tag ${item.source}">${item.source}</span>
                                     <span class="category-tag">${item.category}</span>
                                 </div>
                             </div>
@@ -402,7 +407,7 @@
                     resultsDiv.appendChild(card);
                 });
             } else {
-                resultsDiv.innerHTML = '<div class="loading">No matches found.</div>';
+                resultsDiv.innerHTML = '<div class="loading">No matches found in this group.</div>';
             }
 
             // Footer
