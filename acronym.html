@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V22</title>
+    <title>Pilot's Database V24</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -14,6 +14,7 @@
             --text: #2c3e50;
             --accent: #00a8ff;
             --star-color: #f1c40f;
+            --history-color: #8e44ad;
             --success: #2ecc71;
             --error: #e74c3c;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
@@ -23,11 +24,6 @@
             
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
-            
-            /* Rank Colors */
-            --rank-bronze: #cd7f32;
-            --rank-silver: #95a5a6;
-            --rank-gold: #f1c40f;
         }
 
         [data-theme="dark"] {
@@ -38,6 +34,7 @@
             --text: #ecf0f1;
             --accent: #00d2d3;
             --star-color: #f39c12;
+            --history-color: #9b59b6;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 
             --source-faa: #3498db;
@@ -109,7 +106,7 @@
             background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.7em; cursor: pointer; margin-right: 8px; display: none; 
         }
 
-        /* --- PILOT HUD (STATS) --- */
+        /* --- PILOT HUD --- */
         .hud-container {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 5px; font-size: 0.85em; opacity: 0.9;
@@ -132,6 +129,8 @@
         .chip.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .chip.favorites { border: 1px solid var(--star-color); color: var(--text); }
         .chip.favorites.active { background: var(--star-color); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .chip.history { border: 1px solid var(--history-color); color: var(--text); }
+        .chip.history.active { background: var(--history-color); color: #fff; }
 
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
 
@@ -157,7 +156,6 @@
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
         
-        /* Mastery Indicator on Card */
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
 
         .meaning { 
@@ -204,6 +202,7 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
         }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
+        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
         .modal textarea {
             width: 100%; height: 80px; padding: 12px; border-radius: 8px;
             border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05);
@@ -215,6 +214,7 @@
         .modal-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9em; border: none; font-weight: 600; }
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
+        .modal-btn.full { width: 100%; margin-bottom: 10px; }
         
         /* --- FLASHCARD 3D --- */
         #flashcardOverlay { display: none; z-index: 2000; }
@@ -260,8 +260,6 @@
             position: absolute; top: -30px; width: 100%; text-align: center; 
             color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9em;
         }
-        
-        /* Keyboard Hint */
         .kb-hint { position: absolute; bottom: -30px; width: 100%; text-align: center; font-size: 0.7em; opacity: 0.7; color: var(--text); }
 
     </style>
@@ -291,7 +289,8 @@
             </select>
             
             <div style="display:flex; gap: 5px; margin-left: auto;">
-                <button class="icon-btn" id="randomBtn" title="Study Mode (Flashcards)">🎲</button>
+                <button class="icon-btn" id="settingsBtn" title="Data Settings">⚙️</button>
+                <button class="icon-btn" id="randomBtn" title="Check Ride Mode (Flashcards)">🎲</button>
                 <button class="icon-btn" id="themeBtn" title="Toggle Theme">🌗</button>
             </div>
         </div>
@@ -311,7 +310,6 @@
     <div id="results">
         <div class="loader-container">
             <div class="radar"></div>
-            <div class="loader-text">SCANNING DATABASE...</div>
         </div>
     </div>
 
@@ -324,6 +322,20 @@
         <div class="modal-buttons">
             <button id="cancelModalBtn" class="modal-btn cancel">Cancel</button>
             <button id="sendEmailBtn" class="modal-btn send">Draft Email</button>
+        </div>
+    </div>
+
+    <div id="settingsOverlay" class="modal-overlay"></div>
+    <div id="settingsModal" class="modal">
+        <h3>Flight Data Recorder</h3>
+        <p>Your history, favorites, and mastery rank are stored in this browser. Export to backup or move to another device.</p>
+        
+        <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Data (Backup)</button>
+        <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Import Data (Restore)</button>
+        <input type="file" id="fileInput" style="display:none" accept=".json">
+        
+        <div style="margin-top:15px; text-align:right;">
+            <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
     </div>
 
@@ -340,7 +352,6 @@
                     <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
                 </div>
             </div>
-            
             <div class="fc-controls">
                 <button id="missBtn" class="game-btn miss">⬅️ Missed</button>
                 <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black; font-size:0.8em;">Exit</button>
@@ -357,7 +368,6 @@
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
         };
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
-        const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
         
         const GROUP_CONFIG = {
             "Operations": { desc: "Includes: Navigation, Flight Ops, ATC, & Airspace", keywords: ["Navigation", "Flight Op", "Traffic"] },
@@ -367,6 +377,7 @@
             "Business": { desc: "Includes: Commercial, Airline Ops, IT, Training & Military", keywords: ["Airline", "Commerc", "Training", "Military"] },
             "All": { desc: "Searching entire database." },
             "Favorites": { desc: "Your saved acronyms." },
+            "History": { desc: "Recently viewed or studied items." },
             "Other": { desc: "Uncategorized terms." }
         };
 
@@ -376,11 +387,10 @@
         let activeGroup = 'All';
         let currentReportItem = null;
         
-        // Persistent Data
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
-        let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; // {"VASI": true, ...}
-        
-        // Game State
+        let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; 
+        let historyLog = JSON.parse(localStorage.getItem('pilotHistory')) || [];
+
         let sessionCorrect = 0;
         let sessionTotal = 0;
         let currentFlashcardItem = null;
@@ -394,7 +404,7 @@
             if (!rawCat) return "Other";
             const cat = rawCat.toString();
             for (const [groupName, config] of Object.entries(GROUP_CONFIG)) {
-                if (groupName === 'All' || groupName === 'Favorites' || groupName === 'Other') continue;
+                if (['All','Favorites','History','Other'].includes(groupName)) continue;
                 for (const key of config.keywords) {
                     if (cat.includes(key)) return groupName;
                 }
@@ -408,15 +418,26 @@
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
-        function toggleFavorite(acronym) {
-            const index = favorites.indexOf(acronym);
-            if (index === -1) { favorites.push(acronym); showToast("Added to Favorites"); } 
+        // --- HISTORY & USER DATA ---
+        function addToHistory(item) {
+            historyLog = historyLog.filter(x => x.acronym !== item.acronym);
+            historyLog.unshift(item);
+            if (historyLog.length > 50) historyLog.pop();
+            localStorage.setItem('pilotHistory', JSON.stringify(historyLog));
+            if (activeGroup === 'History') runSearch();
+        }
+
+        function toggleFavorite(item) {
+            const index = favorites.indexOf(item.acronym);
+            if (index === -1) { favorites.push(item.acronym); showToast("Added to Favorites"); } 
             else { favorites.splice(index, 1); showToast("Removed from Favorites"); }
             localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
             
+            addToHistory(item); 
+
             if (activeGroup === 'Favorites') runSearch();
             else {
-                document.querySelectorAll(`[data-acr="${acronym}"]`).forEach(btn => {
+                document.querySelectorAll(`[data-acr="${item.acronym}"]`).forEach(btn => {
                     btn.textContent = index === -1 ? "⭐" : "☆";
                     btn.classList.toggle('active');
                 });
@@ -428,7 +449,6 @@
                 mastery[acronym] = true;
                 localStorage.setItem('pilotMastery', JSON.stringify(mastery));
             } else {
-                // If missed, un-master it if it was mastered
                 if (mastery[acronym]) {
                     delete mastery[acronym];
                     localStorage.setItem('pilotMastery', JSON.stringify(mastery));
@@ -439,19 +459,14 @@
         
         function updateRankHUD() {
             const totalMastered = Object.keys(mastery).length;
-            // Define Ranks
             let rank = "Student Pilot";
-            let pct = 0;
-            
-            // Just arbitrary thresholds for fun
             if (totalMastered > 200) rank = "👨‍✈️ Captain";
             else if (totalMastered > 100) rank = "👨‍✈️ First Officer";
             else if (totalMastered > 50) rank = "✈️ Commercial Pilot";
             else if (totalMastered > 10) rank = "🛩️ Private Pilot";
             
-            // Calculate % of total DB (approx 1000 items)
             const totalDB = allData.length || 1000; 
-            pct = Math.min(100, Math.round((totalMastered / totalDB) * 100));
+            let pct = Math.min(100, Math.round((totalMastered / totalDB) * 100));
             
             document.getElementById('rankBadge').innerText = rank;
             document.getElementById('rankProgress').style.width = `${pct}%`;
@@ -465,6 +480,52 @@
                 utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             }
+        }
+
+        // --- IMPORT / EXPORT LOGIC ---
+        function exportData() {
+            const data = {
+                history: historyLog,
+                favorites: favorites,
+                mastery: mastery
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pilot_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Data exported successfully!");
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.history) { historyLog = data.history; localStorage.setItem('pilotHistory', JSON.stringify(historyLog)); }
+                    if (data.favorites) { favorites = data.favorites; localStorage.setItem('pilotFavorites', JSON.stringify(favorites)); }
+                    if (data.mastery) { mastery = data.mastery; localStorage.setItem('pilotMastery', JSON.stringify(mastery)); }
+                    
+                    updateRankHUD();
+                    runSearch(); // Refresh UI
+                    showToast("Data restored successfully!");
+                    document.getElementById('settingsOverlay').style.display = 'none';
+                    document.getElementById('settingsModal').style.display = 'none';
+                } catch (err) {
+                    showToast("Error: Invalid file format.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
         }
 
         // --- DATA LOADING ---
@@ -504,20 +565,21 @@
 
         loadData('sofema'); 
 
-        // --- EVENTS ---
+        // --- DOM EVENTS ---
         const dbSource = document.getElementById('dbSource');
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
         const randomBtn = document.getElementById('randomBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
         const filterContainer = document.getElementById('filterContainer');
         const groupDesc = document.getElementById('groupDesc');
 
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
         searchBox.addEventListener('input', () => {
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
-            if (activeGroup === 'Favorites') activeGroup = 'All';
+            if (activeGroup === 'Favorites' || activeGroup === 'History') activeGroup = 'All';
             runSearch();
         });
         searchMode.addEventListener('change', runSearch);
@@ -534,7 +596,32 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- PARSE CSV ---
+        // Settings Modal Events
+        const settingsOverlay = document.getElementById('settingsOverlay');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const fileInput = document.getElementById('fileInput');
+
+        settingsBtn.addEventListener('click', () => {
+            settingsOverlay.style.display = 'block';
+            settingsModal.style.display = 'block';
+        });
+        
+        function closeSettings() {
+            settingsOverlay.style.display = 'none';
+            settingsModal.style.display = 'none';
+        }
+        
+        closeSettingsBtn.addEventListener('click', closeSettings);
+        settingsOverlay.addEventListener('click', closeSettings);
+        
+        exportBtn.addEventListener('click', exportData);
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', importData);
+
+        // --- PARSING ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -554,14 +641,19 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- UI LOGIC ---
+        // --- UI CHIPS ---
         function initGroupChips() {
-            const groups = ['All', 'Favorites', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
+            const groups = ['All', 'Favorites', 'History', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             filterContainer.innerHTML = '';
             groups.forEach(grp => {
                 const chip = document.createElement('div');
-                chip.className = `chip ${grp === 'All' ? 'active' : ''} ${grp === 'Favorites' ? 'favorites' : ''}`;
-                chip.textContent = grp === 'Favorites' ? '⭐ Favorites' : grp;
+                let extraClass = '';
+                if(grp === 'Favorites') extraClass = 'favorites';
+                if(grp === 'History') extraClass = 'history';
+
+                chip.className = `chip ${grp === 'All' ? 'active' : ''} ${extraClass}`;
+                chip.textContent = grp === 'Favorites' ? '⭐ Favorites' : (grp === 'History' ? '🕒 History' : grp);
+                
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
@@ -574,6 +666,7 @@
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
+        // --- SEARCH CORE ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
             const term = searchBox.value.toLowerCase().trim();
@@ -590,11 +683,18 @@
                     filteredData = []; 
                     return;
                 }
+            } else if (activeGroup === 'History') {
+                tempFiltered = historyLog;
+                if (tempFiltered.length === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO RECENT HISTORY.</div>';
+                    filteredData = []; 
+                    return;
+                }
             } else if (activeGroup !== 'All') {
                 tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
             
-            filteredData = [...tempFiltered]; // Save for flashcards
+            filteredData = [...tempFiltered];
 
             // 2. Filter by Search Term
             if (term !== '') {
@@ -610,6 +710,7 @@
                  return;
             }
 
+            // Render
             if (tempFiltered.length > 0) {
                 const subset = tempFiltered.slice(0, 50);
                 subset.forEach((item, index) => {
@@ -645,12 +746,19 @@
                     `;
                     
                     card.querySelector('.report').addEventListener('click', () => openReportModal(item));
-                    card.querySelector('.star').addEventListener('click', () => toggleFavorite(item.acronym));
-                    card.querySelector('.speak').addEventListener('click', () => speakText(item.meaning));
+                    card.querySelector('.star').addEventListener('click', () => toggleFavorite(item));
+                    
+                    card.querySelector('.speak').addEventListener('click', () => {
+                        speakText(item.meaning);
+                        addToHistory(item);
+                    });
+                    
                     card.querySelector('.meaning').addEventListener('click', () => {
                         navigator.clipboard.writeText(item.meaning);
                         showToast("Definition copied!");
+                        addToHistory(item);
                     });
+
                     resultsDiv.appendChild(card);
                 });
             } else {
@@ -685,21 +793,18 @@
         function endFlashcardSession() {
             flashcardOverlay.style.display = 'none';
             window.removeEventListener('keydown', handleKeyboard);
-            // Refresh search to show new mastery dots
             runSearch();
         }
 
         function showNextCard() {
-            // Prioritize non-mastered items (80% chance)
             let pool = filteredData;
             const unmastered = filteredData.filter(i => !mastery[i.acronym]);
-            
-            if (unmastered.length > 0 && Math.random() > 0.2) {
-                pool = unmastered;
-            }
+            if (unmastered.length > 0 && Math.random() > 0.2) pool = unmastered;
 
             const randomItem = pool[Math.floor(Math.random() * pool.length)];
             currentFlashcardItem = randomItem;
+            
+            addToHistory(randomItem);
             
             fcAcronym.textContent = randomItem.acronym;
             fcMeaning.textContent = randomItem.meaning;
@@ -722,27 +827,15 @@
             } else {
                 theFlashcard.classList.add('shake');
             }
-            
-            // Save Mastery Progress
-            if(currentFlashcardItem) {
-                updateMastery(currentFlashcardItem.acronym, correct);
-            }
-            
+            if(currentFlashcardItem) updateMastery(currentFlashcardItem.acronym, correct);
             updateScoreUI();
-            
-            // Delay next card slightly
-            setTimeout(() => {
-                showNextCard();
-            }, 600);
+            setTimeout(() => { showNextCard(); }, 600);
         }
 
-        // Keyboard Controls
         function handleKeyboard(e) {
             if (flashcardOverlay.style.display !== 'block') return;
-            
             if (e.code === 'Space') {
-                e.preventDefault();
-                theFlashcard.classList.toggle('flipped');
+                e.preventDefault(); theFlashcard.classList.toggle('flipped');
             } else if (e.code === 'ArrowRight') {
                 if (theFlashcard.classList.contains('flipped')) handleGameResult(true);
             } else if (e.code === 'ArrowLeft') {
