@@ -3,225 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acronym Search</title>
+    <title>Pilot's Acronym Database</title>
     <style>
-        /* --- CSS VARIABLES FOR THEMES --- */
+        /* --- THEMES --- */
         :root {
-            --bg-color: #ffffff;
-            --text-color: #37352f;
+            --bg: #ffffff;
+            --text: #37352f;
             --input-bg: #f7f9fb;
-            --input-border: rgba(55, 53, 47, 0.16);
-            --card-border: rgba(55, 53, 47, 0.09);
+            --border: rgba(55, 53, 47, 0.16);
+            --card-hover: #f7f9fb;
             --badge-bg: rgba(235, 236, 237, 0.6);
-            --badge-text: #37352f;
-            --secondary-text: #6b6b6b;
-            --accent-color: #2eaadc;
+            --badge-text: #4a5568;
+            --accent: #2eaadc;
+            --chip-bg: #e0e0e0;
+            --chip-active: #2eaadc;
+            --chip-text-active: #ffffff;
         }
 
         [data-theme="dark"] {
-            --bg-color: #191919;
-            --text-color: rgba(255, 255, 255, 0.9);
+            --bg: #191919;
+            --text: rgba(255, 255, 255, 0.9);
             --input-bg: #262626;
-            --input-border: #3f3f3f;
-            --card-border: #2f2f2f;
-            --badge-bg: rgba(255, 255, 255, 0.1);
-            --badge-text: rgba(255, 255, 255, 0.9);
-            --secondary-text: rgba(255, 255, 255, 0.5);
-            --accent-color: #1a7f9b;
+            --border: #3f3f3f;
+            --card-hover: #2f2f2f;
+            --badge-bg: rgba(255, 255, 255, 0.15);
+            --badge-text: rgba(255, 255, 255, 0.8);
+            --accent: #1a7f9b;
+            --chip-bg: #333;
+            --chip-active: #1a7f9b;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px;
-            color: var(--text-color);
-            background-color: var(--bg-color);
+            color: var(--text);
+            background-color: var(--bg);
             margin: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* Top Bar Layout */
-        .top-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* --- CONTROLS --- */
+        .controls {
             position: sticky;
             top: 0;
-            background: var(--bg-color);
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--card-border);
+            background: var(--bg);
+            padding-bottom: 10px;
             z-index: 10;
-            transition: background-color 0.3s ease;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         input {
             flex-grow: 1;
             padding: 10px 12px;
             font-size: 16px;
-            border: 1px solid var(--input-border);
+            border: 1px solid var(--border);
             border-radius: 6px;
-            outline: none;
             background: var(--input-bg);
-            color: var(--text-color);
-            transition: all 0.2s ease;
+            color: var(--text);
+            outline: none;
         }
 
-        input:focus {
-            border-color: var(--accent-color);
-        }
+        input:focus { border-color: var(--accent); }
 
-        /* Toggle Button */
-        .theme-toggle {
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            padding: 8px;
-            border-radius: 50%;
-            transition: background 0.2s;
+        .theme-btn {
+            background: none; border: none; cursor: pointer; font-size: 1.2rem;
+            padding: 0 8px; border-radius: 4px;
+        }
+        .theme-btn:hover { background: var(--badge-bg); }
+
+        /* --- FILTER CHIPS --- */
+        .filter-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
         }
-        .theme-toggle:hover {
-            background: var(--badge-bg);
+        .filter-container::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+
+        .chip {
+            padding: 4px 10px;
+            font-size: 0.85em;
+            background: var(--chip-bg);
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .chip.active {
+            background: var(--chip-active);
+            color: var(--chip-text-active);
         }
 
-        /* Results */
+        /* --- RESULTS --- */
         #results { margin-top: 15px; }
 
         .card {
-            padding: 12px 4px;
-            border-bottom: 1px solid var(--card-border);
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border);
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .acronym-header {
-            display: flex;
-            align-items: baseline;
+            justify-content: space-between;
+            align-items: flex-start;
             gap: 10px;
+            transition: background 0.2s;
         }
+        .card:hover { background: var(--card-hover); border-radius: 4px;}
 
+        .card-left { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+
+        .acronym-header { display: flex; align-items: center; gap: 8px; }
+        
         .acronym-badge {
             font-weight: 700;
-            font-size: 1em;
-            color: var(--badge-text);
-            background-color: var(--badge-bg);
-            padding: 4px 8px;
+            color: var(--text);
+            background: var(--badge-bg);
+            padding: 2px 6px;
             border-radius: 4px;
         }
 
-        .meaning-text {
-            color: var(--text-color);
-            font-size: 0.95em;
-            line-height: 1.5;
+        .category-tag {
+            font-size: 0.75em;
+            color: var(--badge-text);
+            border: 1px solid var(--border);
+            padding: 1px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .no-results {
-            color: var(--secondary-text);
-            text-align: center;
-            margin-top: 30px;
+        .meaning { line-height: 1.4; font-size: 0.95em; }
+
+        .report-btn {
+            font-size: 0.8em;
+            color: #999;
+            text-decoration: none;
+            white-space: nowrap;
+            opacity: 0; /* Hidden until hover */
+            transition: opacity 0.2s;
         }
+        .card:hover .report-btn { opacity: 1; }
+        .report-btn:hover { color: #d9534f; }
+
+        .loading { text-align: center; color: #888; margin-top: 20px; font-style: italic;}
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <input type="text" id="searchBox" placeholder="Search dictionary..." autocomplete="off">
-        <button class="theme-toggle" id="themeBtn" title="Toggle Theme">🌗</button>
+    <div class="controls">
+        <div class="search-bar">
+            <input type="text" id="searchBox" placeholder="Search (e.g., Vmc, IFR, Metar)..." autocomplete="off">
+            <button class="theme-btn" id="themeBtn">🌗</button>
+        </div>
+        <div class="filter-container" id="filterContainer">
+            </div>
     </div>
 
     <div id="results">
-        <div class="no-results">Loading database...</div>
+        <div class="loading">Loading database...</div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
+        // --- 1. CONFIGURATION (PASTE YOUR LINKS HERE) ---
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
+        
+        // PASTE YOUR PRE-FILLED FORM LINK HERE (Keep the 'ACRONYM_HERE' part!)
+        // Example: "https://docs.google.com/forms/.../viewform?entry.12345=ACRONYM_HERE"
+        const REPORT_FORM_URL = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?usp=pp_url&entry.123456=ACRONYM_HERE";
 
-        // --- 2. THEME LOGIC ---
+        // --- 2. STATE ---
+        let allData = [];
+        let activeCategory = 'All';
+
+        // --- 3. THEME LOGIC ---
         const themeBtn = document.getElementById('themeBtn');
-        
-        // Check saved preference or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
-
         themeBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- 3. DATA & SEARCH LOGIC ---
-        let dictionaryData = [];
-        const resultsDiv = document.getElementById('results');
-        const searchBox = document.getElementById('searchBox');
+        // --- 4. DATA LOGIC ---
+        fetch(SHEET_URL)
+            .then(res => res.text())
+            .then(text => {
+                const rows = parseCSV(text);
+                allData = rows;
+                initCategories(rows);
+                renderResults(rows); // Show all initially
+            });
 
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
+            // Start at i=1 to skip header
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i];
                 if (!line.trim()) continue;
-                // Regex to handle "Text, with comma"
-                let matches = line.match(/(".*?"|[^",]+)(?=\s*,|\s*)/g);
+                
+                // Regex handles commas inside quotes
+                const matches = line.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);
+                
                 if (matches && matches.length >= 2) {
                     rows.push({
-                        acronym: matches[0].replace(/^"|"$/g, '').trim(),
-                        meaning: matches[1].replace(/^"|"$/g, '').trim()
+                        acronym: clean(matches[0]),
+                        meaning: clean(matches[1]),
+                        // If column 3 is missing, default to "General"
+                        category: matches[2] ? clean(matches[2]) : "General"
                     });
                 }
             }
             return rows;
         }
 
-        fetch(sheetUrl)
-            .then(res => res.text())
-            .then(text => {
-                dictionaryData = parseCSV(text);
-                resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
+        function clean(str) {
+            return str.replace(/^"|"$/g, '').trim();
+        }
+
+        // --- 5. CATEGORY CHIPS ---
+        function initCategories(data) {
+            const categories = new Set(['All']);
+            data.forEach(item => {
+                if(item.category) categories.add(item.category);
             });
 
-        searchBox.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase().trim();
+            const container = document.getElementById('filterContainer');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${cat === 'All' ? 'active' : ''}`;
+                chip.textContent = cat;
+                chip.addEventListener('click', () => {
+                    // Update Active State
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    activeCategory = cat;
+                    
+                    // Re-run Search
+                    runSearch(document.getElementById('searchBox').value);
+                });
+                container.appendChild(chip);
+            });
+        }
+
+        // --- 6. SEARCH & RENDER ---
+        const searchBox = document.getElementById('searchBox');
+        const resultsDiv = document.getElementById('results');
+
+        searchBox.addEventListener('input', (e) => runSearch(e.target.value));
+
+        function runSearch(term) {
+            term = term.toLowerCase().trim();
             resultsDiv.innerHTML = '';
 
-            if (term.length === 0) {
-                resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
-                return;
-            }
-
-            const filtered = dictionaryData.filter(item => 
-                item.acronym.toLowerCase().includes(term) || 
-                item.meaning.toLowerCase().includes(term)
-            );
+            // Filter by Term AND Category
+            const filtered = allData.filter(item => {
+                const matchesTerm = (term === '') || 
+                                    item.acronym.toLowerCase().includes(term) || 
+                                    item.meaning.toLowerCase().includes(term);
+                const matchesCat = (activeCategory === 'All') || (item.category === activeCategory);
+                
+                return matchesTerm && matchesCat;
+            });
 
             if (filtered.length === 0) {
-                resultsDiv.innerHTML = '<div class="no-results">No matches found</div>';
+                resultsDiv.innerHTML = '<div class="loading">No matches found.</div>';
                 return;
             }
 
             filtered.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                // Simple highlight logic
-                const highlightedMeaning = item.meaning.replace(new RegExp(term, "gi"), (match) => `<span style="background:rgba(255, 255, 0, 0.3); color: inherit;">${match}</span>`);
+                
+                // Highlight Logic
+                let displayMeaning = item.meaning;
+                if (term) {
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(255, 255, 0, 0.25)">$1</span>');
+                }
+
+                // Generate Dynamic Report Link
+                // Replaces 'ACRONYM_HERE' with the actual acronym of this row
+                const rowReportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
 
                 card.innerHTML = `
-                    <div class="acronym-header">
-                        <span class="acronym-badge">${item.acronym}</span>
+                    <div class="card-left">
+                        <div class="acronym-header">
+                            <span class="acronym-badge">${item.acronym}</span>
+                            <span class="category-tag">${item.category}</span>
+                        </div>
+                        <div class="meaning">${displayMeaning}</div>
                     </div>
-                    <div class="meaning-text">${highlightedMeaning}</div>
+                    <a href="${rowReportLink}" target="_blank" class="report-btn" title="Report Error">🚩</a>
                 `;
                 resultsDiv.appendChild(card);
             });
-        });
+        }
     </script>
 </body>
 </html>
