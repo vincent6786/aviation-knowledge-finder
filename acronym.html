@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Precision Database</title>
+    <title>Pilot's Database V5</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -11,13 +11,15 @@
             --text: #37352f;
             --input-bg: #f7f9fb;
             --border: #e0e0e0;
-            --accent: #00b0ff; /* The bright blue from your screenshot */
+            --accent: #00b0ff;
             --accent-hover: #009be0;
             --badge-bg: rgba(235, 236, 237, 0.6);
             --badge-text: #4a5568;
             --chip-bg: #e0e0e0;
             --chip-active: #00b0ff;
             --chip-text-active: #ffffff;
+            --ext-btn-bg: #fff;
+            --ext-btn-text: #37352f;
         }
 
         [data-theme="dark"] {
@@ -31,10 +33,12 @@
             --badge-text: rgba(255, 255, 255, 0.8);
             --chip-bg: #333;
             --chip-active: #00b0ff;
+            --ext-btn-bg: #2f2f2f;
+            --ext-btn-text: #fff;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px;
             color: var(--text);
             background-color: var(--bg);
@@ -42,7 +46,7 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* --- CONTROL PANEL LAYOUT --- */
+        /* --- LAYOUT --- */
         .controls {
             position: sticky;
             top: 0;
@@ -54,160 +58,103 @@
             gap: 10px;
         }
 
-        /* 1. TOP ROW: Search Mode + Theme Toggle */
-        .top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .top-row { display: flex; justify-content: space-between; align-items: center; }
 
         .mode-select {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 0.9em;
-            cursor: pointer;
-            outline: none;
+            padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+            background: var(--bg); color: var(--text); outline: none; cursor: pointer;
         }
-        .mode-select:hover { border-color: var(--accent); }
 
         .theme-btn {
             background: none; border: none; cursor: pointer; font-size: 1.2rem;
             padding: 4px; border-radius: 50%;
         }
-        .theme-btn:hover { background: var(--badge-bg); }
 
-        /* 2. SEARCH BAR ROW (Matches your Screenshot) */
         .search-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: 50px; /* Pill shape */
-            padding: 4px;
-            transition: box-shadow 0.2s;
+            display: flex; align-items: center; gap: 8px;
+            background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 50px; padding: 4px; transition: box-shadow 0.2s;
         }
+        .search-wrapper:focus-within { box-shadow: 0 0 0 2px rgba(0, 176, 255, 0.2); border-color: var(--accent); }
 
-        .search-wrapper:focus-within {
-            box-shadow: 0 0 0 2px rgba(0, 176, 255, 0.2);
-            border-color: var(--accent);
-        }
-
-        /* The Input Field */
         #searchBox {
-            flex-grow: 1;
-            border: none;
-            background: transparent;
-            padding: 8px 16px;
-            font-size: 16px;
-            color: var(--text);
-            outline: none;
+            flex-grow: 1; border: none; background: transparent;
+            padding: 8px 16px; font-size: 16px; color: var(--text); outline: none;
         }
 
-        /* The Blue Search Button */
         #searchBtn {
-            background-color: var(--accent);
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            transition: background 0.2s;
+            background-color: var(--accent); border: none; border-radius: 50%;
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: white;
         }
-        #searchBtn:hover { background-color: var(--accent-hover); }
 
-        /* The Clear Button */
         #clearBtn {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 6px 16px;
-            color: var(--accent);
-            font-weight: 600;
-            font-size: 0.85em;
-            cursor: pointer;
-            margin-right: 4px;
-            text-transform: uppercase;
+            background: none; border: 1px solid var(--border); border-radius: 20px;
+            padding: 6px 16px; color: var(--accent); font-weight: 600; font-size: 0.8em;
+            cursor: pointer; margin-right: 4px;
         }
-        #clearBtn:hover { background: rgba(0, 176, 255, 0.1); }
 
-        /* --- CATEGORY CHIPS --- */
         .filter-container {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0;
+            display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;
             scrollbar-width: none;
         }
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 4px 12px;
-            font-size: 0.85em;
-            background: var(--chip-bg);
-            border-radius: 16px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
+            padding: 4px 12px; font-size: 0.85em; background: var(--chip-bg);
+            border-radius: 16px; cursor: pointer; white-space: nowrap; transition: 0.2s;
         }
-        .chip.active {
-            background: var(--chip-active);
-            color: var(--chip-text-active);
-        }
+        .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
-        /* --- RESULTS LIST --- */
-        #results { margin-top: 10px; padding-bottom: 40px;}
+        /* --- RESULTS --- */
+        #results { margin-top: 10px; padding-bottom: 40px; }
 
         .card {
-            padding: 14px 8px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
+            padding: 14px 8px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; gap: 12px;
         }
         .card:hover { background: rgba(0,0,0,0.02); }
-
         .card-content { display: flex; flex-direction: column; gap: 4px; width: 100%; }
-
-        .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         
+        .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge {
-            font-weight: 700;
-            font-size: 1.1em;
-            color: var(--text);
-            background: var(--badge-bg);
-            padding: 2px 8px;
-            border-radius: 6px;
+            font-weight: 700; color: var(--text); background: var(--badge-bg);
+            padding: 2px 8px; border-radius: 6px;
         }
-
-        .category-tag {
-            font-size: 0.7em;
-            color: #888;
-            border: 1px solid var(--border);
-            padding: 1px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
+        .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
         .meaning { line-height: 1.5; font-size: 0.95em; color: var(--text); }
-
-        .report-btn {
-            font-size: 1.2em;
-            text-decoration: none;
-            opacity: 0.1;
-            transition: opacity 0.2s;
-        }
+        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.1; transition: 0.2s; }
         .card:hover .report-btn { opacity: 1; }
-        .report-btn:hover { opacity: 1; transform: scale(1.1); }
 
-        .no-results { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
+        /* --- EXTERNAL SEARCH FALLBACK --- */
+        .fallback-container {
+            text-align: center; margin-top: 40px;
+            color: var(--text);
+        }
+        .fallback-text { margin-bottom: 15px; font-size: 0.9em; opacity: 0.8; }
+        .external-actions {
+            display: flex; justify-content: center; gap: 10px;
+        }
+        .ext-btn {
+            text-decoration: none;
+            padding: 10px 16px;
+            background: var(--ext-btn-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9em;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .ext-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .loading { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
+
     </style>
 </head>
 <body>
@@ -215,44 +162,38 @@
     <div class="controls">
         <div class="top-row">
             <select id="searchMode" class="mode-select">
-                <option value="contains">Contains (Default)</option>
+                <option value="contains">Contains</option>
                 <option value="starts">Begin with</option>
                 <option value="exact">Exact term</option>
             </select>
-            <button class="theme-btn" id="themeBtn" title="Toggle Dark Mode">🌗</button>
+            <button class="theme-btn" id="themeBtn">🌗</button>
         </div>
 
         <div class="search-wrapper">
-            <input type="text" id="searchBox" placeholder="Search..." autocomplete="off">
+            <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
             <button id="searchBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
             <button id="clearBtn">CLEAR</button>
         </div>
-
         <div class="filter-container" id="filterContainer"></div>
     </div>
 
     <div id="results">
-        <div class="no-results">Loading database...</div>
+        <div class="loading">Loading database...</div>
     </div>
 
     <script>
         // ==========================================
-        // 1. CONFIGURATION - PASTE YOUR LINKS HERE
+        // CONFIGURATION
         // ==========================================
-        
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
-        
-        // Example: "https://docs.google.com/forms/.../viewform?entry.123456=ACRONYM_HERE"
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK_HERE"; 
-
         // ==========================================
 
         let allData = [];
         let activeCategory = 'All';
 
-        // --- Theme Logic ---
         const themeBtn = document.getElementById('themeBtn');
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -264,7 +205,6 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- Fetch Data ---
         fetch(SHEET_URL)
             .then(res => res.text())
             .then(text => {
@@ -292,7 +232,6 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- Category Logic ---
         function initCategories(data) {
             const categories = new Set(['All']);
             data.forEach(item => { if(item.category) categories.add(item.category); });
@@ -312,16 +251,13 @@
             });
         }
 
-        // --- Search Logic ---
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const resultsDiv = document.getElementById('results');
 
-        // Events
         searchBox.addEventListener('input', runSearch);
         searchMode.addEventListener('change', runSearch);
-        
         clearBtn.addEventListener('click', () => {
             searchBox.value = '';
             searchBox.focus();
@@ -331,36 +267,42 @@
         function runSearch() {
             const rawTerm = searchBox.value;
             const term = rawTerm.toLowerCase().trim();
-            const mode = searchMode.value; // 'contains', 'starts', 'exact'
+            const mode = searchMode.value;
 
             resultsDiv.innerHTML = '';
 
             const filtered = allData.filter(item => {
-                // 1. Check Category
                 const matchesCat = (activeCategory === 'All') || (item.category === activeCategory);
                 if (!matchesCat) return false;
-
-                // 2. Check Search Term based on Mode
                 if (term === '') return true;
 
                 const acr = item.acronym.toLowerCase();
                 const mean = item.meaning.toLowerCase();
 
-                if (mode === 'starts') {
-                    // "Begin with": Only checks the start of the Acronym
-                    return acr.startsWith(term);
-                } else if (mode === 'exact') {
-                    // "Exact term": Must match perfectly
-                    return acr === term;
-                } else {
-                    // "Contains": Checks both Acronym AND Meaning (Standard)
-                    return acr.includes(term) || mean.includes(term);
-                }
+                if (mode === 'starts') return acr.startsWith(term);
+                else if (mode === 'exact') return acr === term;
+                else return acr.includes(term) || mean.includes(term);
             });
 
-            // Render
+            // --- NO RESULTS: SHOW EXTERNAL SEARCH BUTTONS ---
             if (filtered.length === 0) {
-                resultsDiv.innerHTML = '<div class="no-results">No matches found.</div>';
+                // We use Google Site Search for reliability
+                const sofemaLink = `https://www.google.com/search?q=site:sofemaonline.com/aviation-abbreviations-glossary+"${term}"`;
+                const broadLink = `https://www.google.com/search?q=define+aviation+term+"${term}"`;
+
+                resultsDiv.innerHTML = `
+                    <div class="fallback-container">
+                        <div class="fallback-text">Not found in your database.</div>
+                        <div class="external-actions">
+                            <a href="${sofemaLink}" target="_blank" class="ext-btn">
+                                🔍 Search Sofema
+                            </a>
+                            <a href="${broadLink}" target="_blank" class="ext-btn">
+                                🌐 Search Web
+                            </a>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
@@ -368,14 +310,12 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 
-                // Highlight Logic (Only for 'Contains' mode effectively)
                 let displayMeaning = item.meaning;
                 if (term && mode === 'contains') {
                     const regex = new RegExp(`(${term})`, 'gi');
                     displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 176, 255, 0.2)">$1</span>');
                 }
 
-                // Report Link
                 let reportLink = "#";
                 if (REPORT_FORM_URL && REPORT_FORM_URL.includes('http')) {
                     reportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
