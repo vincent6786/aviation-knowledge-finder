@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V24</title>
+    <title>Pilot's EFB V25</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -24,6 +24,7 @@
             
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
+            --drawer-bg: #ffffff;
         }
 
         [data-theme="dark"] {
@@ -40,6 +41,7 @@
             --source-faa: #3498db;
             --source-sof: #d35400;
             --modal-bg: #1e272e;
+            --drawer-bg: #1e272e;
         }
 
         @keyframes breathe {
@@ -55,6 +57,7 @@
             background-size: 400% 400%;
             animation: breathe 15s ease infinite;
             min-height: 100vh; transition: color 0.3s;
+            overflow-x: hidden; /* Prevent horizontal scroll when drawer opens */
         }
 
         /* --- CONTROLS --- */
@@ -81,6 +84,9 @@
             padding: 6px; border-radius: 50%; transition: transform 0.2s;
         }
         .icon-btn:hover { transform: scale(1.2); background: rgba(255,255,255,0.2); }
+
+        /* Menu Button Animation */
+        .menu-btn { font-size: 1.4rem; padding: 4px 10px; }
 
         .search-wrapper {
             display: flex; align-items: center; gap: 8px;
@@ -155,15 +161,9 @@
         .source-tag { font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
-        
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
-
-        .meaning { 
-            line-height: 1.5; font-size: 0.95em; opacity: 0.9; cursor: pointer; 
-            transition: color 0.2s; position: relative;
-        }
+        .meaning { line-height: 1.5; font-size: 0.95em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; }
         .meaning:hover { color: var(--accent); }
-        
         .card-actions { display: flex; flex-direction: column; gap: 8px; align-items: center; }
         .action-btn { font-size: 1.1em; cursor: pointer; opacity: 0.3; transition: 0.2s; border: none; background: none; padding: 4px; }
         .action-btn:hover { opacity: 1; transform: scale(1.1); }
@@ -193,7 +193,46 @@
         }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- MODAL --- */
+        /* --- SIDE DRAWER (THE FLIGHT BAG) --- */
+        .drawer-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px);
+        }
+        .drawer {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+            background: var(--drawer-bg); border-right: 1px solid var(--glass-border);
+            z-index: 2000; padding: 20px; box-sizing: border-box;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.2);
+        }
+        .drawer.open { left: 0; }
+        
+        .drawer h3 { margin: 0; font-size: 1.1em; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+        .tool-section { display: flex; flex-direction: column; gap: 10px; }
+        .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
+        
+        /* Scratchpad */
+        #scratchpad {
+            width: 100%; height: 200px; border-radius: 8px; padding: 10px;
+            background: var(--input-bg); border: 1px solid var(--border);
+            color: var(--text); font-family: monospace; resize: none; box-sizing: border-box;
+            outline: none;
+        }
+        #scratchpad:focus { border-color: var(--accent); }
+
+        /* NATO Tool */
+        #natoInput {
+            width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none;
+        }
+        #natoResult {
+            font-family: monospace; font-size: 0.9em; line-height: 1.4; 
+            padding: 10px; background: rgba(0,0,0,0.05); border-radius: 6px;
+            min-height: 40px; color: var(--accent); font-weight: bold;
+        }
+
+        /* --- MODALS --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; backdrop-filter: blur(5px); }
         .modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -227,12 +266,10 @@
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer;
         }
         .flashcard.flipped { transform: rotateY(180deg); }
-        
         .shake { animation: shake 0.5s; }
         .pulse-green { animation: pulseGreen 0.5s; }
         @keyframes shake { 0% { transform: rotateY(180deg) translateX(0); } 25% { transform: rotateY(180deg) translateX(-10px); } 75% { transform: rotateY(180deg) translateX(10px); } 100% { transform: rotateY(180deg) translateX(0); } }
         @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
-
         .card-face {
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
             border-radius: 20px; background: var(--modal-bg); border: 1px solid var(--glass-border);
@@ -244,18 +281,15 @@
         .fc-acronym { font-size: 2.5em; font-weight: 800; color: var(--accent); margin: 0; }
         .fc-hint { font-size: 0.8em; opacity: 0.5; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .fc-meaning { font-size: 1.1em; line-height: 1.4; font-weight: 500; }
-        
         .fc-controls { 
             margin-top: 15px; width: 100%; display: flex; justify-content: space-between; align-items: center; 
             opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         .flashcard.flipped ~ .fc-controls { opacity: 1; pointer-events: auto; }
-        
         .game-btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .game-btn:active { transform: scale(0.95); }
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
-        
         .score-display { 
             position: absolute; top: -30px; width: 100%; text-align: center; 
             color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 0.9em;
@@ -265,6 +299,28 @@
     </style>
 </head>
 <body>
+
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+    
+    <div id="sideDrawer" class="drawer">
+        <h3>👜 Flight Bag</h3>
+        
+        <div class="tool-section">
+            <span class="tool-label">SCRATCHPAD (AUTO-SAVES)</span>
+            <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
+        </div>
+
+        <div class="tool-section">
+            <span class="tool-label">NATO PHONETIC TRANSLATOR</span>
+            <input type="text" id="natoInput" placeholder="Type text here..." autocomplete="off">
+            <div id="natoResult">...</div>
+            <button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button>
+        </div>
+        
+        <div style="margin-top:auto">
+            <button class="modal-btn cancel" id="closeDrawerBtn" style="width:100%">Close Bag</button>
+        </div>
+    </div>
 
     <div class="controls">
         <div class="hud-container">
@@ -277,15 +333,12 @@
         </div>
 
         <div class="top-row">
+            <button class="icon-btn menu-btn" id="menuBtn" title="Open Flight Bag">☰</button>
+            
             <select id="dbSource" title="Select Database">
                 <option value="sofema" selected>🇪🇺 SOFEMA</option>
                 <option value="faa">🇺🇸 FAA</option>
                 <option value="both">🌎 ALL SOURCES</option>
-            </select>
-            <select id="searchMode" title="Search Mode">
-                <option value="contains">Contains</option>
-                <option value="starts">Starts With</option>
-                <option value="exact">Exact</option>
             </select>
             
             <div style="display:flex; gap: 5px; margin-left: auto;">
@@ -303,8 +356,15 @@
             </button>
         </div>
         
-        <div class="filter-container" id="filterContainer"></div>
-        <div id="groupDesc" class="group-desc">Searching entire database.</div>
+        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+             <select id="searchMode" title="Search Mode" style="width: auto;">
+                <option value="contains">Contains</option>
+                <option value="starts">Starts With</option>
+                <option value="exact">Exact</option>
+            </select>
+            <div class="filter-container" id="filterContainer" style="flex-grow:1;"></div>
+        </div>
+        <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
     </div>
 
     <div id="results">
@@ -328,12 +388,10 @@
     <div id="settingsOverlay" class="modal-overlay"></div>
     <div id="settingsModal" class="modal">
         <h3>Flight Data Recorder</h3>
-        <p>Your history, favorites, and mastery rank are stored in this browser. Export to backup or move to another device.</p>
-        
+        <p>Your history, favorites, mastery rank, AND scratchpad notes are stored in this browser. Export to backup.</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Data (Backup)</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Import Data (Restore)</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
-        
         <div style="margin-top:15px; text-align:right;">
             <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
@@ -368,6 +426,7 @@
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
         };
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
+        const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
         
         const GROUP_CONFIG = {
             "Operations": { desc: "Includes: Navigation, Flight Ops, ATC, & Airspace", keywords: ["Navigation", "Flight Op", "Traffic"] },
@@ -381,6 +440,15 @@
             "Other": { desc: "Uncategorized terms." }
         };
 
+        const NATO_MAP = {
+            'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot',
+            'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima',
+            'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo',
+            'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray',
+            'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four',
+            '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal'
+        };
+
         // --- STATE ---
         let allData = [];
         let filteredData = [];
@@ -390,6 +458,7 @@
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
         let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; 
         let historyLog = JSON.parse(localStorage.getItem('pilotHistory')) || [];
+        let scratchpadText = localStorage.getItem('pilotScratchpad') || "";
 
         let sessionCorrect = 0;
         let sessionTotal = 0;
@@ -418,7 +487,6 @@
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
-        // --- HISTORY & USER DATA ---
         function addToHistory(item) {
             historyLog = historyLog.filter(x => x.acronym !== item.acronym);
             historyLog.unshift(item);
@@ -432,9 +500,7 @@
             if (index === -1) { favorites.push(item.acronym); showToast("Added to Favorites"); } 
             else { favorites.splice(index, 1); showToast("Removed from Favorites"); }
             localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
-            
             addToHistory(item); 
-
             if (activeGroup === 'Favorites') runSearch();
             else {
                 document.querySelectorAll(`[data-acr="${item.acronym}"]`).forEach(btn => {
@@ -482,12 +548,62 @@
             }
         }
 
+        // --- DRAWER & TOOLS LOGIC ---
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuBtn = document.getElementById('menuBtn');
+        const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+        const scratchpad = document.getElementById('scratchpad');
+        const natoInput = document.getElementById('natoInput');
+        const natoResult = document.getElementById('natoResult');
+        const natoSpeakBtn = document.getElementById('natoSpeakBtn');
+
+        // Init Scratchpad
+        scratchpad.value = scratchpadText;
+
+        function toggleDrawer() {
+            if (sideDrawer.classList.contains('open')) {
+                sideDrawer.classList.remove('open');
+                drawerOverlay.style.display = 'none';
+            } else {
+                sideDrawer.classList.add('open');
+                drawerOverlay.style.display = 'block';
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleDrawer);
+        closeDrawerBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+
+        // Scratchpad Auto-Save
+        scratchpad.addEventListener('input', (e) => {
+            localStorage.setItem('pilotScratchpad', e.target.value);
+        });
+
+        // NATO Logic
+        natoInput.addEventListener('input', (e) => {
+            const val = e.target.value.toUpperCase();
+            let result = [];
+            for (let char of val) {
+                if (NATO_MAP[char]) result.push(NATO_MAP[char]);
+                else if (char === ' ') result.push('[SPACE]');
+                else result.push(char);
+            }
+            natoResult.innerText = result.join(' ');
+        });
+
+        natoSpeakBtn.addEventListener('click', () => {
+            if (natoResult.innerText && natoResult.innerText !== '...') speakText(natoResult.innerText);
+        });
+
         // --- IMPORT / EXPORT LOGIC ---
         function exportData() {
+            const currentNote = document.getElementById('scratchpad').value;
             const data = {
                 history: historyLog,
                 favorites: favorites,
-                mastery: mastery
+                mastery: mastery,
+                scratchpad: currentNote
             };
             const jsonStr = JSON.stringify(data, null, 2);
             const blob = new Blob([jsonStr], { type: "application/json" });
@@ -514,9 +630,13 @@
                     if (data.history) { historyLog = data.history; localStorage.setItem('pilotHistory', JSON.stringify(historyLog)); }
                     if (data.favorites) { favorites = data.favorites; localStorage.setItem('pilotFavorites', JSON.stringify(favorites)); }
                     if (data.mastery) { mastery = data.mastery; localStorage.setItem('pilotMastery', JSON.stringify(mastery)); }
+                    if (data.scratchpad !== undefined) { 
+                        scratchpad.value = data.scratchpad; 
+                        localStorage.setItem('pilotScratchpad', data.scratchpad); 
+                    }
                     
                     updateRankHUD();
-                    runSearch(); // Refresh UI
+                    runSearch(); 
                     showToast("Data restored successfully!");
                     document.getElementById('settingsOverlay').style.display = 'none';
                     document.getElementById('settingsModal').style.display = 'none';
@@ -596,7 +716,6 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // Settings Modal Events
         const settingsOverlay = document.getElementById('settingsOverlay');
         const settingsModal = document.getElementById('settingsModal');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -604,24 +723,14 @@
         const importBtn = document.getElementById('importBtn');
         const fileInput = document.getElementById('fileInput');
 
-        settingsBtn.addEventListener('click', () => {
-            settingsOverlay.style.display = 'block';
-            settingsModal.style.display = 'block';
-        });
-        
-        function closeSettings() {
-            settingsOverlay.style.display = 'none';
-            settingsModal.style.display = 'none';
-        }
-        
+        settingsBtn.addEventListener('click', () => { settingsOverlay.style.display = 'block'; settingsModal.style.display = 'block'; });
+        function closeSettings() { settingsOverlay.style.display = 'none'; settingsModal.style.display = 'none'; }
         closeSettingsBtn.addEventListener('click', closeSettings);
         settingsOverlay.addEventListener('click', closeSettings);
-        
         exportBtn.addEventListener('click', exportData);
         importBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', importData);
 
-        // --- PARSING ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -641,7 +750,6 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- UI CHIPS ---
         function initGroupChips() {
             const groups = ['All', 'Favorites', 'History', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             filterContainer.innerHTML = '';
@@ -650,10 +758,8 @@
                 let extraClass = '';
                 if(grp === 'Favorites') extraClass = 'favorites';
                 if(grp === 'History') extraClass = 'history';
-
                 chip.className = `chip ${grp === 'All' ? 'active' : ''} ${extraClass}`;
                 chip.textContent = grp === 'Favorites' ? '⭐ Favorites' : (grp === 'History' ? '🕒 History' : grp);
-                
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
@@ -666,37 +772,30 @@
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
-        // --- SEARCH CORE ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
             const term = searchBox.value.toLowerCase().trim();
             const mode = searchMode.value;
-
             resultsDiv.innerHTML = '';
             let tempFiltered = allData;
 
-            // 1. Filter by Group
             if (activeGroup === 'Favorites') {
                 tempFiltered = tempFiltered.filter(item => favorites.includes(item.acronym));
                 if (tempFiltered.length === 0) {
                     resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO FAVORITES SAVED YET.</div>';
-                    filteredData = []; 
-                    return;
+                    filteredData = []; return;
                 }
             } else if (activeGroup === 'History') {
                 tempFiltered = historyLog;
                 if (tempFiltered.length === 0) {
                     resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO RECENT HISTORY.</div>';
-                    filteredData = []; 
-                    return;
+                    filteredData = []; return;
                 }
             } else if (activeGroup !== 'All') {
                 tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
-            
             filteredData = [...tempFiltered];
 
-            // 2. Filter by Search Term
             if (term !== '') {
                 tempFiltered = tempFiltered.filter(item => {
                     const acr = item.acronym.toLowerCase();
@@ -710,7 +809,6 @@
                  return;
             }
 
-            // Render
             if (tempFiltered.length > 0) {
                 const subset = tempFiltered.slice(0, 50);
                 subset.forEach((item, index) => {
@@ -719,13 +817,11 @@
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.style.animationDelay = `${index * 0.05}s`;
-                    
                     let displayMeaning = item.meaning;
                     if (term && mode === 'contains') {
                         const regex = new RegExp(`(${term})`, 'gi');
                         displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 168, 255, 0.3); color:inherit;">$1</span>');
                     }
-
                     card.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
@@ -744,29 +840,23 @@
                             <button class="action-btn report" title="Report Error">🚩</button>
                         </div>
                     `;
-                    
                     card.querySelector('.report').addEventListener('click', () => openReportModal(item));
                     card.querySelector('.star').addEventListener('click', () => toggleFavorite(item));
-                    
-                    card.querySelector('.speak').addEventListener('click', () => {
-                        speakText(item.meaning);
-                        addToHistory(item);
-                    });
-                    
-                    card.querySelector('.meaning').addEventListener('click', () => {
-                        navigator.clipboard.writeText(item.meaning);
-                        showToast("Definition copied!");
-                        addToHistory(item);
-                    });
-
+                    card.querySelector('.speak').addEventListener('click', () => { speakText(item.meaning); addToHistory(item); });
+                    card.querySelector('.meaning').addEventListener('click', () => { navigator.clipboard.writeText(item.meaning); showToast("Definition copied!"); addToHistory(item); });
                     resultsDiv.appendChild(card);
                 });
+                const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+                const sofemaLink = SOFEMA_URL;
+                const footer = document.createElement('div');
+                footer.className = 'search-footer';
+                footer.innerHTML = `<div class="footer-title">EXTEND SEARCH RANGE</div><div class="footer-buttons"><a href="${sofemaLink}" target="_blank" class="ext-btn">✈️ Sofema</a><a href="${webSearchLink}" target="_blank" class="ext-btn">🌐 Web Search</a></div>`;
+                resultsDiv.appendChild(footer);
             } else {
                 resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO TARGETS FOUND.</div>';
             }
         }
 
-        // --- FLASHCARD LOGIC ---
         const flashcardOverlay = document.getElementById('flashcardOverlay');
         const theFlashcard = document.getElementById('theFlashcard');
         const fcAcronym = document.getElementById('fcAcronym');
@@ -778,102 +868,56 @@
         const sessionScore = document.getElementById('sessionScore');
 
         function startFlashcardSession() {
-            if (filteredData.length === 0) {
-                showToast("No cards available in this filter/group.");
-                return;
-            }
-            sessionCorrect = 0;
-            sessionTotal = 0;
-            updateScoreUI();
-            showNextCard();
-            flashcardOverlay.style.display = 'block';
-            window.addEventListener('keydown', handleKeyboard);
+            if (filteredData.length === 0) { showToast("No cards available in this filter/group."); return; }
+            sessionCorrect = 0; sessionTotal = 0; updateScoreUI(); showNextCard();
+            flashcardOverlay.style.display = 'block'; window.addEventListener('keydown', handleKeyboard);
         }
-        
-        function endFlashcardSession() {
-            flashcardOverlay.style.display = 'none';
-            window.removeEventListener('keydown', handleKeyboard);
-            runSearch();
-        }
-
+        function endFlashcardSession() { flashcardOverlay.style.display = 'none'; window.removeEventListener('keydown', handleKeyboard); runSearch(); }
         function showNextCard() {
             let pool = filteredData;
             const unmastered = filteredData.filter(i => !mastery[i.acronym]);
             if (unmastered.length > 0 && Math.random() > 0.2) pool = unmastered;
-
             const randomItem = pool[Math.floor(Math.random() * pool.length)];
             currentFlashcardItem = randomItem;
-            
             addToHistory(randomItem);
-            
             fcAcronym.textContent = randomItem.acronym;
             fcMeaning.textContent = randomItem.meaning;
             fcSource.textContent = randomItem.source;
             fcSource.className = `source-tag ${randomItem.source}`;
-            
             theFlashcard.classList.remove('flipped', 'shake', 'pulse-green');
         }
-
         function updateScoreUI() {
             const pct = sessionTotal === 0 ? 0 : Math.round((sessionCorrect / sessionTotal) * 100);
             sessionScore.innerText = `Session Accuracy: ${pct}% (${sessionCorrect}/${sessionTotal})`;
         }
-
         function handleGameResult(correct) {
             sessionTotal++;
-            if (correct) {
-                sessionCorrect++;
-                theFlashcard.classList.add('pulse-green');
-            } else {
-                theFlashcard.classList.add('shake');
-            }
+            if (correct) { sessionCorrect++; theFlashcard.classList.add('pulse-green'); } 
+            else { theFlashcard.classList.add('shake'); }
             if(currentFlashcardItem) updateMastery(currentFlashcardItem.acronym, correct);
-            updateScoreUI();
-            setTimeout(() => { showNextCard(); }, 600);
+            updateScoreUI(); setTimeout(() => { showNextCard(); }, 600);
         }
-
         function handleKeyboard(e) {
             if (flashcardOverlay.style.display !== 'block') return;
-            if (e.code === 'Space') {
-                e.preventDefault(); theFlashcard.classList.toggle('flipped');
-            } else if (e.code === 'ArrowRight') {
-                if (theFlashcard.classList.contains('flipped')) handleGameResult(true);
-            } else if (e.code === 'ArrowLeft') {
-                if (theFlashcard.classList.contains('flipped')) handleGameResult(false);
-            } else if (e.code === 'Escape') {
-                endFlashcardSession();
-            }
+            if (e.code === 'Space') { e.preventDefault(); theFlashcard.classList.toggle('flipped'); } 
+            else if (e.code === 'ArrowRight') { if (theFlashcard.classList.contains('flipped')) handleGameResult(true); } 
+            else if (e.code === 'ArrowLeft') { if (theFlashcard.classList.contains('flipped')) handleGameResult(false); } 
+            else if (e.code === 'Escape') { endFlashcardSession(); }
         }
-
         randomBtn.addEventListener('click', startFlashcardSession);
         theFlashcard.addEventListener('click', () => theFlashcard.classList.toggle('flipped'));
         missBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(false); });
         gotBtn.addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(true); });
         closeFcBtn.addEventListener('click', endFlashcardSession);
 
-        // --- REPORT MODAL ---
         const modalOverlay = document.getElementById('modalOverlay');
         const reportModal = document.getElementById('reportModal');
         const reportComment = document.getElementById('reportComment');
         const modalTitle = document.getElementById('modalTitle');
         const cancelModalBtn = document.getElementById('cancelModalBtn');
         const sendEmailBtn = document.getElementById('sendEmailBtn');
-
-        function openReportModal(item) {
-            currentReportItem = item;
-            modalTitle.innerText = `Report: ${item.acronym}`;
-            reportComment.value = ""; 
-            modalOverlay.style.display = 'block';
-            reportModal.style.display = 'block';
-            reportComment.focus();
-        }
-
-        function closeReportModal() {
-            modalOverlay.style.display = 'none';
-            reportModal.style.display = 'none';
-            currentReportItem = null;
-        }
-
+        function openReportModal(item) { currentReportItem = item; modalTitle.innerText = `Report: ${item.acronym}`; reportComment.value = ""; modalOverlay.style.display = 'block'; reportModal.style.display = 'block'; reportComment.focus(); }
+        function closeReportModal() { modalOverlay.style.display = 'none'; reportModal.style.display = 'none'; currentReportItem = null; }
         cancelModalBtn.addEventListener('click', closeReportModal);
         modalOverlay.addEventListener('click', closeReportModal);
         sendEmailBtn.addEventListener('click', () => {
@@ -884,7 +928,6 @@
             window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
             closeReportModal();
         });
-
     </script>
 </body>
 </html>
