@@ -3,135 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviation Acronym Search</title>
+    <title>Acronym Search</title>
     <style>
         /* Notion-like Styling */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
-            background-color: #ffffff; /* Change to #191919 for Dark Mode */
-            color: #37352f; /* Change to #d4d4d4 for Dark Mode */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
             padding: 20px;
+            color: #37352f;
+            background-color: transparent; /* Matches Notion background */
             margin: 0;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+        /* Search Input Styling */
+        .search-container {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
         }
 
-        h2 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        /* Search Input */
-        input[type="text"] {
+        input {
             width: 100%;
-            padding: 10px;
+            padding: 10px 12px;
             font-size: 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
+            border: 1px solid rgba(55, 53, 47, 0.16);
+            border-radius: 6px;
             box-sizing: border-box;
             outline: none;
-            transition: border 0.2s;
+            background: #f7f9fb;
+            transition: all 0.2s ease;
         }
 
-        input[type="text"]:focus {
+        input:focus {
+            background: white;
             border-color: #2eaadc;
+            box-shadow: 0 0 0 2px rgba(46, 170, 220, 0.2);
         }
 
-        /* Results List */
+        /* Results Styling */
         #results {
             margin-top: 15px;
-            list-style-type: none;
-            padding: 0;
         }
 
-        .result-item {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f0f0f0;
+        .card {
+            padding: 12px 4px;
+            border-bottom: 1px solid rgba(55, 53, 47, 0.09);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .acronym {
-            font-weight: bold;
-            color: #eb5757; /* Red highlight for the acronym */
-            min-width: 80px;
+        .acronym-title {
+            font-weight: 600;
+            font-size: 1.05em;
+            color: #37352f;
+            background-color: rgba(235, 236, 237, 0.6);
+            padding: 2px 6px;
+            border-radius: 4px;
+            align-self: flex-start; /* Keeps the badge small */
         }
 
-        .definition {
-            color: #555;
-            flex-grow: 1;
-            text-align: right;
+        .meaning-text {
+            color: #4f4e4b;
+            font-size: 0.95em;
+            line-height: 1.5;
+            padding-left: 2px;
         }
-        
-        .no-result {
-            color: #999;
-            font-style: italic;
-            margin-top: 10px;
+
+        .loading, .no-results {
+            color: rgba(55, 53, 47, 0.5);
+            font-size: 0.9em;
+            text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>✈️ Acronym Finder</h2>
-    <input type="text" id="searchInput" placeholder="Type acronym (e.g. VFR)..." onkeyup="searchAcronyms()">
-    <div id="results"></div>
-</div>
+    <div class="search-container">
+        <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
+    </div>
 
-<script>
-    // --- YOUR DATA GOES HERE ---
-    // You can add as many as you want in this format: "ACRONYM": "Definition"
-    const acronyms = {
-        "VFR": "Visual Flight Rules",
-        "IFR": "Instrument Flight Rules",
-        "METAR": "Meteorological Aerodrome Report",
-        "TAF": "Terminal Aerodrome Forecast",
-        "NOTAM": "Notice to Air Missions",
-        "ATC": "Air Traffic Control",
-        "ILS": "Instrument Landing System",
-        "AGL": "Above Ground Level",
-        "MSL": "Mean Sea Level",
-        "PIC": "Pilot In Command",
-        "ETA": "Estimated Time of Arrival",
-        "ETD": "Estimated Time of Departure",
-        "FOD": "Foreign Object Debris",
-        "PAPI": "Precision Approach Path Indicator"
-    };
+    <div id="results">
+        <div class="loading">Loading dictionary...</div>
+    </div>
 
-    function searchAcronyms() {
-        const input = document.getElementById('searchInput').value.toUpperCase();
+    <script>
+        // YOUR SPECIFIC GOOGLE SHEET LINK
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
+
+        let dictionaryData = [];
         const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = ''; // Clear previous results
+        const searchBox = document.getElementById('searchBox');
 
-        if (input.length === 0) {
-            return; // Show nothing if input is empty
-        }
-
-        let count = 0;
-        const keys = Object.keys(acronyms);
-
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            // Check if the Key matches OR the Definition matches
-            if (key.includes(input) || acronyms[key].toUpperCase().includes(input)) {
+        // Robust CSV Parser (Handles commas inside meanings)
+        function parseCSV(text) {
+            const rows = [];
+            // This regex matches a CSV field: either quoted content OR non-comma content
+            const pattern = /(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g; 
+            
+            const lines = text.split('\n');
+            
+            // Skip header (i=1 instead of 0)
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue; // Skip empty lines
                 
-                const item = document.createElement('div');
-                item.className = 'result-item';
-                item.innerHTML = `<span class="acronym">${key}</span> <span class="definition">${acronyms[key]}</span>`;
-                resultsDiv.appendChild(item);
-                count++;
+                // Matches the line against the CSV pattern
+                // If simple split fails, this regex handles quotes: "Meaning, with comma"
+                let matches = line.match(/(".*?"|[^",]+)(?=\s*,|\s*)/g);
+                
+                if (matches && matches.length >= 2) {
+                    // Clean up quotes if they exist (e.g. "Text" -> Text)
+                    const cleanAcronym = matches[0].replace(/^"|"$/g, '').trim();
+                    const cleanMeaning = matches[1].replace(/^"|"$/g, '').trim();
+                    
+                    rows.push({ acronym: cleanAcronym, meaning: cleanMeaning });
+                }
             }
+            return rows;
         }
 
-        if (count === 0) {
-            resultsDiv.innerHTML = '<div class="no-result">No acronym found.</div>';
-        }
-    }
-</script>
+        // Fetch Data
+        fetch(sheetUrl)
+            .then(res => res.text())
+            .then(text => {
+                dictionaryData = parseCSV(text);
+                resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
+                console.log("Loaded " + dictionaryData.length + " entries.");
+            })
+            .catch(err => {
+                resultsDiv.innerHTML = '<div class="no-results">Error loading data. Check console.</div>';
+                console.error(err);
+            });
 
+        // Search Logic
+        searchBox.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            resultsDiv.innerHTML = '';
+
+            // 1. If empty, show nothing (cleaner interface)
+            if (term.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">Type above to search</div>';
+                return;
+            }
+
+            // 2. Filter logic
+            const filtered = dictionaryData.filter(item => 
+                item.acronym.toLowerCase().includes(term) || 
+                item.meaning.toLowerCase().includes(term)
+            );
+
+            // 3. Display Results
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No matches found</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="acronym-title">${item.acronym}</div>
+                    <div class="meaning-text">${item.meaning}</div>
+                `;
+                resultsDiv.appendChild(card);
+            });
+        });
+    </script>
 </body>
 </html>
