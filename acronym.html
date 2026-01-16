@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V26</title>
+    <title>Pilot's Database V27</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            /* Default Light Mode */
+            /* Light Mode */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
@@ -43,7 +43,7 @@
             --drawer-bg: #1e272e;
         }
 
-        /* DYNAMIC BACKGROUNDS */
+        /* BACKGROUNDS */
         .bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
         .bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
         .bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
@@ -95,7 +95,15 @@
 
         #searchBox { flex-grow: 1; border: none; background: transparent; padding: 8px 16px; font-size: 16px; color: var(--text); outline: none; }
         #searchBtn { background-color: var(--accent); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
         #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.7em; cursor: pointer; margin-right: 8px; display: none; }
+        
+        /* NEW: Back Button */
+        #backBtn { 
+            background: none; border: none; color: var(--accent); font-weight: 700; 
+            font-size: 0.9em; cursor: pointer; padding-left: 10px; display: none; 
+        }
+        #backBtn:hover { text-decoration: underline; }
 
         /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.85em; opacity: 0.9; }
@@ -184,11 +192,6 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* REPORT CARD */
-        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .report-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .report-item.missed { color: var(--error); }
-
         /* FLASHCARD */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 260px; perspective: 1000px; z-index: 2001; }
@@ -260,6 +263,7 @@
         </div>
 
         <div class="search-wrapper">
+            <button id="backBtn">⬅</button>
             <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
             <button id="clearBtn">CLEAR</button>
             <button id="searchBtn">🔍</button>
@@ -297,8 +301,14 @@
         <h3>System Settings</h3>
         
         <div class="toggle-row">
-            <span>Dynamic Weather Background</span>
-            <label class="switch"><input type="checkbox" id="toggleBg"><span class="slider"></span></label>
+            <span>Weather Background</span>
+            <select id="weatherSelect" style="width:auto; padding:4px;">
+                <option value="auto">Auto (Time)</option>
+                <option value="bg-sunrise">Sunrise</option>
+                <option value="bg-day">Day VFR</option>
+                <option value="bg-sunset">Sunset</option>
+                <option value="bg-night">Night IFR</option>
+            </select>
         </div>
         <div class="toggle-row">
             <span>Sound Effects (SFX)</span>
@@ -314,18 +324,6 @@
         <div style="margin-top:15px; text-align:right;">
             <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
-    </div>
-
-    <div id="debriefOverlay" class="modal-overlay"></div>
-    <div id="debriefModal" class="modal">
-        <h3>Flight Debriefing</h3>
-        <div style="text-align:center; margin-bottom:15px;">
-            <div style="font-size:3em; font-weight:bold; color:var(--accent);" id="debriefGrade">A</div>
-            <div style="font-size:1.2em;" id="debriefScore">10/10</div>
-        </div>
-        <p>Review Items:</p>
-        <div class="report-list" id="debriefList"></div>
-        <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
     </div>
 
     <div id="flashcardOverlay" class="modal-overlay">
@@ -375,33 +373,32 @@
 
         // STATE
         let allData = [];
-        let acronymSet = new Set(); // For hyperlinking
+        let acronymSet = new Set(); 
         let filteredData = [];
         let activeGroup = 'All';
         let currentReportItem = null;
         let currentFlashcardItem = null;
+        let searchStack = []; // For Navigation History
         
         // Persistent
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
         let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; 
         let historyLog = JSON.parse(localStorage.getItem('pilotHistory')) || [];
-        let settings = JSON.parse(localStorage.getItem('pilotSettings')) || { sfx: false, dynamicBg: false };
+        // Settings update: Now 'weather' stores the class name or 'auto'
+        let settings = JSON.parse(localStorage.getItem('pilotSettings')) || { sfx: false, weather: 'auto' };
         let scratchpadText = localStorage.getItem('pilotScratchpad') || "";
 
-        // Session Stats
-        let sessionStats = { total: 0, correct: 0, missedItems: [] };
+        let sessionStats = { total: 0, correct: 0 };
 
-        // --- SOUND ENGINE (Web Audio API) ---
+        // --- SOUND ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (!settings.sfx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-
             if (type === 'click') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
@@ -421,17 +418,23 @@
 
         // --- BACKGROUND ENGINE ---
         function updateBackground() {
-            document.body.className = ''; // Reset
-            if (!settings.dynamicBg) return; // Keep default gradient if off
+            document.body.className = ''; 
             
+            // Manual Override
+            if (settings.weather !== 'auto') {
+                document.body.classList.add(settings.weather);
+                return;
+            }
+            
+            // Auto Mode
             const hour = new Date().getHours();
             if (hour >= 5 && hour < 8) document.body.classList.add('bg-sunrise');
             else if (hour >= 8 && hour < 17) document.body.classList.add('bg-day');
             else if (hour >= 17 && hour < 20) document.body.classList.add('bg-sunset');
             else document.body.classList.add('bg-night');
         }
-        setInterval(updateBackground, 60000); // Check every minute
-        updateBackground(); // Initial check
+        setInterval(updateBackground, 60000); 
+        updateBackground(); 
 
         // --- DATA LOGIC ---
         function fetchSheet(url, sourceName) {
@@ -456,14 +459,13 @@
 
             Promise.all(promises).then(results => {
                 allData = results.flat();
-                
-                // Build Set for Hyperlinking
                 acronymSet = new Set(allData.map(i => i.acronym));
                 
                 activeGroup = 'All';
                 initGroupChips();
                 filteredData = [...allData];
                 updateRankHUD();
+                
                 const currentTerm = document.getElementById('searchBox').value;
                 if(currentTerm.length > 0) runSearch();
                 else resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
@@ -474,31 +476,45 @@
             });
         }
 
-        // --- HYPERLINK LOGIC ---
+        // --- HYPERLINK & NAVIGATION ---
         function autoLink(text) {
-            // Find words that match acronyms in our DB (length > 1 to avoid linking "A", "I")
-            // This is a simple word boundary regex replacement
             return text.replace(/\b([A-Z0-9]{2,})\b/g, (match) => {
                 if (acronymSet.has(match)) {
-                    return `<span class="term-link" onclick="searchFor('${match}')">${match}</span>`;
+                    return `<span class="term-link" onclick="navigateFor('${match}')">${match}</span>`;
                 }
                 return match;
             });
         }
         
-        window.searchFor = function(term) {
+        window.navigateFor = function(term) {
+            // Push current search to stack before moving
+            const currentVal = document.getElementById('searchBox').value;
+            if(currentVal) searchStack.push(currentVal);
+            
+            document.getElementById('backBtn').style.display = 'block'; // Show Back
+            
             document.getElementById('searchBox').value = term;
             document.getElementById('clearBtn').style.display = 'block';
             runSearch();
             playSound('click');
         };
+        
+        document.getElementById('backBtn').addEventListener('click', () => {
+            if(searchStack.length > 0) {
+                const prev = searchStack.pop();
+                document.getElementById('searchBox').value = prev;
+                runSearch();
+                playSound('click');
+            }
+            if(searchStack.length === 0) document.getElementById('backBtn').style.display = 'none';
+        });
 
         // --- INITIALIZATION ---
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
         document.getElementById('scratchpad').value = scratchpadText;
-        document.getElementById('toggleBg').checked = settings.dynamicBg;
+        document.getElementById('weatherSelect').value = settings.weather || 'auto';
         document.getElementById('toggleSfx').checked = settings.sfx;
         
         loadData('sofema'); 
@@ -586,7 +602,7 @@
                 tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
             
-            filteredData = [...tempFiltered]; // Sync for flashcards
+            filteredData = [...tempFiltered]; 
 
             if (term !== '') {
                 tempFiltered = tempFiltered.filter(item => {
@@ -610,15 +626,16 @@
                     card.className = 'card';
                     card.style.animationDelay = `${index * 0.05}s`;
                     
-                    // Highlight logic
                     let displayMeaning = item.meaning;
                     if (term && mode === 'contains') {
                         const regex = new RegExp(`(${term})`, 'gi');
                         displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 168, 255, 0.3); color:inherit;">$1</span>');
                     }
                     
-                    // APPLY SMART LINKS
                     displayMeaning = autoLink(displayMeaning);
+
+                    // NEW: Google Search Link Logic
+                    const googleLink = `https://www.google.com/search?q=aviation+definition+${encodeURIComponent(item.acronym)}`;
 
                     card.innerHTML = `
                         <div class="card-content">
@@ -635,6 +652,7 @@
                         <div class="card-actions">
                             <button class="action-btn star ${isFav ? 'active' : ''}" data-acr="${item.acronym}" title="Toggle Favorite">${isFav ? '⭐' : '☆'}</button>
                             <button class="action-btn speak" title="Listen">🔊</button>
+                            <a href="${googleLink}" target="_blank" class="action-btn" title="Explore on Google">🌐</a>
                             <button class="action-btn report" title="Report Error">🚩</button>
                         </div>
                     `;
@@ -652,12 +670,10 @@
         // --- FLASHCARD SESSION ---
         const flashcardOverlay = document.getElementById('flashcardOverlay');
         const theFlashcard = document.getElementById('theFlashcard');
-        const debriefOverlay = document.getElementById('debriefOverlay');
-        const debriefModal = document.getElementById('debriefModal');
 
         function startFlashcardSession() {
             if (filteredData.length === 0) { showToast("No cards available in this filter/group."); return; }
-            sessionStats = { total: 0, correct: 0, missedItems: [] };
+            sessionStats = { total: 0, correct: 0 };
             updateScoreUI();
             showNextCard();
             flashcardOverlay.style.display = 'block';
@@ -669,43 +685,10 @@
             flashcardOverlay.style.display = 'none';
             window.removeEventListener('keydown', handleKeyboard);
             runSearch();
-            showDebrief();
-        }
-
-        function showDebrief() {
-            if (sessionStats.total === 0) return;
-            const pct = Math.round((sessionStats.correct / sessionStats.total) * 100);
-            let grade = 'F';
-            if (pct === 100) grade = 'S (Superb)';
-            else if (pct >= 90) grade = 'A';
-            else if (pct >= 80) grade = 'B';
-            else if (pct >= 70) grade = 'C';
-            else if (pct >= 60) grade = 'D';
-
-            document.getElementById('debriefGrade').innerText = grade;
-            document.getElementById('debriefScore').innerText = `${pct}% Accuracy`;
-            
-            const list = document.getElementById('debriefList');
-            list.innerHTML = '';
-            if (sessionStats.missedItems.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:10px;">Perfect Check Ride! No errors.</div>';
-            } else {
-                sessionStats.missedItems.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'report-item missed';
-                    div.innerHTML = `<span>${item.acronym}</span> <span style="font-size:0.8em; opacity:0.7">Missed</span>`;
-                    list.appendChild(div);
-                });
-            }
-            
-            debriefOverlay.style.display = 'block';
-            debriefModal.style.display = 'block';
-            playSound('success');
         }
 
         function showNextCard() {
             let pool = filteredData;
-            // Weighted random: 70% chance to show an unmastered item
             const unmastered = filteredData.filter(i => !mastery[i.acronym]);
             if (unmastered.length > 0 && Math.random() > 0.3) pool = unmastered;
 
@@ -740,7 +723,6 @@
                 theFlashcard.classList.add('shake');
                 playSound('error');
                 if(currentFlashcardItem) {
-                    sessionStats.missedItems.push(currentFlashcardItem);
                     if (mastery[currentFlashcardItem.acronym]) {
                         delete mastery[currentFlashcardItem.acronym];
                         localStorage.setItem('pilotMastery', JSON.stringify(mastery));
@@ -759,11 +741,6 @@
         document.getElementById('gotBtn').addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(true); });
         theFlashcard.addEventListener('click', () => { theFlashcard.classList.toggle('flipped'); playSound('click'); });
         
-        document.getElementById('closeDebriefBtn').addEventListener('click', () => {
-            debriefOverlay.style.display = 'none';
-            debriefModal.style.display = 'none';
-        });
-
         // Settings
         document.getElementById('settingsBtn').addEventListener('click', () => { 
             document.getElementById('settingsOverlay').style.display = 'block'; 
@@ -775,8 +752,8 @@
         });
         
         // Toggles
-        document.getElementById('toggleBg').addEventListener('change', (e) => {
-            settings.dynamicBg = e.target.checked;
+        document.getElementById('weatherSelect').addEventListener('change', (e) => {
+            settings.weather = e.target.value;
             localStorage.setItem('pilotSettings', JSON.stringify(settings));
             updateBackground();
         });
@@ -826,6 +803,9 @@
                     chip.classList.add('active');
                     activeGroup = grp;
                     document.getElementById('groupDesc').textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
+                    // Clear search stack when changing groups
+                    searchStack = [];
+                    document.getElementById('backBtn').style.display = 'none';
                     runSearch();
                     playSound('click');
                 });
@@ -872,6 +852,7 @@
         function openReportModal(item) { currentReportItem = item; document.getElementById('modalTitle').innerText = `Report: ${item.acronym}`; document.getElementById('reportComment').value = ""; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('reportModal').style.display = 'block'; }
         function closeReportModal() { document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('reportModal').style.display = 'none'; }
         document.getElementById('cancelModalBtn').addEventListener('click', closeReportModal);
+        document.getElementById('modalOverlay').addEventListener('click', closeReportModal);
         document.getElementById('sendEmailBtn').addEventListener('click', () => {
             if (!currentReportItem) return;
             const subject = `Correction for ${currentReportItem.acronym}`;
@@ -896,7 +877,6 @@
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
         });
 
-        // Parse CSV helper for new users
         function parseCSV(text) {
             const rows = []; const lines = text.split('\n');
             for (let i = 1; i < lines.length; i++) {
