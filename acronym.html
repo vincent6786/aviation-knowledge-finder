@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V12</title>
+    <title>Pilot's Database V13</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -19,7 +19,6 @@
             --footer-bg: #f7f9fb;
             --select-bg: #ffffff;
             --desc-text: #888888;
-            /* Source Tags */
             --source-faa: #3498db;
             --source-sof: #e67e22;
         }
@@ -50,7 +49,7 @@
         .controls {
             position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; z-index: 10;
             display: flex; flex-direction: column; gap: 10px;
-            border-bottom: 1px solid var(--border); /* Added separator */
+            border-bottom: 1px solid var(--border);
         }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -88,21 +87,20 @@
         }
 
         .filter-container {
-            display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scrollbar-width: none;
+            display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none;
         }
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 4px 12px; font-size: 0.85em; background: var(--chip-bg); border-radius: 12px;
+            padding: 6px 14px; font-size: 0.85em; background: var(--chip-bg); border-radius: 16px;
             cursor: pointer; white-space: nowrap; transition: 0.2s; font-weight: 500;
         }
         .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
-        /* NEW: Group Description Text */
+        /* Dynamic Description Text */
         .group-desc {
             font-size: 0.75em; color: var(--desc-text); padding-left: 4px; font-style: italic;
-            min-height: 1.2em; /* Prevents layout jump */
-            transition: opacity 0.3s;
+            min-height: 1.2em; transition: opacity 0.3s;
         }
 
         /* --- RESULTS --- */
@@ -198,25 +196,25 @@
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
 
-        // --- GROUP DEFINITIONS (Rules + Descriptions) ---
+        // --- UPDATED GROUP DEFINITIONS (FULL NAMES) ---
         const GROUP_CONFIG = {
-            "OPS": {
+            "Operations": {
                 desc: "Includes: Navigation, Flight Ops, ATC, & Airspace",
                 keywords: ["Navigation", "Flight Op", "Traffic"]
             },
-            "WX": {
+            "Weather": {
                 desc: "Includes: Meteorology, Weather Codes, Forecasts & Icing",
                 keywords: ["Weather", "Meteorology"]
             },
-            "SYS": {
+            "Systems": {
                 desc: "Includes: Avionics, Systems, Hydraulics, Maintenance & Infrastructure",
                 keywords: ["Avionics", "System", "Maintenance", "Infrastruct"]
             },
-            "REGS": {
+            "Regulations": {
                 desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment",
                 keywords: ["Regulat", "Safety", "Standard"]
             },
-            "BIZ": {
+            "Business": {
                 desc: "Includes: Commercial, Airline Ops, IT, Training & Military",
                 keywords: ["Airline", "Commerc", "Training", "Military"]
             },
@@ -278,7 +276,7 @@
                 .then(results => {
                     allData = results.flat();
                     activeGroup = 'All';
-                    initGroupChips(); // Re-init chips
+                    initGroupChips();
                     
                     const currentTerm = document.getElementById('searchBox').value;
                     if(currentTerm.length > 0) runSearch();
@@ -290,7 +288,7 @@
                 });
         }
 
-        loadData('faa'); // Initial Load
+        loadData('faa'); 
 
         // --- CONTROLS ---
         const dbSource = document.getElementById('dbSource');
@@ -298,7 +296,7 @@
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
-        const groupDesc = document.getElementById('groupDesc'); // The text element
+        const groupDesc = document.getElementById('groupDesc');
 
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
         searchBox.addEventListener('input', () => {
@@ -339,38 +337,30 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- GROUP CHIPS & DESCRIPTION LOGIC ---
+        // --- GROUP CHIPS ---
         function initGroupChips() {
-            // Fixed order for better UX
-            const groups = ['All', 'OPS', 'WX', 'SYS', 'REGS', 'BIZ', 'Other'];
+            // Full names order
+            const groups = ['All', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             const container = document.getElementById('filterContainer');
             container.innerHTML = '';
 
             groups.forEach(grp => {
-                // Only show chips if data actually exists for them (optional, but cleaner)
-                // For now we show all so the user learns the system.
-                
                 const chip = document.createElement('div');
                 chip.className = `chip ${grp === 'All' ? 'active' : ''}`;
                 chip.textContent = grp;
                 
                 chip.addEventListener('click', () => {
-                    // Update Active Chip UI
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
-                    
-                    // Update State
                     activeGroup = grp;
                     
-                    // Update Description Text
+                    // Show description
                     groupDesc.textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
                     
                     runSearch();
                 });
                 container.appendChild(chip);
             });
-            
-            // Reset description text
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
