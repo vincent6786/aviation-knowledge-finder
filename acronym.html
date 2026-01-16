@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V14</title>
+    <title>Pilot's Database V17</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -21,6 +21,8 @@
             --desc-text: #888888;
             --source-faa: #3498db;
             --source-sof: #e67e22;
+            --modal-overlay: rgba(15, 15, 15, 0.6);
+            --modal-bg: #ffffff;
         }
 
         [data-theme="dark"] {
@@ -37,6 +39,8 @@
             --desc-text: #aaaaaa;
             --source-faa: #2980b9;
             --source-sof: #d35400;
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+            --modal-bg: #262626;
         }
 
         body {
@@ -119,7 +123,6 @@
         }
         
         .meta-tags { display: flex; gap: 6px; align-items: center; }
-        
         .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
         
         .source-tag { 
@@ -130,8 +133,9 @@
 
         .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
         
-        /* Flag Button Styling */
-        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; transition: opacity 0.2s; }
+        .report-btn { 
+            font-size: 1.2em; cursor: pointer; opacity: 0.2; transition: opacity 0.2s; border: none; background: none; padding: 0;
+        }
         .card:hover .report-btn { opacity: 1; }
         .report-btn:hover { opacity: 1; transform: scale(1.1); }
 
@@ -151,6 +155,34 @@
         .ext-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         .loading { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--modal-overlay); z-index: 1000;
+        }
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--modal-bg); padding: 20px; border-radius: 12px;
+            width: 90%; max-width: 400px; z-index: 1001;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--border);
+        }
+        .modal h3 { margin: 0 0 15px 0; font-size: 1.1em; color: var(--text); }
+        .modal textarea {
+            width: 100%; height: 80px; padding: 10px; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--input-bg);
+            color: var(--text); font-family: inherit; font-size: 0.9em; resize: none;
+            box-sizing: border-box; outline: none; margin-bottom: 15px;
+        }
+        .modal textarea:focus { border-color: var(--accent); }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-btn {
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; border: none;
+        }
+        .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .modal-btn.send { background: var(--accent); color: white; }
+        .modal-btn.send:hover { opacity: 0.9; }
+
     </style>
 </head>
 <body>
@@ -179,12 +211,21 @@
         </div>
         
         <div class="filter-container" id="filterContainer"></div>
-        
         <div id="groupDesc" class="group-desc">Searching entire database.</div>
     </div>
 
     <div id="results">
         <div class="loading">Loading data...</div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay"></div>
+    <div id="reportModal" class="modal">
+        <h3 id="modalTitle">Report Error</h3>
+        <textarea id="reportComment" placeholder="Describe the error or suggested correction..."></textarea>
+        <div class="modal-buttons">
+            <button id="cancelModalBtn" class="modal-btn cancel">Cancel</button>
+            <button id="sendEmailBtn" class="modal-btn send">Draft Email</button>
+        </div>
     </div>
 
     <script>
@@ -195,31 +236,16 @@
             faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv",
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
         };
-        const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
+        
+        const REPORT_EMAIL = "vincent6786@gmail.com"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
 
-        // --- GROUP DEFINITIONS (Full Names) ---
         const GROUP_CONFIG = {
-            "Operations": {
-                desc: "Includes: Navigation, Flight Ops, ATC, & Airspace",
-                keywords: ["Navigation", "Flight Op", "Traffic"]
-            },
-            "Weather": {
-                desc: "Includes: Meteorology, Weather Codes, Forecasts & Icing",
-                keywords: ["Weather", "Meteorology"]
-            },
-            "Systems": {
-                desc: "Includes: Avionics, Systems, Hydraulics, Maintenance & Infrastructure",
-                keywords: ["Avionics", "System", "Maintenance", "Infrastruct"]
-            },
-            "Regulations": {
-                desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment",
-                keywords: ["Regulat", "Safety", "Standard"]
-            },
-            "Business": {
-                desc: "Includes: Commercial, Airline Ops, IT, Training & Military",
-                keywords: ["Airline", "Commerc", "Training", "Military"]
-            },
+            "Operations": { desc: "Includes: Navigation, Flight Ops, ATC, & Airspace", keywords: ["Navigation", "Flight Op", "Traffic"] },
+            "Weather": { desc: "Includes: Meteorology, Weather Codes, Forecasts & Icing", keywords: ["Weather", "Meteorology"] },
+            "Systems": { desc: "Includes: Avionics, Systems, Hydraulics, Maintenance & Infrastructure", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] },
+            "Regulations": { desc: "Includes: ICAO/EASA/FAA Rules, Safety SMS & Environment", keywords: ["Regulat", "Safety", "Standard"] },
+            "Business": { desc: "Includes: Commercial, Airline Ops, IT, Training & Military", keywords: ["Airline", "Commerc", "Training", "Military"] },
             "All": { desc: "Searching entire database." },
             "Other": { desc: "Uncategorized terms." }
         };
@@ -228,10 +254,54 @@
 
         let allData = [];
         let activeGroup = 'All';
+        
+        // Modal State
+        let currentReportItem = null;
 
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
+
+        // --- MODAL LOGIC ---
+        const modalOverlay = document.getElementById('modalOverlay');
+        const reportModal = document.getElementById('reportModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const reportComment = document.getElementById('reportComment');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
+
+        function openModal(item) {
+            currentReportItem = item;
+            modalTitle.innerText = `Report Error: ${item.acronym}`;
+            reportComment.value = ""; // Clear previous
+            modalOverlay.style.display = 'block';
+            reportModal.style.display = 'block';
+            reportComment.focus();
+        }
+
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+            reportModal.style.display = 'none';
+            currentReportItem = null;
+        }
+
+        cancelModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', closeModal);
+
+        sendEmailBtn.addEventListener('click', () => {
+            if (!currentReportItem) return;
+            const comment = reportComment.value;
+            
+            const subject = `Correction for ${currentReportItem.acronym}`;
+            const body = `Hi,\n\nI found an error in the acronym "${currentReportItem.acronym}" (${currentReportItem.source}).\n\nUser Comment:\n${comment}`;
+            
+            const mailtoLink = `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            window.open(mailtoLink, '_blank');
+            closeModal();
+        });
+
+        // --- DATA LOGIC ---
 
         function getGroup(rawCat) {
             if (!rawCat) return "Other";
@@ -286,10 +356,9 @@
                 });
         }
 
-        // --- SET DEFAULT TO SOFEMA HERE ---
+        // DEFAULT LOAD
         loadData('sofema'); 
 
-        // --- CONTROLS ---
         const dbSource = document.getElementById('dbSource');
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
@@ -392,11 +461,7 @@
                         displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 176, 255, 0.2)">$1</span>');
                     }
 
-                    let reportLink = "#";
-                    if (REPORT_FORM_URL.includes('http')) {
-                        reportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
-                    }
-
+                    // Create Card HTML
                     card.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
@@ -408,8 +473,13 @@
                             </div>
                             <div class="meaning">${displayMeaning}</div>
                         </div>
-                        <a href="${reportLink}" target="_blank" class="report-btn" title="Report Error">🚩</a>
+                        <button class="report-btn" title="Report Error">🚩</button>
                     `;
+
+                    // Attach Event Listener to the Flag
+                    const flagBtn = card.querySelector('.report-btn');
+                    flagBtn.addEventListener('click', () => openModal(item));
+
                     resultsDiv.appendChild(card);
                 });
             } else {
