@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V34</title>
+    <title>Aviation Acronym V35</title>
     
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
@@ -15,6 +16,7 @@
     <style>
         /* --- THEME VARIABLES --- */
         :root {
+            /* Light Mode Defaults */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
@@ -25,14 +27,17 @@
             --link-color: #2980b9;
             --success: #2ecc71;
             --error: #e74c3c;
-            --note-bg: #fff9c4; /* Sticky Note Yellow */
+            --note-bg: #fff9c4;
             --note-text: #5d4037;
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
             --drawer-bg: #f8f9fa;
+            
             --source-faa: #2980b9;
             --source-sof: #e67e22;
+            
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
         }
@@ -46,9 +51,10 @@
             --user-color: #8e44ad;
             --history-color: #95a5a6;
             --link-color: #48dbfb;
-            --note-bg: #424242; /* Dark Note */
+            --note-bg: #424242;
             --note-text: #fff9c4;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
             --source-faa: #3498db;
             --source-sof: #d35400;
             --modal-bg: #1e272e;
@@ -158,8 +164,8 @@
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
         #scratchpad { width: 100%; height: 100px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
-        #natoInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
-        #natoResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; }
+        #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
+        #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
 
         /* --- MODALS --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
@@ -256,9 +262,16 @@
             <button class="modal-btn full" id="openQRHBtn" style="background:var(--history-color); color:white;">📋 Cockpit QRH</button>
 
             <div class="tool-section">
+                <span class="tool-label">METAR DECODER (SIMPLE)</span>
+                <input type="text" id="metarInput" placeholder="e.g. 16004KT 9999" autocomplete="off">
+                <div id="metarResult">...</div>
+            </div>
+
+            <div class="tool-section">
                 <span class="tool-label">SCRATCHPAD</span>
                 <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
             </div>
+            
             <div class="tool-section">
                 <span class="tool-label">NATO PHONETIC</span>
                 <input type="text" id="natoInput" placeholder="Type text here..." autocomplete="off">
@@ -284,6 +297,7 @@
                 <option value="faa">🇺🇸 FAA</option>
                 <option value="both">🌎 ALL</option>
             </select>
+            
             <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -344,7 +358,8 @@
             </ul>
             <h4>👜 Flight Bag</h4>
             <ul>
-                <li><strong>QRH:</strong> Quick Reference charts for Light Signals & Transponder codes.</li>
+                <li><strong>QRH:</strong> Quick Reference charts for Lights, XPDR & V-Speeds.</li>
+                <li><strong>METAR:</strong> Basic weather string decoder.</li>
                 <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
             </ul>
             <h4>💾 Data Safety</h4>
@@ -363,10 +378,11 @@
         <div style="display:flex; gap:5px; margin-bottom:15px;">
             <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:8px; font-size:0.8em;">Lights</button>
             <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:8px; font-size:0.8em;">XPDR</button>
+            <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:8px; font-size:0.8em;">V-Spd</button>
         </div>
         
         <div id="qrh-light">
-            <p><strong>Light Gun Signals</strong></p>
+            <p><strong>Light Gun Signals </strong></p>
             <table class="qrh-table">
                 <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
                 <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
@@ -385,6 +401,20 @@
                 <tr><td>7600</td><td class="sig-red">Radio Failure</td></tr>
                 <tr><td>7700</td><td class="sig-red">Emergency</td></tr>
                 <tr><td>1200</td><td>VFR</td></tr>
+            </table>
+        </div>
+
+        <div id="qrh-vspeed" style="display:none;">
+            <p><strong>Standard V-Speeds</strong></p>
+            <table class="qrh-table">
+                <tr><th>Speed</th><th>Description</th></tr>
+                <tr><td>Vr</td><td>Rotation Speed</td></tr>
+                <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
+                <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
+                <tr><td>Va</td><td>Maneuvering Speed</td></tr>
+                <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
+                <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
+                <tr><td>Vso</td><td>Stall (Landing Config)</td></tr>
             </table>
         </div>
 
@@ -502,8 +532,8 @@
         // STATE
         let allData=[], acronymSet=new Set(), filteredData=[], activeGroup='All', exactCategoryFilter=null, currentReportItem=null, currentFlashcardItem=null, searchStack=[];
         let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"", customData=JSON.parse(localStorage.getItem('pilotCustomDB'))||[];
-        let pilotNotes = JSON.parse(localStorage.getItem('pilotNotes')) || {}; // NEW: Notes
-        let currentNoteAcronym = null; // Track editing note
+        let pilotNotes = JSON.parse(localStorage.getItem('pilotNotes')) || {}; 
+        let currentNoteAcronym = null; 
         let sessionStats={total:0,correct:0,missedItems:[]};
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -538,15 +568,15 @@
         window.showQRHTab = function(id) {
             document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
             document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
+            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none'; // NEW
         };
         document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; });
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
 
-        // --- NOTE LOGIC ---
+        // NOTE LOGIC
         const noteOverlay = document.getElementById('noteModalOverlay');
         const noteModal = document.getElementById('noteModal');
-        
         window.openNoteModal = function(acronym) {
             currentNoteAcronym = acronym;
             document.getElementById('noteTargetAcronym').innerText = acronym;
@@ -554,28 +584,23 @@
             noteOverlay.style.display = 'block';
             noteModal.style.display = 'block';
         };
-        
         document.getElementById('saveNoteBtn').addEventListener('click', () => {
             const txt = document.getElementById('noteContent').value.trim();
             if(txt) pilotNotes[currentNoteAcronym] = txt;
             else delete pilotNotes[currentNoteAcronym];
             localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
             noteOverlay.style.display='none'; noteModal.style.display='none';
-            runSearch(); // Refresh to show note
-            showToast("Note Saved");
+            runSearch(); showToast("Note Saved");
         });
-        
         document.getElementById('deleteNoteBtn').addEventListener('click', () => {
             delete pilotNotes[currentNoteAcronym];
             localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
             noteOverlay.style.display='none'; noteModal.style.display='none';
-            runSearch();
-            showToast("Note Deleted");
+            runSearch(); showToast("Note Deleted");
         });
-        
         document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
 
-        // --- CORE FUNCTIONS ---
+        // CORE
         function updateBackground() { document.body.className=''; if(settings.weather!=='auto'){document.body.classList.add(settings.weather);return;} const h=new Date().getHours(); if(h>=5&&h<8)document.body.classList.add('bg-sunrise');else if(h>=8&&h<17)document.body.classList.add('bg-day');else if(h>=17&&h<20)document.body.classList.add('bg-sunset');else document.body.classList.add('bg-night'); }
         setInterval(updateBackground,60000); updateBackground();
 
@@ -600,12 +625,7 @@
 
         // Init
         const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-theme', storedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-        
+        if (storedTheme) { document.documentElement.setAttribute('data-theme', storedTheme); } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.setAttribute('data-theme', 'dark'); }
         document.getElementById('scratchpad').value=scratchpadText;document.getElementById('weatherSelect').value=settings.weather||'auto';document.getElementById('toggleSfx').checked=settings.sfx;
         loadData('sofema');
 
@@ -623,47 +643,19 @@
             if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup==='My Acronyms') tf=customData; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
             if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
             if(term) tf=tf.filter(i=>{const a=i.acronym.toLowerCase(),m=i.meaning.toLowerCase();if(mode==='starts')return a.startsWith(term);if(mode==='exact')return a===term;return a.includes(term)||m.includes(term);});
-            
             filteredData=[...tf];
             if(sort==='az') tf.sort((a,b)=>a.acronym.localeCompare(b.acronym)); else if(sort==='za') tf.sort((a,b)=>b.acronym.localeCompare(a.acronym));
 
             if(tf.length>0){
                 tf.slice(0,50).forEach((i,idx)=>{
-                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER';
-                    const hasNote = pilotNotes[i.acronym]; // Check for note
-                    
+                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER', hasNote = pilotNotes[i.acronym];
                     const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
                     let dm=i.meaning; if(term&&mode==='contains') dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
-                    
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
 
-                    // RENDER NOTE IF EXISTS
-                    let noteHTML = '';
-                    if(hasNote) {
-                        noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`;
-                    }
-
-                    c.innerHTML=`
-                    <div class="card-content">
-                        <div class="acronym-header">
-                            <span class="acronym-badge">${i.acronym}</span>
-                            <div class="meta-tags">
-                                <span class="source-tag ${i.source}">${i.source}</span>
-                                <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
-                                ${isM?'<span class="mastered-dot"></span>':''}
-                            </div>
-                        </div>
-                        <div class="meaning">${autoLink(dm)}</div>
-                        ${noteHTML}
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
-                        <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
-                        <button class="action-btn speak">🔊</button>
-                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
-                        ${actionBtn}
-                    </div>`;
+                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
                     if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
                     c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
                     res.appendChild(c);
@@ -743,8 +735,46 @@
         function initGroupChips(){const g=['All','Favorites','History','My Acronyms','Operations','Weather','Systems','Regulations','Business','Other'],c=document.getElementById('filterContainer');c.innerHTML='';g.forEach(x=>{const d=document.createElement('div');d.className=`chip ${x==='All'?'active':''} ${x==='My Acronyms'?'my-data':''} ${x.toLowerCase()}`;d.innerText=x;d.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(z=>z.classList.remove('active'));d.classList.add('active');activeGroup=x;exactCategoryFilter=null;document.getElementById('groupDesc').innerText=GROUP_CONFIG[x]?GROUP_CONFIG[x].desc:'';searchStack=[];document.getElementById('backBtn').style.display='none';runSearch();playSound('click');});c.appendChild(d);});}
 
         document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
-        document.getElementById('natoInput').addEventListener('input',(e)=>{const v=e.target.value.toUpperCase(),r=[];for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));document.getElementById('natoResult').innerText=r.join(' ');});
+        
+        // NATO
+        document.getElementById('natoInput').addEventListener('input',(e)=>{
+            const v=e.target.value.toUpperCase();
+            let r=[]; for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));
+            document.getElementById('natoResult').innerText=r.join(' ');
+        });
         document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
+
+        // METAR (Simple Regex)
+        document.getElementById('metarInput').addEventListener('input', (e) => {
+            const raw = e.target.value.toUpperCase();
+            let decoded = [];
+            
+            // Wind
+            const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/);
+            if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
+            
+            // Vis
+            if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)");
+            else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
+            
+            // Clouds
+            if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)");
+            if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)");
+            if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
+            if(raw.includes('FEW')) decoded.push("☁️ Clouds: Few");
+            if(raw.includes('SCT')) decoded.push("☁️ Clouds: Scattered");
+            
+            // Temp
+            const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/);
+            if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
+            
+            // QNH
+            const qnh = raw.match(/Q(\d{4})/);
+            if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
+
+            document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
+        });
+
         document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData,notes:pilotNotes},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
         document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
         document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.notes)pilotNotes=d.notes;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotNotes',JSON.stringify(pilotNotes));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
