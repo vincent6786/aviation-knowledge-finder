@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V5</title>
+    <title>Pilot's Database V6</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -14,12 +14,10 @@
             --accent: #00b0ff;
             --accent-hover: #009be0;
             --badge-bg: rgba(235, 236, 237, 0.6);
-            --badge-text: #4a5568;
             --chip-bg: #e0e0e0;
             --chip-active: #00b0ff;
             --chip-text-active: #ffffff;
-            --ext-btn-bg: #fff;
-            --ext-btn-text: #37352f;
+            --footer-bg: #f7f9fb;
         }
 
         [data-theme="dark"] {
@@ -28,13 +26,10 @@
             --input-bg: #262626;
             --border: #3f3f3f;
             --accent: #00b0ff;
-            --accent-hover: #009be0;
             --badge-bg: rgba(255, 255, 255, 0.15);
-            --badge-text: rgba(255, 255, 255, 0.8);
             --chip-bg: #333;
             --chip-active: #00b0ff;
-            --ext-btn-bg: #2f2f2f;
-            --ext-btn-text: #fff;
+            --footer-bg: #222;
         }
 
         body {
@@ -46,7 +41,7 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* --- LAYOUT --- */
+        /* --- CONTROLS --- */
         .controls {
             position: sticky;
             top: 0;
@@ -61,8 +56,8 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; }
 
         .mode-select {
-            padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
-            background: var(--bg); color: var(--text); outline: none; cursor: pointer;
+            padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+            background: var(--bg); color: var(--text); outline: none; cursor: pointer; font-size: 0.85em;
         }
 
         .theme-btn {
@@ -84,75 +79,73 @@
 
         #searchBtn {
             background-color: var(--accent); border: none; border-radius: 50%;
-            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
             cursor: pointer; color: white;
         }
 
         #clearBtn {
-            background: none; border: 1px solid var(--border); border-radius: 20px;
-            padding: 6px 16px; color: var(--accent); font-weight: 600; font-size: 0.8em;
-            cursor: pointer; margin-right: 4px;
+            background: none; border: none;
+            color: #999; font-weight: 600; font-size: 0.75em;
+            cursor: pointer; margin-right: 8px;
+            display: none; /* Hidden by default */
         }
 
         .filter-container {
-            display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;
+            display: flex; gap: 6px; overflow-x: auto; padding: 2px 0;
             scrollbar-width: none;
         }
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 4px 12px; font-size: 0.85em; background: var(--chip-bg);
-            border-radius: 16px; cursor: pointer; white-space: nowrap; transition: 0.2s;
+            padding: 4px 10px; font-size: 0.8em; background: var(--chip-bg);
+            border-radius: 12px; cursor: pointer; white-space: nowrap; transition: 0.2s;
         }
         .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
         /* --- RESULTS --- */
-        #results { margin-top: 10px; padding-bottom: 40px; }
+        #results { margin-top: 10px; padding-bottom: 60px; }
 
         .card {
-            padding: 14px 8px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; gap: 12px;
+            padding: 12px 4px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; gap: 10px;
         }
-        .card:hover { background: rgba(0,0,0,0.02); }
-        .card-content { display: flex; flex-direction: column; gap: 4px; width: 100%; }
         
-        .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .card-content { display: flex; flex-direction: column; gap: 3px; width: 100%; }
+        
+        .acronym-header { display: flex; align-items: center; gap: 8px; }
         .acronym-badge {
             font-weight: 700; color: var(--text); background: var(--badge-bg);
-            padding: 2px 8px; border-radius: 6px;
+            padding: 2px 6px; border-radius: 4px; font-size: 0.95em;
         }
-        .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
-        .meaning { line-height: 1.5; font-size: 0.95em; color: var(--text); }
-        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.1; transition: 0.2s; }
+        .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
+        .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
+        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; }
         .card:hover .report-btn { opacity: 1; }
 
-        /* --- EXTERNAL SEARCH FALLBACK --- */
-        .fallback-container {
-            text-align: center; margin-top: 40px;
-            color: var(--text);
-        }
-        .fallback-text { margin-bottom: 15px; font-size: 0.9em; opacity: 0.8; }
-        .external-actions {
-            display: flex; justify-content: center; gap: 10px;
-        }
-        .ext-btn {
-            text-decoration: none;
-            padding: 10px 16px;
-            background: var(--ext-btn-bg);
-            border: 1px solid var(--border);
+        /* --- EXTERNAL SEARCH FOOTER --- */
+        .search-footer {
+            margin-top: 25px;
+            padding: 15px;
+            background: var(--footer-bg);
             border-radius: 8px;
-            color: var(--text);
-            font-size: 0.9em;
+            border: 1px dashed var(--border);
+            text-align: center;
+        }
+        .footer-title {
+            font-size: 0.85em; color: #888; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .footer-buttons { display: flex; justify-content: center; gap: 10px; }
+        
+        .ext-btn {
+            text-decoration: none; padding: 8px 14px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 6px; color: var(--text); font-size: 0.85em;
             display: flex; align-items: center; gap: 6px;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .ext-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+        .ext-btn:hover { border-color: var(--accent); color: var(--accent); }
+
         .loading { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
 
     </style>
@@ -171,16 +164,16 @@
 
         <div class="search-wrapper">
             <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
-            <button id="searchBtn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </button>
             <button id="clearBtn">CLEAR</button>
+            <button id="searchBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
         </div>
         <div class="filter-container" id="filterContainer"></div>
     </div>
 
     <div id="results">
-        <div class="loading">Loading database...</div>
+        <div class="loading">Database ready.</div>
     </div>
 
     <script>
@@ -188,29 +181,24 @@
         // CONFIGURATION
         // ==========================================
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
-        const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK_HERE"; 
+        const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         // ==========================================
 
         let allData = [];
         let activeCategory = 'All';
 
-        const themeBtn = document.getElementById('themeBtn');
+        // Theme Init
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
-        themeBtn.addEventListener('click', () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
 
+        // Fetch Data
         fetch(SHEET_URL)
             .then(res => res.text())
             .then(text => {
                 allData = parseCSV(text);
                 initCategories(allData);
-                renderResults(allData);
+                document.querySelector('.loading').innerText = "Type to search...";
             });
 
         function parseCSV(text) {
@@ -254,14 +242,28 @@
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
+        const themeBtn = document.getElementById('themeBtn');
         const resultsDiv = document.getElementById('results');
 
-        searchBox.addEventListener('input', runSearch);
+        searchBox.addEventListener('input', () => {
+             // Show/Hide Clear Button
+            clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
+            runSearch();
+        });
         searchMode.addEventListener('change', runSearch);
+        
         clearBtn.addEventListener('click', () => {
             searchBox.value = '';
+            clearBtn.style.display = 'none';
             searchBox.focus();
-            runSearch();
+            resultsDiv.innerHTML = '<div class="loading">Type to search...</div>';
+        });
+
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
         });
 
         function runSearch() {
@@ -269,13 +271,18 @@
             const term = rawTerm.toLowerCase().trim();
             const mode = searchMode.value;
 
+            if (term === '') {
+                resultsDiv.innerHTML = '<div class="loading">Type to search...</div>';
+                return;
+            }
+
             resultsDiv.innerHTML = '';
 
+            // 1. Local Search
             const filtered = allData.filter(item => {
                 const matchesCat = (activeCategory === 'All') || (item.category === activeCategory);
                 if (!matchesCat) return false;
-                if (term === '') return true;
-
+                
                 const acr = item.acronym.toLowerCase();
                 const mean = item.meaning.toLowerCase();
 
@@ -284,55 +291,57 @@
                 else return acr.includes(term) || mean.includes(term);
             });
 
-            // --- NO RESULTS: SHOW EXTERNAL SEARCH BUTTONS ---
-            if (filtered.length === 0) {
-                // We use Google Site Search for reliability
-                const sofemaLink = `https://www.google.com/search?q=site:sofemaonline.com/aviation-abbreviations-glossary+"${term}"`;
-                const broadLink = `https://www.google.com/search?q=define+aviation+term+"${term}"`;
+            // 2. Display Local Results
+            if (filtered.length > 0) {
+                filtered.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    let displayMeaning = item.meaning;
+                    if (mode === 'contains') {
+                        const regex = new RegExp(`(${term})`, 'gi');
+                        displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 176, 255, 0.2)">$1</span>');
+                    }
 
-                resultsDiv.innerHTML = `
-                    <div class="fallback-container">
-                        <div class="fallback-text">Not found in your database.</div>
-                        <div class="external-actions">
-                            <a href="${sofemaLink}" target="_blank" class="ext-btn">
-                                🔍 Search Sofema
-                            </a>
-                            <a href="${broadLink}" target="_blank" class="ext-btn">
-                                🌐 Search Web
-                            </a>
+                    let reportLink = "#";
+                    if (REPORT_FORM_URL.includes('http')) {
+                        reportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
+                    }
+
+                    card.innerHTML = `
+                        <div class="card-content">
+                            <div class="acronym-header">
+                                <span class="acronym-badge">${item.acronym}</span>
+                                <span class="category-tag">${item.category}</span>
+                            </div>
+                            <div class="meaning">${displayMeaning}</div>
                         </div>
-                    </div>
-                `;
-                return;
+                        <a href="${reportLink}" target="_blank" class="report-btn" title="Report Error">🚩</a>
+                    `;
+                    resultsDiv.appendChild(card);
+                });
+            } else {
+                resultsDiv.innerHTML = '<div class="loading">No local matches found.</div>';
             }
 
-            filtered.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                let displayMeaning = item.meaning;
-                if (term && mode === 'contains') {
-                    const regex = new RegExp(`(${term})`, 'gi');
-                    displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 176, 255, 0.2)">$1</span>');
-                }
+            // 3. ALWAYS Append External Search Footer (The "Pop out" logic)
+            const sofemaLink = `https://www.google.com/search?q=site:sofemaonline.com/aviation-abbreviations-glossary+"${term}"`;
+            const broadLink = `https://www.google.com/search?q=define+aviation+term+"${term}"`;
 
-                let reportLink = "#";
-                if (REPORT_FORM_URL && REPORT_FORM_URL.includes('http')) {
-                    reportLink = REPORT_FORM_URL.replace('ACRONYM_HERE', encodeURIComponent(item.acronym));
-                }
-
-                card.innerHTML = `
-                    <div class="card-content">
-                        <div class="acronym-header">
-                            <span class="acronym-badge">${item.acronym}</span>
-                            <span class="category-tag">${item.category}</span>
-                        </div>
-                        <div class="meaning">${displayMeaning}</div>
-                    </div>
-                    <a href="${reportLink}" target="_blank" class="report-btn" title="Report Error">🚩</a>
-                `;
-                resultsDiv.appendChild(card);
-            });
+            const footer = document.createElement('div');
+            footer.className = 'search-footer';
+            footer.innerHTML = `
+                <div class="footer-title">Not the result you wanted?</div>
+                <div class="footer-buttons">
+                    <a href="${sofemaLink}" target="_blank" class="ext-btn">
+                        ✈️ Sofema
+                    </a>
+                    <a href="${broadLink}" target="_blank" class="ext-btn">
+                        🌐 Web Search
+                    </a>
+                </div>
+            `;
+            resultsDiv.appendChild(footer);
         }
     </script>
 </body>
