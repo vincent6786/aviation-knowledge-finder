@@ -3,185 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V17</title>
+    <title>Pilot's Aero Database</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            --bg: #ffffff;
-            --text: #37352f;
-            --input-bg: #f7f9fb;
-            --border: #e0e0e0;
-            --accent: #00b0ff;
-            --badge-bg: rgba(235, 236, 237, 0.6);
-            --chip-bg: #e0e0e0;
-            --chip-active: #00b0ff;
-            --chip-text-active: #ffffff;
-            --footer-bg: #f7f9fb;
-            --select-bg: #ffffff;
-            --desc-text: #888888;
-            --source-faa: #3498db;
+            /* Light Mode: Frosted Sky */
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --text: #2c3e50;
+            --accent: #00a8ff; /* Sky Blue */
+            --badge-bg: rgba(0, 168, 255, 0.15);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            
+            --source-faa: #2980b9;
             --source-sof: #e67e22;
+            
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
         }
 
         [data-theme="dark"] {
-            --bg: #191919;
-            --text: rgba(255, 255, 255, 0.9);
-            --input-bg: #262626;
-            --border: #3f3f3f;
-            --accent: #00b0ff;
-            --badge-bg: rgba(255, 255, 255, 0.15);
-            --chip-bg: #333;
-            --chip-active: #00b0ff;
-            --footer-bg: #222;
-            --select-bg: #262626;
-            --desc-text: #aaaaaa;
-            --source-faa: #2980b9;
+            /* Dark Mode: Night Cockpit */
+            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            --glass-bg: rgba(20, 25, 30, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #ecf0f1;
+            --accent: #00d2d3; /* Cyan glow */
+            --badge-bg: rgba(0, 210, 211, 0.15);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+            --source-faa: #3498db;
             --source-sof: #d35400;
-            --modal-overlay: rgba(0, 0, 0, 0.8);
-            --modal-bg: #262626;
+            --modal-bg: #1e272e;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 20px; color: var(--text); background-color: var(--bg); margin: 0;
-            transition: background 0.3s, color 0.3s;
+            padding: 20px; 
+            margin: 0;
+            color: var(--text);
+            background: var(--bg-gradient);
+            background-attachment: fixed; /* Keeps gradient steady */
+            min-height: 100vh;
+            transition: color 0.3s;
         }
 
-        /* --- CONTROLS --- */
+        /* --- GLASSMORPHISM CONTROLS --- */
         .controls {
-            position: sticky; top: 0; background: var(--bg); padding-bottom: 15px; z-index: 10;
-            display: flex; flex-direction: column; gap: 10px;
-            border-bottom: 1px solid var(--border);
+            position: sticky; top: 10px; z-index: 100;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            display: flex; flex-direction: column; gap: 12px;
+            margin-bottom: 20px;
         }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 
         select {
-            padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border);
-            background: var(--select-bg); color: var(--text); outline: none; cursor: pointer; font-size: 0.85em;
-            max-width: 45%;
+            padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(150,150,150,0.3);
+            background: rgba(255,255,255,0.1); color: var(--text); 
+            outline: none; cursor: pointer; font-size: 0.85em; font-weight: 500;
+            backdrop-filter: blur(4px);
         }
         select:hover { border-color: var(--accent); }
+        select option { background: var(--modal-bg); color: var(--text); } /* Fix dropdown readability */
 
-        .theme-btn {
+        .icon-btn {
             background: none; border: none; cursor: pointer; font-size: 1.2rem;
-            padding: 4px; border-radius: 50%; margin-left: auto;
+            padding: 6px; border-radius: 50%; transition: transform 0.2s;
         }
+        .icon-btn:hover { transform: scale(1.2) rotate(10deg); background: rgba(255,255,255,0.2); }
 
         .search-wrapper {
             display: flex; align-items: center; gap: 8px;
-            background: var(--input-bg); border: 1px solid var(--border);
-            border-radius: 50px; padding: 4px; transition: box-shadow 0.2s;
+            background: rgba(255,255,255,0.2); 
+            border: 1px solid rgba(150,150,150,0.2);
+            border-radius: 50px; padding: 4px; 
+            transition: all 0.3s;
         }
-        .search-wrapper:focus-within { box-shadow: 0 0 0 2px rgba(0, 176, 255, 0.2); border-color: var(--accent); }
+        .search-wrapper:focus-within { 
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px var(--accent);
+            border-color: var(--accent);
+        }
+        [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
 
         #searchBox {
             flex-grow: 1; border: none; background: transparent; padding: 8px 16px; font-size: 16px; color: var(--text); outline: none;
         }
 
         #searchBtn {
-            background-color: var(--accent); border: none; border-radius: 50%; width: 32px; height: 32px;
+            background-color: var(--accent); border: none; border-radius: 50%; width: 36px; height: 36px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         #clearBtn {
-            background: none; border: none; color: #999; font-weight: 600; font-size: 0.75em; cursor: pointer; margin-right: 8px; display: none; 
+            background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.7em; cursor: pointer; margin-right: 8px; display: none; 
         }
 
+        /* --- CHIPS --- */
         .filter-container {
             display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none;
         }
         .filter-container::-webkit-scrollbar { display: none; }
 
         .chip {
-            padding: 6px 14px; font-size: 0.85em; background: var(--chip-bg); border-radius: 16px;
-            cursor: pointer; white-space: nowrap; transition: 0.2s; font-weight: 500;
+            padding: 6px 14px; font-size: 0.85em; 
+            background: rgba(150,150,150,0.15); 
+            border: 1px solid transparent;
+            border-radius: 12px; cursor: pointer; white-space: nowrap; transition: 0.3s; font-weight: 600;
         }
-        .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
+        .chip:hover { transform: translateY(-2px); }
+        .chip.active { 
+            background: var(--accent); color: white; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
 
         .group-desc {
-            font-size: 0.75em; color: var(--desc-text); padding-left: 4px; font-style: italic;
-            min-height: 1.2em; transition: opacity 0.3s;
+            font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em;
         }
 
-        /* --- RESULTS --- */
-        #results { margin-top: 15px; padding-bottom: 60px; }
+        /* --- CARDS & ANIMATION --- */
+        #results { margin-top: 10px; padding-bottom: 60px; display: flex; flex-direction: column; gap: 10px; }
 
         .card {
-            padding: 12px 4px; border-bottom: 1px solid var(--border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
             display: flex; justify-content: space-between; gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            
+            /* Animation */
+            animation: slideUp 0.3s ease forwards;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .card-content { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: var(--accent);
+        }
+        
+        .card-content { display: flex; flex-direction: column; gap: 6px; width: 100%; }
         
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge {
-            font-weight: 700; color: var(--text); background: var(--badge-bg);
-            padding: 2px 6px; border-radius: 4px; font-size: 0.95em;
+            font-weight: 800; color: var(--accent); font-size: 1.1em; letter-spacing: 0.5px;
         }
         
         .meta-tags { display: flex; gap: 6px; align-items: center; }
-        .category-tag { font-size: 0.7em; color: #888; border: 1px solid var(--border); padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
+        .category-tag { font-size: 0.65em; opacity: 0.7; border: 1px solid var(--text); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         
         .source-tag { 
-            font-size: 0.65em; font-weight: bold; color: white; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; 
+            font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; 
         }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
 
-        .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
+        .meaning { line-height: 1.5; font-size: 0.95em; opacity: 0.9; }
         
-        .report-btn { 
-            font-size: 1.2em; cursor: pointer; opacity: 0.2; transition: opacity 0.2s; border: none; background: none; padding: 0;
-        }
+        .report-btn { font-size: 1.2em; cursor: pointer; opacity: 0.2; transition: 0.2s; border: none; background: none; padding: 0; }
         .card:hover .report-btn { opacity: 1; }
-        .report-btn:hover { opacity: 1; transform: scale(1.1); }
+        .report-btn:hover { opacity: 1; transform: scale(1.2); }
+
+        /* --- RADAR LOADER --- */
+        .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .radar {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid var(--accent);
+            position: relative;
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .radar::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%);
+            animation: scan 1.5s linear infinite;
+        }
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .loader-text { margin-top: 10px; font-size: 0.8em; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase;}
 
         /* --- FOOTER --- */
         .search-footer {
-            margin-top: 25px; padding: 15px; background: var(--footer-bg);
-            border-radius: 8px; border: 1px dashed var(--border); text-align: center;
+            margin-top: 25px; padding: 20px; 
+            background: rgba(0,0,0,0.05); border-radius: 12px;
+            text-align: center; border: 1px dashed rgba(150,150,150,0.4);
         }
-        .footer-title {
-            font-size: 0.85em; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
-        }
+        .footer-title { font-size: 0.8em; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         .footer-buttons { display: flex; justify-content: center; gap: 10px; }
         .ext-btn {
-            text-decoration: none; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 6px; color: var(--text); font-size: 0.85em; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+            text-decoration: none; padding: 8px 16px; background: var(--glass-bg); border: 1px solid rgba(150,150,150,0.3);
+            border-radius: 8px; color: var(--text); font-size: 0.85em; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
         }
-        .ext-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .ext-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-        .loading { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
-
-        /* --- MODAL STYLES --- */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--modal-overlay); z-index: 1000;
-        }
+        /* --- MODAL --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; backdrop-filter: blur(3px); }
         .modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--modal-bg); padding: 20px; border-radius: 12px;
+            background: var(--modal-bg); padding: 25px; border-radius: 16px;
             width: 90%; max-width: 400px; z-index: 1001;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
         }
-        .modal h3 { margin: 0 0 15px 0; font-size: 1.1em; color: var(--text); }
+        .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
         .modal textarea {
-            width: 100%; height: 80px; padding: 10px; border-radius: 6px;
-            border: 1px solid var(--border); background: var(--input-bg);
-            color: var(--text); font-family: inherit; font-size: 0.9em; resize: none;
-            box-sizing: border-box; outline: none; margin-bottom: 15px;
+            width: 100%; height: 80px; padding: 12px; border-radius: 8px;
+            border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05);
+            color: var(--text); font-family: inherit; font-size: 0.95em; resize: none;
+            box-sizing: border-box; outline: none; margin-bottom: 20px;
         }
-        .modal textarea:focus { border-color: var(--accent); }
+        .modal textarea:focus { border-color: var(--accent); background: rgba(0,0,0,0.02); }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
-        .modal-btn {
-            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; border: none;
-        }
-        .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid var(--border); }
-        .modal-btn.send { background: var(--accent); color: white; }
-        .modal-btn.send:hover { opacity: 0.9; }
+        .modal-btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9em; border: none; font-weight: 600; }
+        .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
+        .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
+        .modal-btn.send:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0, 168, 255, 0.4); }
 
     </style>
 </head>
@@ -190,23 +239,27 @@
     <div class="controls">
         <div class="top-row">
             <select id="dbSource" title="Select Database">
-                <option value="sofema" selected>🇪🇺 SOFEMA (Default)</option>
+                <option value="sofema" selected>🇪🇺 SOFEMA</option>
                 <option value="faa">🇺🇸 FAA</option>
                 <option value="both">🌎 ALL SOURCES</option>
             </select>
             <select id="searchMode" title="Search Mode">
                 <option value="contains">Contains</option>
-                <option value="starts">Begin with</option>
-                <option value="exact">Exact term</option>
+                <option value="starts">Starts With</option>
+                <option value="exact">Exact</option>
             </select>
-            <button class="theme-btn" id="themeBtn">🌗</button>
+            
+            <div style="display:flex; gap: 5px; margin-left: auto;">
+                <button class="icon-btn" id="randomBtn" title="Random Acronym">🎲</button>
+                <button class="icon-btn" id="themeBtn" title="Toggle Theme">🌗</button>
+            </div>
         </div>
 
         <div class="search-wrapper">
             <input type="text" id="searchBox" placeholder="Search acronyms..." autocomplete="off">
             <button id="clearBtn">CLEAR</button>
             <button id="searchBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
         </div>
         
@@ -215,7 +268,10 @@
     </div>
 
     <div id="results">
-        <div class="loading">Loading data...</div>
+        <div class="loader-container">
+            <div class="radar"></div>
+            <div class="loader-text">SCANNING DATABASE...</div>
+        </div>
     </div>
 
     <div id="modalOverlay" class="modal-overlay"></div>
@@ -229,17 +285,14 @@
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURATION
-        // ==========================================
+        // CONFIG
         const LINKS = {
             faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv",
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv"
         };
-        
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
-
+        
         const GROUP_CONFIG = {
             "Operations": { desc: "Includes: Navigation, Flight Ops, ATC, & Airspace", keywords: ["Navigation", "Flight Op", "Traffic"] },
             "Weather": { desc: "Includes: Meteorology, Weather Codes, Forecasts & Icing", keywords: ["Weather", "Meteorology"] },
@@ -250,59 +303,17 @@
             "Other": { desc: "Uncategorized terms." }
         };
 
-        // ==========================================
-
+        // STATE
         let allData = [];
         let activeGroup = 'All';
-        
-        // Modal State
         let currentReportItem = null;
 
+        // THEME
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // --- MODAL LOGIC ---
-        const modalOverlay = document.getElementById('modalOverlay');
-        const reportModal = document.getElementById('reportModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const reportComment = document.getElementById('reportComment');
-        const cancelModalBtn = document.getElementById('cancelModalBtn');
-        const sendEmailBtn = document.getElementById('sendEmailBtn');
-
-        function openModal(item) {
-            currentReportItem = item;
-            modalTitle.innerText = `Report Error: ${item.acronym}`;
-            reportComment.value = ""; // Clear previous
-            modalOverlay.style.display = 'block';
-            reportModal.style.display = 'block';
-            reportComment.focus();
-        }
-
-        function closeModal() {
-            modalOverlay.style.display = 'none';
-            reportModal.style.display = 'none';
-            currentReportItem = null;
-        }
-
-        cancelModalBtn.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', closeModal);
-
-        sendEmailBtn.addEventListener('click', () => {
-            if (!currentReportItem) return;
-            const comment = reportComment.value;
-            
-            const subject = `Correction for ${currentReportItem.acronym}`;
-            const body = `Hi,\n\nI found an error in the acronym "${currentReportItem.acronym}" (${currentReportItem.source}).\n\nUser Comment:\n${comment}`;
-            
-            const mailtoLink = `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            
-            window.open(mailtoLink, '_blank');
-            closeModal();
-        });
-
-        // --- DATA LOGIC ---
-
+        // --- HELPER FUNCTIONS ---
         function getGroup(rawCat) {
             if (!rawCat) return "Other";
             const cat = rawCat.toString();
@@ -316,21 +327,19 @@
         }
 
         function fetchSheet(url, sourceName) {
-            return fetch(url)
-                .then(res => res.text())
-                .then(text => {
-                    const rows = parseCSV(text);
-                    return rows.map(item => ({ 
-                        ...item, 
-                        source: sourceName,
-                        group: getGroup(item.category)
-                    }));
-                });
+            return fetch(url).then(res => res.text()).then(text => {
+                const rows = parseCSV(text);
+                return rows.map(item => ({ ...item, source: sourceName, group: getGroup(item.category) }));
+            });
         }
 
         function loadData(mode) {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading">Fetching databases...</div>';
+            resultsDiv.innerHTML = `
+                <div class="loader-container">
+                    <div class="radar"></div>
+                    <div class="loader-text">SCANNING DATABASES...</div>
+                </div>`;
             
             let promises = [];
             if (mode === 'faa') promises.push(fetchSheet(LINKS.faa, 'FAA'));
@@ -340,44 +349,49 @@
                 promises.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
             }
 
-            Promise.all(promises)
-                .then(results => {
-                    allData = results.flat();
-                    activeGroup = 'All';
-                    initGroupChips();
-                    
-                    const currentTerm = document.getElementById('searchBox').value;
-                    if(currentTerm.length > 0) runSearch();
-                    else resultsDiv.innerHTML = '<div class="loading">Ready. Type to search.</div>';
-                })
-                .catch(err => {
-                    console.error(err);
-                    resultsDiv.innerHTML = '<div class="loading">Error loading data.</div>';
-                });
+            Promise.all(promises).then(results => {
+                allData = results.flat();
+                activeGroup = 'All';
+                initGroupChips();
+                const currentTerm = document.getElementById('searchBox').value;
+                if(currentTerm.length > 0) runSearch();
+                else {
+                    resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.<br>ENTER QUERY OR ROLL DICE.</div>';
+                }
+            }).catch(err => {
+                resultsDiv.innerHTML = '<div class="loader-text">CONNECTION ERROR</div>';
+            });
         }
 
-        // DEFAULT LOAD
         loadData('sofema'); 
 
+        // --- DOM ELEMENTS ---
         const dbSource = document.getElementById('dbSource');
         const searchBox = document.getElementById('searchBox');
         const searchMode = document.getElementById('searchMode');
         const clearBtn = document.getElementById('clearBtn');
         const themeBtn = document.getElementById('themeBtn');
+        const randomBtn = document.getElementById('randomBtn');
         const groupDesc = document.getElementById('groupDesc');
+        const filterContainer = document.getElementById('filterContainer');
 
+        // --- EVENTS ---
         dbSource.addEventListener('change', (e) => loadData(e.target.value));
+        
         searchBox.addEventListener('input', () => {
             clearBtn.style.display = searchBox.value.length > 0 ? 'block' : 'none';
             runSearch();
         });
+        
         searchMode.addEventListener('change', runSearch);
+        
         clearBtn.addEventListener('click', () => {
             searchBox.value = '';
             clearBtn.style.display = 'none';
             searchBox.focus();
-            document.getElementById('results').innerHTML = '<div class="loading">Type to search...</div>';
+            document.getElementById('results').innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
         });
+        
         themeBtn.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -385,6 +399,19 @@
             localStorage.setItem('theme', newTheme);
         });
 
+        // --- RANDOMIZER FUNCTION ---
+        randomBtn.addEventListener('click', () => {
+            if (allData.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * allData.length);
+            const randomItem = allData[randomIndex];
+            
+            // Set search box to this item so we can "reveal" it
+            searchBox.value = randomItem.acronym;
+            clearBtn.style.display = 'block';
+            runSearch();
+        });
+
+        // --- PARSING ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -404,16 +431,14 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
+        // --- UI LOGIC ---
         function initGroupChips() {
             const groups = ['All', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
-            const container = document.getElementById('filterContainer');
-            container.innerHTML = '';
-
+            filterContainer.innerHTML = '';
             groups.forEach(grp => {
                 const chip = document.createElement('div');
                 chip.className = `chip ${grp === 'All' ? 'active' : ''}`;
                 chip.textContent = grp;
-                
                 chip.addEventListener('click', () => {
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
@@ -421,7 +446,7 @@
                     groupDesc.textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
                     runSearch();
                 });
-                container.appendChild(chip);
+                filterContainer.appendChild(chip);
             });
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
@@ -432,7 +457,7 @@
             const mode = searchMode.value;
 
             if (term === '') {
-                resultsDiv.innerHTML = '<div class="loading">Type to search...</div>';
+                resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
                 return;
             }
 
@@ -451,17 +476,22 @@
             });
 
             if (filtered.length > 0) {
-                filtered.forEach(item => {
+                // Limit large results for performance
+                const displayLimit = 50;
+                const subset = filtered.slice(0, displayLimit);
+                
+                subset.forEach((item, index) => {
                     const card = document.createElement('div');
                     card.className = 'card';
+                    // Stagger animation
+                    card.style.animationDelay = `${index * 0.05}s`;
                     
                     let displayMeaning = item.meaning;
                     if (mode === 'contains') {
                         const regex = new RegExp(`(${term})`, 'gi');
-                        displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 176, 255, 0.2)">$1</span>');
+                        displayMeaning = item.meaning.replace(regex, '<span style="background:rgba(0, 168, 255, 0.3); color:inherit;">$1</span>');
                     }
 
-                    // Create Card HTML
                     card.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
@@ -475,15 +505,20 @@
                         </div>
                         <button class="report-btn" title="Report Error">🚩</button>
                     `;
-
-                    // Attach Event Listener to the Flag
-                    const flagBtn = card.querySelector('.report-btn');
-                    flagBtn.addEventListener('click', () => openModal(item));
-
+                    
+                    card.querySelector('.report-btn').addEventListener('click', () => openModal(item));
                     resultsDiv.appendChild(card);
                 });
+                
+                if (filtered.length > displayLimit) {
+                    const moreDiv = document.createElement('div');
+                    moreDiv.style.textAlign = 'center'; moreDiv.style.opacity = '0.6'; moreDiv.style.fontSize = '0.8em';
+                    moreDiv.innerText = `Showing ${displayLimit} of ${filtered.length} matches. Refine search.`;
+                    resultsDiv.appendChild(moreDiv);
+                }
+
             } else {
-                resultsDiv.innerHTML = '<div class="loading">No matches found in this group.</div>';
+                resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">NO TARGETS FOUND.</div>';
             }
 
             const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
@@ -492,18 +527,54 @@
             const footer = document.createElement('div');
             footer.className = 'search-footer';
             footer.innerHTML = `
-                <div class="footer-title">External Search</div>
+                <div class="footer-title">EXTEND SEARCH RANGE</div>
                 <div class="footer-buttons">
-                    <a href="${sofemaLink}" target="_blank" class="ext-btn" title="Open Sofema Glossary">
+                    <a href="${sofemaLink}" target="_blank" class="ext-btn">
                         ✈️ Sofema
                     </a>
-                    <a href="${webSearchLink}" target="_blank" class="ext-btn" title="Search Web">
+                    <a href="${webSearchLink}" target="_blank" class="ext-btn">
                         🌐 Web Search
                     </a>
                 </div>
             `;
             resultsDiv.appendChild(footer);
         }
+
+        // --- MODAL LOGIC ---
+        const modalOverlay = document.getElementById('modalOverlay');
+        const reportModal = document.getElementById('reportModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const reportComment = document.getElementById('reportComment');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
+
+        function openModal(item) {
+            currentReportItem = item;
+            modalTitle.innerText = `Report: ${item.acronym}`;
+            reportComment.value = ""; 
+            modalOverlay.style.display = 'block';
+            reportModal.style.display = 'block';
+            reportComment.focus();
+        }
+
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+            reportModal.style.display = 'none';
+            currentReportItem = null;
+        }
+
+        cancelModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', closeModal);
+
+        sendEmailBtn.addEventListener('click', () => {
+            if (!currentReportItem) return;
+            const comment = reportComment.value;
+            const subject = `Correction for ${currentReportItem.acronym}`;
+            const body = `Hi,\n\nI found an error in the acronym "${currentReportItem.acronym}" (${currentReportItem.source}).\n\nUser Comment:\n${comment}`;
+            const mailtoLink = `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink, '_blank');
+            closeModal();
+        });
     </script>
 </body>
 </html>
