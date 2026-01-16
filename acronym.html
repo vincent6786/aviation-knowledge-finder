@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V13</title>
+    <title>Pilot's Database V14</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -97,7 +97,6 @@
         }
         .chip.active { background: var(--chip-active); color: var(--chip-text-active); }
 
-        /* Dynamic Description Text */
         .group-desc {
             font-size: 0.75em; color: var(--desc-text); padding-left: 4px; font-style: italic;
             min-height: 1.2em; transition: opacity 0.3s;
@@ -130,8 +129,11 @@
         .source-tag.SOFEMA { background: var(--source-sof); }
 
         .meaning { line-height: 1.4; font-size: 0.9em; color: var(--text); }
-        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; }
+        
+        /* Flag Button Styling */
+        .report-btn { font-size: 1.2em; text-decoration: none; opacity: 0.2; transition: opacity 0.2s; }
         .card:hover .report-btn { opacity: 1; }
+        .report-btn:hover { opacity: 1; transform: scale(1.1); }
 
         /* --- FOOTER --- */
         .search-footer {
@@ -156,8 +158,8 @@
     <div class="controls">
         <div class="top-row">
             <select id="dbSource" title="Select Database">
+                <option value="sofema" selected>🇪🇺 SOFEMA (Default)</option>
                 <option value="faa">🇺🇸 FAA</option>
-                <option value="sofema">🇪🇺 SOFEMA</option>
                 <option value="both">🌎 ALL SOURCES</option>
             </select>
             <select id="searchMode" title="Search Mode">
@@ -196,7 +198,7 @@
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
 
-        // --- UPDATED GROUP DEFINITIONS (FULL NAMES) ---
+        // --- GROUP DEFINITIONS (Full Names) ---
         const GROUP_CONFIG = {
             "Operations": {
                 desc: "Includes: Navigation, Flight Ops, ATC, & Airspace",
@@ -231,12 +233,9 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // --- HELPER: ASSIGN GROUP ---
         function getGroup(rawCat) {
             if (!rawCat) return "Other";
             const cat = rawCat.toString();
-            
-            // Check keywords in our config
             for (const [groupName, config] of Object.entries(GROUP_CONFIG)) {
                 if (groupName === 'All' || groupName === 'Other') continue;
                 for (const key of config.keywords) {
@@ -246,7 +245,6 @@
             return "Other"; 
         }
 
-        // --- DATA LOADING ---
         function fetchSheet(url, sourceName) {
             return fetch(url)
                 .then(res => res.text())
@@ -288,7 +286,8 @@
                 });
         }
 
-        loadData('faa'); 
+        // --- SET DEFAULT TO SOFEMA HERE ---
+        loadData('sofema'); 
 
         // --- CONTROLS ---
         const dbSource = document.getElementById('dbSource');
@@ -317,7 +316,6 @@
             localStorage.setItem('theme', newTheme);
         });
 
-        // --- CSV PARSER ---
         function parseCSV(text) {
             const rows = [];
             const lines = text.split('\n');
@@ -337,9 +335,7 @@
         }
         function clean(str) { return str.replace(/^"|"$/g, '').trim(); }
 
-        // --- GROUP CHIPS ---
         function initGroupChips() {
-            // Full names order
             const groups = ['All', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             const container = document.getElementById('filterContainer');
             container.innerHTML = '';
@@ -353,10 +349,7 @@
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
                     activeGroup = grp;
-                    
-                    // Show description
                     groupDesc.textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
-                    
                     runSearch();
                 });
                 container.appendChild(chip);
@@ -364,7 +357,6 @@
             groupDesc.textContent = GROUP_CONFIG['All'].desc;
         }
 
-        // --- SEARCH LOGIC ---
         function runSearch() {
             const resultsDiv = document.getElementById('results');
             const term = searchBox.value.toLowerCase().trim();
@@ -424,7 +416,6 @@
                 resultsDiv.innerHTML = '<div class="loading">No matches found in this group.</div>';
             }
 
-            // Footer
             const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
             const sofemaLink = SOFEMA_URL;
 
