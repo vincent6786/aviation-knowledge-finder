@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V7</title>
+    <title>Pilot's Database V8</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -182,8 +182,8 @@
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv";
         const REPORT_FORM_URL = "YOUR_GOOGLE_FORM_LINK"; 
         
-        // External Links
-        const SOFEMA_URL = "https://github.com/vincent6786/aviation-knowledge-finder/blob/b568684404a70f46ab1ad9a01d30bcad44e00a9e/acronym.html";
+        // External Links (Updated)
+        const SOFEMA_URL = "https://sofemaonline.com/aviation-abbreviations-glossary";
         // ==========================================
 
         let allData = [];
@@ -325,11 +325,8 @@
                 resultsDiv.innerHTML = '<div class="loading">No local matches found.</div>';
             }
 
-            // 3. Footer Links (Updated Logic)
-            // Web Search: Uses the exact text from the search bar
+            // 3. Footer Links
             const webSearchLink = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
-            
-            // Sofema: Points to the static GitHub link provided
             const sofemaLink = SOFEMA_URL;
 
             const footer = document.createElement('div');
@@ -337,8 +334,8 @@
             footer.innerHTML = `
                 <div class="footer-title">External Search</div>
                 <div class="footer-buttons">
-                    <a href="${sofemaLink}" target="_blank" class="ext-btn" title="Open Aviation Knowledge Finder">
-                        ✈️ Sofema List
+                    <a href="${sofemaLink}" target="_blank" class="ext-btn" title="Open Sofema Glossary">
+                        ✈️ Sofema Glossary
                     </a>
                     <a href="${webSearchLink}" target="_blank" class="ext-btn" title="Search Google for '${term}'">
                         🌐 Web Search
