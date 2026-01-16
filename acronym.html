@@ -6,17 +6,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
-    <title>Pilot's Database V29</title>
+    <title>Pilot's Database V30</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            /* Light Mode */
             --glass-bg: rgba(255, 255, 255, 0.65);
             --glass-border: rgba(255, 255, 255, 0.9);
             --text: #2c3e50;
             --accent: #00a8ff;
             --star-color: #f1c40f;
-            --history-color: #8e44ad;
+            --user-color: #9b59b6; /* Purple for User Data */
+            --history-color: #34495e;
             --link-color: #2980b9;
             --success: #2ecc71;
             --error: #e74c3c;
@@ -28,8 +28,6 @@
             --modal-overlay: rgba(15, 15, 15, 0.6);
             --modal-bg: #ffffff;
             --drawer-bg: #ffffff;
-            
-            /* SAFE AREA VARIABLES FOR NOTCH */
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
         }
@@ -40,7 +38,8 @@
             --text: #ecf0f1;
             --accent: #00d2d3;
             --star-color: #f39c12;
-            --history-color: #9b59b6;
+            --user-color: #8e44ad;
+            --history-color: #95a5a6;
             --link-color: #48dbfb;
             --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
 
@@ -59,20 +58,18 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 20px; 
-            padding-top: calc(20px + var(--safe-top)); /* Notch Support */
-            padding-bottom: calc(80px + var(--safe-bottom)); /* Bottom Nav Space */
+            padding-top: calc(20px + var(--safe-top)); 
+            padding-bottom: calc(80px + var(--safe-bottom)); 
             margin: 0; color: var(--text);
             background-attachment: fixed; background-size: cover;
             min-height: 100vh; transition: background 1s ease, color 0.3s;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; /* Remove tap gray box */
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
         /* --- CONTROLS --- */
         .controls {
             position: sticky; top: var(--safe-top); z-index: 90;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border); border-radius: 16px;
             padding: 15px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
@@ -82,15 +79,12 @@
 
         select {
             padding: 8px 12px; border-radius: 20px; border: 1px solid rgba(150,150,150,0.3);
-            background: rgba(255,255,255,0.1); color: var(--text); 
-            outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500;
-            min-height: 40px; /* Touch friendly */
+            background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500; min-height: 40px;
         }
         select option { background: var(--modal-bg); color: var(--text); }
 
         .icon-btn {
-            background: none; border: none; cursor: pointer; font-size: 1.4rem;
-            padding: 8px; border-radius: 50%; transition: transform 0.2s;
+            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s;
         }
         .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
 
@@ -99,34 +93,52 @@
             background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2);
             border-radius: 50px; padding: 6px; transition: all 0.3s;
         }
-        .search-wrapper:focus-within { 
-            background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent);
-        }
+        .search-wrapper:focus-within { background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
         [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
 
         #searchBox { flex-grow: 1; border: none; background: transparent; padding: 8px 10px; font-size: 16px; color: var(--text); outline: none; }
         #searchBtn { background-color: var(--accent); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.8em; cursor: pointer; margin-right: 8px; display: none; padding: 10px;}
-        
-        #backBtn { 
-            background: none; border: none; color: var(--accent); font-weight: 700; 
-            font-size: 1.2em; cursor: pointer; padding-left: 10px; display: none; 
-        }
+        #backBtn { background: none; border: none; color: var(--accent); font-weight: 700; font-size: 1.2em; cursor: pointer; padding-left: 10px; display: none; }
 
-        /* --- MOBILE FAB (Floating Action Button) --- */
-        .fab-menu {
-            position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px;
-            z-index: 100; display: flex; flex-direction: column; gap: 10px;
+        /* --- RETRACTABLE FAB --- */
+        .fab-container {
+            position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100;
+            display: flex; flex-direction: column-reverse; align-items: center; gap: 12px;
         }
-        .fab-btn {
+        .fab-main {
             width: 56px; height: 56px; border-radius: 50%; border: none;
-            background: var(--accent); color: white; font-size: 1.5rem;
+            background: var(--accent); color: white; font-size: 1.8rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .fab-btn:active { transform: scale(0.9); }
-        .fab-btn.secondary { width: 48px; height: 48px; font-size: 1.2rem; background: var(--glass-bg); color: var(--text); backdrop-filter: blur(10px); }
+        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
+        
+        .fab-items {
+            display: flex; flex-direction: column-reverse; gap: 10px;
+            opacity: 0; pointer-events: none; transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        
+        .fab-mini {
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            background: var(--glass-bg); color: var(--text); font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
+            backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s; position: relative;
+        }
+        .fab-mini:active { transform: scale(0.9); }
+        
+        /* Tooltips for FAB (Desktop hover) */
+        .fab-mini::after {
+            content: attr(data-label); position: absolute; right: 60px;
+            background: rgba(0,0,0,0.7); color: white; padding: 4px 8px;
+            border-radius: 4px; font-size: 0.8em; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .fab-container.active .fab-mini:hover::after { opacity: 1; }
 
         /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; margin-bottom: 5px;}
@@ -143,8 +155,10 @@
         .chip.favorites.active { background: var(--star-color); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .chip.history { border: 1px solid var(--history-color); color: var(--text); }
         .chip.history.active { background: var(--history-color); color: #fff; }
+        .chip.my-data { border: 1px solid var(--user-color); color: var(--text); }
+        .chip.my-data.active { background: var(--user-color); color: #fff; }
+
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
-        
         .reset-filter-link { color: var(--accent); text-decoration: underline; cursor: pointer; margin-left: 5px; font-weight: bold; }
 
         /* --- RESULTS --- */
@@ -156,16 +170,14 @@
         .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.2em; letter-spacing: 0.5px; }
         .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         
-        .category-tag { 
-            font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); 
-            padding: 4px 8px; border-radius: 6px; text-transform: uppercase; 
-            cursor: pointer; transition: 0.2s;
-        }
+        .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
 
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
+        .source-tag.USER { background: var(--user-color); }
+
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
         .meaning { line-height: 1.5; font-size: 1em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; }
         .meaning:active { color: var(--accent); }
@@ -175,6 +187,8 @@
         .action-btn { font-size: 1.3em; cursor: pointer; opacity: 0.4; transition: 0.2s; border: none; background: none; padding: 5px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
         .action-btn.star.active { opacity: 1; filter: drop-shadow(0 0 5px var(--star-color)); }
+        .action-btn.delete { color: var(--error); opacity: 0.6; }
+        .action-btn.delete:active { opacity: 1; }
 
         /* --- DRAWER --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
@@ -191,13 +205,14 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
+        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
+        .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
         .modal-btn { padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; border: none; font-weight: 600; }
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
-        
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -205,11 +220,6 @@
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
-
-        /* REPORT LIST */
-        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-        .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .report-item.missed { color: var(--error); }
 
         /* TOAST & LOADER */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -219,7 +229,10 @@
         .radar::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%); animation: scan 1.5s linear infinite; }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* FLASHCARD */
+        /* FLASHCARD & REPORT */
+        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.9em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .report-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .report-item.missed { color: var(--error); }
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 300px; perspective: 1000px; z-index: 2001; }
         .flashcard { width: 100%; height: 260px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
@@ -241,7 +254,10 @@
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
         .score-display { position: absolute; top: -40px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1em; }
-        .kb-hint { display: none; } /* Hidden on mobile */
+        
+        /* KEYFRAMES */
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
     </style>
 </head>
@@ -261,9 +277,6 @@
             <div id="natoResult">...</div>
             <button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button>
         </div>
-        <div style="margin-top:auto">
-            <button class="modal-btn cancel" id="closeDrawerBtn" style="width:100%">Close Bag</button>
-        </div>
     </div>
 
     <div class="controls">
@@ -280,7 +293,7 @@
             <select id="dbSource" title="Select Database" style="flex-grow: 1;">
                 <option value="sofema" selected>🇪🇺 SOFEMA</option>
                 <option value="faa">🇺🇸 FAA</option>
-                <option value="both">🌎 ALL</option>
+                <option value="both">🌎 ALL SOURCES</option>
             </select>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -312,13 +325,35 @@
         <div class="loader-container"><div class="radar"></div></div>
     </div>
 
-    <div class="fab-menu">
-        <button class="fab-btn secondary" id="randomBtn" title="Flashcards">🎲</button>
-        <button class="fab-btn secondary" id="settingsBtn" title="Settings">⚙️</button>
-        <button class="fab-btn" id="menuBtn" title="Flight Bag">👜</button>
+    <div class="fab-container" id="fabContainer">
+        <button class="fab-main" id="fabTrigger" title="Menu">＋</button>
+        <div class="fab-items">
+            <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
+            <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
+            <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
+        </div>
     </div>
 
     <div id="toast">Message</div>
+
+    <div id="addModalOverlay" class="modal-overlay"></div>
+    <div id="addModal" class="modal">
+        <h3>Add New Acronym</h3>
+        <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
+        <textarea id="newMeaning" placeholder="Definition..."></textarea>
+        <select id="newCategory">
+            <option value="General">General</option>
+            <option value="Operations">Operations</option>
+            <option value="Weather">Weather</option>
+            <option value="Systems">Systems</option>
+            <option value="Regulations">Regulations</option>
+        </select>
+        <div class="modal-buttons">
+            <button id="cancelAddBtn" class="modal-btn cancel">Cancel</button>
+            <button id="saveAcronymBtn" class="modal-btn send">Save</button>
+        </div>
+    </div>
 
     <div id="modalOverlay" class="modal-overlay"></div>
     <div id="reportModal" class="modal">
@@ -348,6 +383,7 @@
             <label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label>
         </div>
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
+        <p style="font-size:0.8em; opacity:0.7;">Includes history, mastery, and your custom acronyms.</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
@@ -390,22 +426,21 @@
     </div>
 
     <script>
-        // --- ALL JS LOGIC FROM V28 REMAINS SAME (Just Minified for cleaner copy) ---
-        // I will include the full functional script block here:
-        
+        // CONFIG
         const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
-        const GROUP_CONFIG = { "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics, Maint, Infra", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] }, "Regulations": { desc: "ICAO, Safety, Rules", keywords: ["Regulat", "Safety", "Standard"] }, "Business": { desc: "Airline, Commercial, IT", keywords: ["Airline", "Commerc", "Training", "Military"] }, "All": { desc: "Searching DB." }, "Favorites": { desc: "Saved." }, "History": { desc: "Recent." }, "Other": { desc: "Uncategorized." } };
+        const GROUP_CONFIG = { "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics, Maint, Infra", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] }, "Regulations": { desc: "ICAO, Safety, Rules", keywords: ["Regulat", "Safety", "Standard"] }, "Business": { desc: "Airline, Commercial, IT", keywords: ["Airline", "Commerc", "Training", "Military"] }, "All": { desc: "Searching DB." }, "Favorites": { desc: "Saved." }, "History": { desc: "Recent." }, "My Acronyms": { desc: "User defined." }, "Other": { desc: "Uncategorized." } };
         const NATO_MAP = { 'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot', 'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima', 'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo', 'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray', 'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four', '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal' };
 
+        // STATE
         let allData=[], acronymSet=new Set(), filteredData=[], activeGroup='All', exactCategoryFilter=null, currentReportItem=null, currentFlashcardItem=null, searchStack=[];
-        let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"";
+        let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"", customData=JSON.parse(localStorage.getItem('pilotCustomDB'))||[];
         let sessionStats={total:0,correct:0,missedItems:[]};
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if(!settings.sfx) return; if(audioCtx.state==='suspended') audioCtx.resume();
-            if('vibrate' in navigator) navigator.vibrate(10); // HAPTIC FEEDBACK
+            if('vibrate' in navigator) navigator.vibrate(10);
             const osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
             if(type==='click'){osc.type='sine';osc.frequency.setValueAtTime(800,audioCtx.currentTime);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.05);}
             else if(type==='success'){osc.type='sine';osc.frequency.setValueAtTime(600,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(1200,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
@@ -419,7 +454,13 @@
         function loadData(m){
             document.getElementById('results').innerHTML=`<div class="loader-container"><div class="radar"></div></div>`;
             let p=[]; if(m==='faa')p.push(fetchSheet(LINKS.faa,'FAA')); else if(m==='sofema')p.push(fetchSheet(LINKS.sofema,'SOFEMA')); else if(m==='both'){p.push(fetchSheet(LINKS.faa,'FAA'));p.push(fetchSheet(LINKS.sofema,'SOFEMA'));}
-            Promise.all(p).then(r=>{allData=r.flat();acronymSet=new Set(allData.map(i=>i.acronym));activeGroup='All';initGroupChips();filteredData=[...allData];updateRankHUD();if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';}).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
+            Promise.all(p).then(r=>{
+                let csvData = r.flat();
+                // Merge Custom Data
+                allData = [...customData, ...csvData];
+                acronymSet=new Set(allData.map(i=>i.acronym));
+                activeGroup='All';initGroupChips();filteredData=[...allData];updateRankHUD();if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+            }).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
         }
 
         function autoLink(t){return t.replace(/\b([A-Z0-9]{2,})\b/g,(m)=>{if(acronymSet.has(m))return `<span class="term-link" onclick="navigateFor('${m}')">${m}</span>`;return m;});}
@@ -433,17 +474,18 @@
         document.getElementById('scratchpad').value=scratchpadText;document.getElementById('weatherSelect').value=settings.weather||'auto';document.getElementById('toggleSfx').checked=settings.sfx;
         loadData('sofema');
 
-        function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
+        function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','My Acronyms','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
         function updateRankHUD(){const t=Object.keys(mastery).length;let r="Student Pilot",p=Math.min(100,Math.round((t/allData.length)*100));if(t>200)r="👨‍✈️ Captain";else if(t>100)r="First Officer";else if(t>50)r="Commercial";else if(t>10)r="Private Pilot";document.getElementById('rankBadge').innerText=r;document.getElementById('rankProgress').style.width=`${p}%`;document.getElementById('rankPct').innerText=`${t} Mastered`;}
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
         function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
+        function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
         function speakText(t){if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;window.speechSynthesis.speak(u);}}
 
         function runSearch(){
             const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim(), mode=document.getElementById('searchMode').value, sort=document.getElementById('sortSelect').value;
             res.innerHTML=''; let tf=allData;
-            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
+            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup==='My Acronyms') tf=customData; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
             if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
             if(term) tf=tf.filter(i=>{const a=i.acronym.toLowerCase(),m=i.meaning.toLowerCase();if(mode==='starts')return a.startsWith(term);if(mode==='exact')return a===term;return a.includes(term)||m.includes(term);});
             
@@ -452,15 +494,45 @@
 
             if(tf.length>0){
                 tf.slice(0,50).forEach((i,idx)=>{
-                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym];
+                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER';
                     const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
                     let dm=i.meaning; if(term&&mode==='contains') dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
-                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div></div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a><button class="action-btn report">🚩</button></div>`;
-                    c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
+                    
+                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
+                    if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+
+                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div></div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
+                    if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
+                    c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
                     res.appendChild(c);
                 });
             } else res.innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
         }
+
+        // FAB LOGIC
+        const fabCont=document.getElementById('fabContainer');
+        document.getElementById('fabTrigger').addEventListener('click',(e)=>{e.stopPropagation();fabCont.classList.toggle('active');});
+        document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
+        document.addEventListener('scroll',()=>{fabCont.classList.remove('active');});
+
+        // Add Acronym Logic
+        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
+        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
+        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
+            const mean = document.getElementById('newMeaning').value.trim();
+            const cat = document.getElementById('newCategory').value;
+            if(!acr || !mean) { showToast("Fill all fields"); return; }
+            
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
+            customData.unshift(newItem);
+            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+            loadData(document.getElementById('dbSource').value); // Reload to merge
+            showToast("Saved!");
+            addOverlay.style.display='none'; addModal.style.display='none';
+            document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        });
 
         const fo=document.getElementById('flashcardOverlay'), tfc=document.getElementById('theFlashcard'), dbo=document.getElementById('debriefOverlay'), dbm=document.getElementById('debriefModal');
         function startFlashcardSession(){if(filteredData.length===0){showToast("No cards");return;}sessionStats={total:0,correct:0,missedItems:[]};updateScoreUI();showNextCard();fo.style.display='block';playSound('click');}
@@ -501,21 +573,21 @@
 
         const sd=document.getElementById('sideDrawer'), dor=document.getElementById('drawerOverlay');
         function toggleDrawer(){if(sd.classList.contains('open')){sd.classList.remove('open');dor.style.display='none';}else{sd.classList.add('open');dor.style.display='block';}}
-        document.getElementById('menuBtn').addEventListener('click',toggleDrawer); document.getElementById('closeDrawerBtn').addEventListener('click',toggleDrawer); dor.addEventListener('click',toggleDrawer);
+        document.getElementById('openDrawerBtn').addEventListener('click',toggleDrawer); document.getElementById('closeDrawerBtn').addEventListener('click',toggleDrawer); dor.addEventListener('click',toggleDrawer);
 
         document.getElementById('dbSource').addEventListener('change',(e)=>loadData(e.target.value));
         document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
         document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
         document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
         
-        function initGroupChips(){const g=['All','Favorites','History','Operations','Weather','Systems','Regulations','Business','Other'],c=document.getElementById('filterContainer');c.innerHTML='';g.forEach(x=>{const d=document.createElement('div');d.className=`chip ${x==='All'?'active':''} ${x.toLowerCase()}`;d.innerText=x;d.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(z=>z.classList.remove('active'));d.classList.add('active');activeGroup=x;exactCategoryFilter=null;document.getElementById('groupDesc').innerText=GROUP_CONFIG[x]?GROUP_CONFIG[x].desc:'';searchStack=[];document.getElementById('backBtn').style.display='none';runSearch();playSound('click');});c.appendChild(d);});}
+        function initGroupChips(){const g=['All','Favorites','History','My Acronyms','Operations','Weather','Systems','Regulations','Business','Other'],c=document.getElementById('filterContainer');c.innerHTML='';g.forEach(x=>{const d=document.createElement('div');d.className=`chip ${x==='All'?'active':''} ${x==='My Acronyms'?'my-data':''} ${x.toLowerCase()}`;d.innerText=x;d.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(z=>z.classList.remove('active'));d.classList.add('active');activeGroup=x;exactCategoryFilter=null;document.getElementById('groupDesc').innerText=GROUP_CONFIG[x]?GROUP_CONFIG[x].desc:'';searchStack=[];document.getElementById('backBtn').style.display='none';runSearch();playSound('click');});c.appendChild(d);});}
 
         document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
         document.getElementById('natoInput').addEventListener('input',(e)=>{const v=e.target.value.toUpperCase(),r=[];for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));document.getElementById('natoResult').innerText=r.join(' ');});
         document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
-        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
+        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
         document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
-        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotScratchpad',d.scratchpad);updateRankHUD();runSearch();showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
+        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
 
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
