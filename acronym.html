@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot's Database V27</title>
+    <title>Pilot's Database V28</title>
     <style>
         /* --- THEME VARIABLES --- */
         :root {
@@ -67,7 +67,7 @@
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
         }
 
-        .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;}
 
         select {
             padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(150,150,150,0.3);
@@ -95,10 +95,8 @@
 
         #searchBox { flex-grow: 1; border: none; background: transparent; padding: 8px 16px; font-size: 16px; color: var(--text); outline: none; }
         #searchBtn { background-color: var(--accent); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
         #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.7em; cursor: pointer; margin-right: 8px; display: none; }
         
-        /* NEW: Back Button */
         #backBtn { 
             background: none; border: none; color: var(--accent); font-weight: 700; 
             font-size: 0.9em; cursor: pointer; padding-left: 10px; display: none; 
@@ -122,6 +120,8 @@
         .chip.history { border: 1px solid var(--history-color); color: var(--text); }
         .chip.history.active { background: var(--history-color); color: #fff; }
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
+        
+        .reset-filter-link { color: var(--accent); text-decoration: underline; cursor: pointer; margin-left: 5px; font-weight: bold; }
 
         /* --- RESULTS --- */
         #results { margin-top: 10px; padding-bottom: 60px; display: flex; flex-direction: column; gap: 10px; }
@@ -132,17 +132,23 @@
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.1em; letter-spacing: 0.5px; }
         .meta-tags { display: flex; gap: 6px; align-items: center; }
-        .category-tag { font-size: 0.65em; opacity: 0.7; border: 1px solid var(--text); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        
+        /* CATEGORY TAG (Clickable now) */
+        .category-tag { 
+            font-size: 0.65em; opacity: 0.7; border: 1px solid var(--text); 
+            padding: 2px 6px; border-radius: 4px; text-transform: uppercase; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .category-tag:hover { background: var(--text); color: var(--glass-bg); opacity: 1; }
+
         .source-tag { font-size: 0.65em; font-weight: bold; color: white; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
         .meaning { line-height: 1.5; font-size: 0.95em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; }
         .meaning:hover { color: var(--accent); }
-        /* SMART LINK STYLE */
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
         .term-link:hover { background: rgba(0, 168, 255, 0.1); }
-        
         .card-actions { display: flex; flex-direction: column; gap: 8px; align-items: center; }
         .action-btn { font-size: 1.1em; cursor: pointer; opacity: 0.3; transition: 0.2s; border: none; background: none; padding: 4px; }
         .action-btn:hover { opacity: 1; transform: scale(1.1); }
@@ -183,7 +189,6 @@
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
         
-        /* SETTINGS TOGGLES */
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -192,7 +197,10 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* FLASHCARD */
+        .report-list { max-height: 200px; overflow-y: auto; font-size: 0.85em; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .report-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .report-item.missed { color: var(--error); }
+
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; height: 260px; perspective: 1000px; z-index: 2001; }
         .flashcard { width: 100%; height: 220px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
@@ -269,12 +277,18 @@
             <button id="searchBtn">🔍</button>
         </div>
         
-        <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-             <select id="searchMode" title="Search Mode" style="width: auto;">
+        <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+             <select id="searchMode" title="Search Logic" style="width: auto;">
                 <option value="contains">Contains</option>
                 <option value="starts">Starts With</option>
                 <option value="exact">Exact</option>
             </select>
+            <select id="sortSelect" title="Sort Order" style="width: auto;">
+                <option value="default">Original Order</option>
+                <option value="az">A-Z (Alphabetical)</option>
+                <option value="za">Z-A (Reverse)</option>
+            </select>
+            
             <div class="filter-container" id="filterContainer" style="flex-grow:1;"></div>
         </div>
         <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
@@ -324,6 +338,18 @@
         <div style="margin-top:15px; text-align:right;">
             <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
+    </div>
+
+    <div id="debriefOverlay" class="modal-overlay"></div>
+    <div id="debriefModal" class="modal">
+        <h3>Flight Debriefing</h3>
+        <div style="text-align:center; margin-bottom:15px;">
+            <div style="font-size:3em; font-weight:bold; color:var(--accent);" id="debriefGrade">A</div>
+            <div style="font-size:1.2em;" id="debriefScore">10/10</div>
+        </div>
+        <p>Review Items:</p>
+        <div class="report-list" id="debriefList"></div>
+        <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
     </div>
 
     <div id="flashcardOverlay" class="modal-overlay">
@@ -376,19 +402,20 @@
         let acronymSet = new Set(); 
         let filteredData = [];
         let activeGroup = 'All';
+        let exactCategoryFilter = null; // New state for raw category filter
+        
         let currentReportItem = null;
         let currentFlashcardItem = null;
-        let searchStack = []; // For Navigation History
+        let searchStack = []; 
         
         // Persistent
         let favorites = JSON.parse(localStorage.getItem('pilotFavorites')) || [];
         let mastery = JSON.parse(localStorage.getItem('pilotMastery')) || {}; 
         let historyLog = JSON.parse(localStorage.getItem('pilotHistory')) || [];
-        // Settings update: Now 'weather' stores the class name or 'auto'
         let settings = JSON.parse(localStorage.getItem('pilotSettings')) || { sfx: false, weather: 'auto' };
         let scratchpadText = localStorage.getItem('pilotScratchpad') || "";
 
-        let sessionStats = { total: 0, correct: 0 };
+        let sessionStats = { total: 0, correct: 0, missedItems: [] };
 
         // --- SOUND ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -419,14 +446,10 @@
         // --- BACKGROUND ENGINE ---
         function updateBackground() {
             document.body.className = ''; 
-            
-            // Manual Override
             if (settings.weather !== 'auto') {
                 document.body.classList.add(settings.weather);
                 return;
             }
-            
-            // Auto Mode
             const hour = new Date().getHours();
             if (hour >= 5 && hour < 8) document.body.classList.add('bg-sunrise');
             else if (hour >= 8 && hour < 17) document.body.classList.add('bg-day');
@@ -487,12 +510,9 @@
         }
         
         window.navigateFor = function(term) {
-            // Push current search to stack before moving
             const currentVal = document.getElementById('searchBox').value;
             if(currentVal) searchStack.push(currentVal);
-            
-            document.getElementById('backBtn').style.display = 'block'; // Show Back
-            
+            document.getElementById('backBtn').style.display = 'block'; 
             document.getElementById('searchBox').value = term;
             document.getElementById('clearBtn').style.display = 'block';
             runSearch();
@@ -508,6 +528,27 @@
             }
             if(searchStack.length === 0) document.getElementById('backBtn').style.display = 'none';
         });
+
+        // --- FILTER BY RAW CATEGORY ---
+        window.filterByRawCategory = function(catName) {
+            exactCategoryFilter = catName;
+            activeGroup = 'All'; // Reset broad group
+            document.getElementById('searchBox').value = ''; // Reset text
+            document.getElementById('groupDesc').innerHTML = `Filtering by Category: <b>${catName}</b> <span class="reset-filter-link" onclick="clearRawCategory()">[Clear]</span>`;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            // Highlight 'All' chip roughly
+            document.querySelector('.chip').classList.add('active');
+            
+            runSearch();
+            playSound('click');
+        };
+
+        window.clearRawCategory = function() {
+            exactCategoryFilter = null;
+            document.getElementById('groupDesc').textContent = "Searching entire database.";
+            runSearch();
+            playSound('click');
+        };
 
         // --- INITIALIZATION ---
         if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -591,9 +632,13 @@
             const resultsDiv = document.getElementById('results');
             const term = document.getElementById('searchBox').value.toLowerCase().trim();
             const mode = document.getElementById('searchMode').value;
+            const sortMode = document.getElementById('sortSelect').value; // NEW Sorting
+            
             resultsDiv.innerHTML = '';
             
             let tempFiltered = allData;
+            
+            // 1. Broad Filters
             if (activeGroup === 'Favorites') {
                 tempFiltered = tempFiltered.filter(item => favorites.includes(item.acronym));
             } else if (activeGroup === 'History') {
@@ -602,8 +647,12 @@
                 tempFiltered = tempFiltered.filter(item => item.group === activeGroup);
             }
             
-            filteredData = [...tempFiltered]; 
-
+            // 2. Specific Category Filter (Clickable Tag)
+            if (exactCategoryFilter) {
+                tempFiltered = tempFiltered.filter(item => item.category === exactCategoryFilter);
+            }
+            
+            // 3. Text Search
             if (term !== '') {
                 tempFiltered = tempFiltered.filter(item => {
                     const acr = item.acronym.toLowerCase();
@@ -612,10 +661,21 @@
                     else if (mode === 'exact') return acr === term;
                     else return acr.includes(term) || mean.includes(term);
                 });
-            } else if (activeGroup === 'All') {
+            } else if (activeGroup === 'All' && !exactCategoryFilter) {
                  resultsDiv.innerHTML = '<div style="text-align:center; margin-top:40px; opacity:0.6;">SYSTEM READY.</div>';
                  return;
             }
+            
+            // 4. Update Flashcard Pool
+            filteredData = [...tempFiltered]; 
+
+            // 5. SORTING LOGIC (New)
+            if (sortMode === 'az') {
+                tempFiltered.sort((a, b) => a.acronym.localeCompare(b.acronym));
+            } else if (sortMode === 'za') {
+                tempFiltered.sort((a, b) => b.acronym.localeCompare(a.acronym));
+            }
+            // 'default' does nothing (preserves CSV order or filtered order)
 
             if (tempFiltered.length > 0) {
                 const subset = tempFiltered.slice(0, 50);
@@ -633,8 +693,6 @@
                     }
                     
                     displayMeaning = autoLink(displayMeaning);
-
-                    // NEW: Google Search Link Logic
                     const googleLink = `https://www.google.com/search?q=aviation+definition+${encodeURIComponent(item.acronym)}`;
 
                     card.innerHTML = `
@@ -643,7 +701,7 @@
                                 <span class="acronym-badge">${item.acronym}</span>
                                 <div class="meta-tags">
                                     <span class="source-tag ${item.source}">${item.source}</span>
-                                    <span class="category-tag">${item.category}</span>
+                                    <span class="category-tag" onclick="filterByRawCategory('${item.category}')" title="Filter by this category">${item.category}</span>
                                     ${isMastered ? '<span class="mastered-dot" title="Mastered"></span>' : ''}
                                 </div>
                             </div>
@@ -670,10 +728,12 @@
         // --- FLASHCARD SESSION ---
         const flashcardOverlay = document.getElementById('flashcardOverlay');
         const theFlashcard = document.getElementById('theFlashcard');
+        const debriefOverlay = document.getElementById('debriefOverlay');
+        const debriefModal = document.getElementById('debriefModal');
 
         function startFlashcardSession() {
             if (filteredData.length === 0) { showToast("No cards available in this filter/group."); return; }
-            sessionStats = { total: 0, correct: 0 };
+            sessionStats = { total: 0, correct: 0, missedItems: [] };
             updateScoreUI();
             showNextCard();
             flashcardOverlay.style.display = 'block';
@@ -685,6 +745,35 @@
             flashcardOverlay.style.display = 'none';
             window.removeEventListener('keydown', handleKeyboard);
             runSearch();
+            showDebrief();
+        }
+
+        function showDebrief() {
+            if (sessionStats.total === 0) return;
+            const pct = Math.round((sessionStats.correct / sessionStats.total) * 100);
+            let grade = 'F';
+            if (pct === 100) grade = 'S (Superb)';
+            else if (pct >= 90) grade = 'A';
+            else if (pct >= 80) grade = 'B';
+            else if (pct >= 70) grade = 'C';
+            else if (pct >= 60) grade = 'D';
+
+            document.getElementById('debriefGrade').innerText = grade;
+            document.getElementById('debriefScore').innerText = `${pct}% Accuracy`;
+            
+            const list = document.getElementById('debriefList');
+            list.innerHTML = '';
+            if (sessionStats.missedItems.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:10px;">Perfect Check Ride! No errors.</div>';
+            } else {
+                sessionStats.missedItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'report-item missed';
+                    div.innerHTML = `<span>${item.acronym}</span> <span style="font-size:0.8em; opacity:0.7">Missed</span>`;
+                    list.appendChild(div);
+                });
+            }
+            debriefOverlay.style.display = 'block'; debriefModal.style.display = 'block'; playSound('success');
         }
 
         function showNextCard() {
@@ -723,6 +812,7 @@
                 theFlashcard.classList.add('shake');
                 playSound('error');
                 if(currentFlashcardItem) {
+                    sessionStats.missedItems.push(currentFlashcardItem);
                     if (mastery[currentFlashcardItem.acronym]) {
                         delete mastery[currentFlashcardItem.acronym];
                         localStorage.setItem('pilotMastery', JSON.stringify(mastery));
@@ -741,52 +831,37 @@
         document.getElementById('gotBtn').addEventListener('click', (e) => { e.stopPropagation(); handleGameResult(true); });
         theFlashcard.addEventListener('click', () => { theFlashcard.classList.toggle('flipped'); playSound('click'); });
         
-        // Settings
-        document.getElementById('settingsBtn').addEventListener('click', () => { 
-            document.getElementById('settingsOverlay').style.display = 'block'; 
-            document.getElementById('settingsModal').style.display = 'block'; 
+        document.getElementById('closeDebriefBtn').addEventListener('click', () => {
+            debriefOverlay.style.display = 'none';
+            debriefModal.style.display = 'none';
         });
-        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            document.getElementById('settingsOverlay').style.display = 'none'; 
-            document.getElementById('settingsModal').style.display = 'none'; 
-        });
-        
-        // Toggles
-        document.getElementById('weatherSelect').addEventListener('change', (e) => {
-            settings.weather = e.target.value;
-            localStorage.setItem('pilotSettings', JSON.stringify(settings));
-            updateBackground();
-        });
-        document.getElementById('toggleSfx').addEventListener('change', (e) => {
-            settings.sfx = e.target.checked;
-            localStorage.setItem('pilotSettings', JSON.stringify(settings));
-        });
+
+        // Settings & Toggles
+        document.getElementById('settingsBtn').addEventListener('click', () => { document.getElementById('settingsOverlay').style.display = 'block'; document.getElementById('settingsModal').style.display = 'block'; });
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => { document.getElementById('settingsOverlay').style.display = 'none'; document.getElementById('settingsModal').style.display = 'none'; });
+        document.getElementById('weatherSelect').addEventListener('change', (e) => { settings.weather = e.target.value; localStorage.setItem('pilotSettings', JSON.stringify(settings)); updateBackground(); });
+        document.getElementById('toggleSfx').addEventListener('change', (e) => { settings.sfx = e.target.checked; localStorage.setItem('pilotSettings', JSON.stringify(settings)); });
 
         // Drawer
         const sideDrawer = document.getElementById('sideDrawer');
         const drawerOverlay = document.getElementById('drawerOverlay');
-        function toggleDrawer() {
-            if (sideDrawer.classList.contains('open')) { sideDrawer.classList.remove('open'); drawerOverlay.style.display = 'none'; }
-            else { sideDrawer.classList.add('open'); drawerOverlay.style.display = 'block'; }
-        }
+        function toggleDrawer() { if (sideDrawer.classList.contains('open')) { sideDrawer.classList.remove('open'); drawerOverlay.style.display = 'none'; } else { sideDrawer.classList.add('open'); drawerOverlay.style.display = 'block'; } }
         document.getElementById('menuBtn').addEventListener('click', toggleDrawer);
         document.getElementById('closeDrawerBtn').addEventListener('click', toggleDrawer);
         drawerOverlay.addEventListener('click', toggleDrawer);
 
-        // Search Events
+        // Search Events & Sorting
         document.getElementById('dbSource').addEventListener('change', (e) => loadData(e.target.value));
         document.getElementById('searchBox').addEventListener('input', () => {
             document.getElementById('clearBtn').style.display = 'block';
             if (activeGroup === 'Favorites' || activeGroup === 'History') activeGroup = 'All';
             runSearch();
         });
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            document.getElementById('searchBox').value = '';
-            runSearch();
-        });
+        document.getElementById('clearBtn').addEventListener('click', () => { document.getElementById('searchBox').value = ''; runSearch(); });
         document.getElementById('searchMode').addEventListener('change', runSearch);
+        document.getElementById('sortSelect').addEventListener('change', runSearch); // Trigger sort
         
-        // --- CHIPS UI ---
+        // Chips UI
         function initGroupChips() {
             const groups = ['All', 'Favorites', 'History', 'Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
             const container = document.getElementById('filterContainer');
@@ -799,11 +874,14 @@
                 chip.className = `chip ${grp === 'All' ? 'active' : ''} ${extraClass}`;
                 chip.textContent = grp === 'Favorites' ? '⭐ Favorites' : (grp === 'History' ? '🕒 History' : grp);
                 chip.addEventListener('click', () => {
+                    // Clearing raw category filter when switching broader groups
+                    exactCategoryFilter = null; 
+                    
                     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
                     activeGroup = grp;
                     document.getElementById('groupDesc').textContent = GROUP_CONFIG[grp] ? GROUP_CONFIG[grp].desc : "";
-                    // Clear search stack when changing groups
+                    // Clear search stack
                     searchStack = [];
                     document.getElementById('backBtn').style.display = 'none';
                     runSearch();
@@ -813,7 +891,7 @@
             });
         }
 
-        // --- SCRATCHPAD & NATO ---
+        // Tools & Export
         document.getElementById('scratchpad').addEventListener('input', (e) => localStorage.setItem('pilotScratchpad', e.target.value));
         document.getElementById('natoInput').addEventListener('input', (e) => {
             const val = e.target.value.toUpperCase();
@@ -826,8 +904,6 @@
             document.getElementById('natoResult').innerText = res.join(' ');
         });
         document.getElementById('natoSpeakBtn').addEventListener('click', () => speakText(document.getElementById('natoResult').innerText));
-
-        // --- EXPORT/IMPORT ---
         document.getElementById('exportBtn').addEventListener('click', () => {
             const data = { history: historyLog, favorites: favorites, mastery: mastery, scratchpad: document.getElementById('scratchpad').value };
             const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
@@ -848,7 +924,7 @@
             reader.readAsText(e.target.files[0]);
         });
 
-        // --- REPORT LOGIC ---
+        // Report & Keyboard
         function openReportModal(item) { currentReportItem = item; document.getElementById('modalTitle').innerText = `Report: ${item.acronym}`; document.getElementById('reportComment').value = ""; document.getElementById('modalOverlay').style.display = 'block'; document.getElementById('reportModal').style.display = 'block'; }
         function closeReportModal() { document.getElementById('modalOverlay').style.display = 'none'; document.getElementById('reportModal').style.display = 'none'; }
         document.getElementById('cancelModalBtn').addEventListener('click', closeReportModal);
@@ -861,7 +937,6 @@
             closeReportModal();
         });
 
-        // --- KEYBOARD ---
         function handleKeyboard(e) {
             if (flashcardOverlay.style.display !== 'block') return;
             if (e.code === 'Space') { e.preventDefault(); theFlashcard.classList.toggle('flipped'); } 
@@ -870,7 +945,6 @@
             else if (e.code === 'Escape') endFlashcardSession(); 
         }
         
-        // Theme Toggle
         document.getElementById('themeBtn').addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
