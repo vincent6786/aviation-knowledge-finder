@@ -382,30 +382,36 @@
         </div>
         
         <div class="filter-row" style="margin-top:10px;">
-             <select id="categorySelect" title="Category">
-                 <option value="All">All Categories</option>
-                 <option value="Favorites">⭐ Favorites</option>
-                 <option value="History">🕒 History</option>
-                 <option value="My Acronyms">👤 My Acronyms</option>
-                 <option value="Operations">Operations</option>
-                 <option value="Weather">Weather</option>
-                 <option value="Systems">Systems</option>
-                 <option value="Regulations">Regulations</option>
-                 <option value="Business">Business</option>
-                 <option value="Other">Other</option>
-             </select>
-
-             <select id="searchMode" title="Mode" style="width: auto;">
-                <option value="contains">In</option>
-                <option value="starts">Start</option>
-                <option value="exact">Exact</option>
-            </select>
-            <select id="sortSelect" title="Sort" style="width: auto;">
-                <option value="default">Orig</option>
-                <option value="az">A-Z</option>
-                <option value="za">Z-A</option>
-            </select>
-        </div>
+                     <select id="categorySelect" title="Category">
+                         <option value="All">All Categories</option>
+                         <option value="Favorites">⭐ Favorites</option>
+                         <option value="History">🕒 History</option>
+                         <option value="My Acronyms">👤 My Acronyms</option>
+                         <option value="Operations">Operations</option>
+                         <option value="Weather">Weather</option>
+                         <option value="Systems">Systems</option>
+                         <option value="Regulations">Regulations</option>
+                         <option value="Business">Business</option>
+                         <option value="Other">Other</option>
+                     </select>
+        
+                     <label style="display:flex; align-items:center; font-size:0.85em; gap:5px; margin-left:5px; background:rgba(255,255,255,0.1); padding:6px 10px; border-radius:12px; border:1px solid rgba(150,150,150,0.3); cursor:pointer;">
+                        <input type="checkbox" id="defSearchToggle">
+                        <span>Def Only</span>
+                     </label>
+        
+                     <select id="searchMode" title="Mode" style="width: auto;">
+                        <option value="contains">In</option>
+                        <option value="starts">Start</option>
+                        <option value="exact">Exact</option>
+                    </select>
+        
+                    <select id="sortSelect" title="Sort" style="width: auto;">
+                        <option value="default">Orig</option>
+                        <option value="az">A-Z</option>
+                        <option value="za">Z-A</option>
+                    </select>
+                </div>
         <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
     </div>
 
@@ -911,16 +917,19 @@
 
         function runSearch() {
                     const res = document.getElementById('results');
-                    // Get raw value for display/Google link (preserve case)
                     const rawTerm = document.getElementById('searchBox').value.trim();
                     const term = rawTerm.toLowerCase();
                     const mode = document.getElementById('searchMode').value;
                     const sort = document.getElementById('sortSelect').value;
+                    
+                    // NEW: Check if "Def Only" is active
+                    // (We use optional chaining ?. in case the element doesn't exist yet, avoiding errors)
+                    const searchDefs = document.getElementById('defSearchToggle')?.checked || false;
         
                     res.innerHTML = '';
                     let tf = allData;
         
-                    // Filter Logic
+                    // 1. Filter by Group/Category
                     if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
                     else if (activeGroup === 'History') tf = historyLog;
                     else if (activeGroup === 'My Acronyms') tf = customData;
@@ -928,8 +937,17 @@
         
                     if (exactCategoryFilter) tf = tf.filter(i => i.category === exactCategoryFilter);
         
+                    // 2. Filter by Search Term
                     if (term) tf = tf.filter(i => {
-                        const a = i.acronym.toLowerCase(), m = i.meaning.toLowerCase();
+                        const a = i.acronym.toLowerCase();
+                        const m = i.meaning.toLowerCase();
+                        
+                        // NEW: Priority Search on Definition
+                        if (searchDefs) {
+                            return m.includes(term);
+                        }
+        
+                        // Standard Search
                         if (mode === 'starts') return a.startsWith(term);
                         if (mode === 'exact') return a === term;
                         return a.includes(term) || m.includes(term);
@@ -937,28 +955,72 @@
         
                     filteredData = [...tf];
         
-                    // Sort Logic
+                    // 3. Sort
                     if (sort === 'az') tf.sort((a, b) => a.acronym.localeCompare(b.acronym));
                     else if (sort === 'za') tf.sort((a, b) => b.acronym.localeCompare(a.acronym));
         
-                    // Render Results or Fallback
+                    // 4. Render Results
                     if (tf.length > 0) {
                         tf.slice(0, 50).forEach((i, idx) => {
-                            const isFav = favorites.includes(i.acronym), isM = mastery[i.acronym], isUser = i.source === 'USER', hasNote = pilotNotes[i.acronym];
+                            const isFav = favorites.includes(i.acronym);
+                            const isM = mastery[i.acronym];
+                            const isUser = i.source === 'USER';
+                            const hasNote = pilotNotes[i.acronym];
+        
                             const c = document.createElement('div');
                             c.className = 'card';
                             c.style.animationDelay = `${idx * 0.05}s`;
                             
+                            // Highlight matching terms in definition
                             let dm = i.meaning;
-                            if (term && mode === 'contains') dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                            if (term && (mode === 'contains' || searchDefs)) {
+                                 dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                            }
                             
+                            // --- NEW: "SEE ALSO" GENERATOR ---
+                            // Finds up to 3 items in the same category that start with the same letter
+                            let seeAlsoHTML = '';
+                            const related = allData.filter(x => 
+                                x.category === i.category && 
+                                x.acronym !== i.acronym && 
+                                x.acronym.charAt(0) === i.acronym.charAt(0)
+                            ).slice(0, 3);
+                            
+                            if (related.length > 0) {
+                                seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
+                                    <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
+                                    ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px; cursor:pointer; color:var(--link-color); text-decoration:underline;">${r.acronym}</span>`).join('')}
+                                </div>`;
+                            }
+                            // ---------------------------------
+        
                             let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                             if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
                             
                             let noteHTML = '';
                             if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
         
-                            c.innerHTML = `<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM ? '<span class="mastered-dot"></span>' : ''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav ? 'active' : ''}">⭐</button><button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
+                            c.innerHTML = `
+                                <div class="card-content">
+                                    <div class="acronym-header">
+                                        <span class="acronym-badge">${i.acronym}</span>
+                                        <div class="meta-tags">
+                                            <span class="source-tag ${i.source}">${i.source}</span>
+                                            <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                            ${isM ? '<span class="mastered-dot"></span>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="meaning">${autoLink(dm)}</div>
+                                    ${seeAlsoHTML}
+                                    ${noteHTML}
+                                </div>
+                                <div class="card-actions">
+                                    <button class="action-btn star ${isFav ? 'active' : ''}">⭐</button>
+                                    <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button>
+                                    <button class="action-btn speak">🔊</button>
+                                    <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                                    ${actionBtn}
+                                </div>`;
                             
                             if (!isUser) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
                             c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
@@ -966,7 +1028,7 @@
                             res.appendChild(c);
                         });
                     } else {
-                        // --- NEW FALLBACK LOGIC ---
+                        // FALLBACK: Show Google Search Button
                         if (rawTerm) {
                             res.innerHTML = `
                                 <div style="text-align:center; margin-top:40px; padding:20px; animation: slideUp 0.3s ease forwards;">
@@ -975,9 +1037,6 @@
                                     <a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send" style="text-decoration:none; display:inline-block; padding:12px 24px; color:white; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                                         🌐 Search Google
                                     </a>
-                                    <div style="margin-top:20px; font-size:0.85em; opacity:0.5;">
-                                        Tip: Try checking your spelling or switching the <b>Database Source</b> in the top menu.
-                                    </div>
                                 </div>
                             `;
                         } else {
