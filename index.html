@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V41</title>
+    <title>Aviation Acronym V40</title>
     
     <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
     <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
@@ -72,7 +72,7 @@
             overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- CONTROLS --- */
+        /* --- CONTROLS (HEADER) --- */
         .controls {
             position: sticky; top: var(--safe-top); z-index: 90;
             background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -81,12 +81,28 @@
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
-        .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
+        
+        /* COMPACT MODE (Scroll Down) */
+        .controls.compact {
+            padding: 10px;
+            border-radius: 0 0 16px 16px;
+            gap: 5px;
+        }
+        .controls.compact .hud-container,
+        .controls.compact .top-row,
+        .controls.compact #groupDesc {
+            display: none;
+        }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        select { padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer; font-size: 0.9em; font-weight: 500; min-height: 40px; flex-grow: 1; }
+
+        select {
+            padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
+            background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer;
+            font-size: 0.9em; font-weight: 500; min-height: 40px; flex-grow: 1;
+        }
         select option { background: var(--modal-bg); color: var(--text); }
+
         .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
@@ -101,20 +117,30 @@
         .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
 
+        /* --- HUD --- */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
         .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
         .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
         .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
 
-        /* --- CARDS --- */
+        /* --- CARDS (Bottom Toolbar Layout) --- */
         #results { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
-        .card { background: var(--glass-bg); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; }
+        .card { 
+            background: var(--glass-bg); backdrop-filter: blur(5px); 
+            border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; 
+            display: flex; flex-direction: column; gap: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; 
+        }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        
         .card-content { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.3em; letter-spacing: 0.5px; word-break: break-all; }
         .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
@@ -122,20 +148,45 @@
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.USER { background: var(--user-color); }
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
-        .meaning { line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; word-wrap: break-word; }
+        
+        .meaning { 
+            line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; 
+            transition: color 0.2s; position: relative; word-wrap: break-word; 
+        }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
         
-        .card-actions { display: flex; flex-direction: row; width: 100%; box-sizing: border-box; padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1); justify-content: flex-end; gap: 15px; }
+        /* BOTTOM ACTION BAR */
+        .card-actions { 
+            display: flex; flex-direction: row; 
+            width: 100%; box-sizing: border-box;
+            padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1);
+            justify-content: flex-end; gap: 15px; 
+        }
         @media (max-width: 600px) { .card-actions { justify-content: space-between; gap: 0; } }
+
         .action-btn { font-size: 1.4em; cursor: pointer; opacity: 0.5; transition: 0.2s; border: none; background: none; padding: 5px 10px; }
         .action-btn:active { opacity: 1; transform: scale(1.2); }
         .action-btn.star.active { opacity: 1; color: var(--star-color); filter: drop-shadow(0 0 2px var(--star-color)); }
+        .action-btn.delete { color: var(--error); opacity: 0.6; }
+        .action-btn.delete:active { opacity: 1; }
+        
         .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
         .note-icon-small { font-size: 1.1em; opacity: 0.6; }
         .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
 
-        /* --- DRAWER & MODALS --- */
+        /* --- RETRACTABLE FAB --- */
+        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
+        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
+        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
+        .fab-mini:active { transform: scale(0.9); }
+        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .fab-container.active .fab-mini:hover::after { opacity: 1; }
+
+        /* --- DRAWER --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.open { transform: translateY(0); }
@@ -147,10 +198,10 @@
         #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
         #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
 
+        /* --- MODALS --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
         .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
-        .modal p { font-size: 0.9em; opacity: 0.8; line-height: 1.5; margin-bottom: 20px; }
         .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
@@ -158,6 +209,7 @@
         .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
+        
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -175,6 +227,7 @@
         .sig-red { color: #e74c3c; font-weight: bold; }
         .sig-white { color: #95a5a6; font-weight: bold; }
 
+        /* AIRSPACE VISUALIZER */
         .airspace-vis { width: 100%; height: 180px; background: linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0) 100%); border-radius: 12px; position: relative; overflow: hidden; margin-top: 10px; border: 1px solid var(--glass-border); }
         .cloud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 30px; background: var(--cloud-color); border-radius: 50px; box-shadow: 0 0 20px rgba(255,255,255,0.8); }
         .cloud::after, .cloud::before { content: ''; position: absolute; background: var(--cloud-color); border-radius: 50%; }
@@ -184,35 +237,7 @@
         .dist-line { position: absolute; background: var(--error); opacity: 0.7; }
         .dist-label { position: absolute; color: var(--text); font-size: 0.75em; font-weight: bold; background: var(--glass-bg); padding: 2px 4px; border-radius: 4px; }
 
-        /* FAB */
-        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
-        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
-        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
-        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
-        .fab-mini:active { transform: scale(0.9); }
-        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-        .fab-container.active .fab-mini:hover::after { opacity: 1; }
-
-        /* EXAM MODE MODAL */
-        #quizOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; }
-        #quizModal {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; max-width: 400px; background: var(--modal-bg);
-            border-radius: 20px; padding: 20px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-        }
-        .quiz-question { font-size: 2em; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-        .quiz-options { display: flex; flex-direction: column; gap: 10px; }
-        .quiz-option {
-            padding: 12px; border: 1px solid rgba(150,150,150,0.3); border-radius: 12px;
-            background: rgba(0,0,0,0.05); cursor: pointer; font-size: 1em; transition: 0.2s;
-        }
-        .quiz-option:hover { background: rgba(0,0,0,0.1); }
-        .quiz-option.correct { background: var(--success); color: white; border-color: var(--success); }
-        .quiz-option.wrong { background: var(--error); color: white; border-color: var(--error); }
-
+        /* TOAST & LOADER */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
@@ -222,6 +247,7 @@
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
+        /* FLASHCARD */
         #flashcardOverlay { display: none; z-index: 2000; }
         .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 300px; perspective: 1000px; z-index: 2001; }
         .flashcard { width: 100%; height: 260px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
@@ -238,19 +264,15 @@
         .fc-meaning { font-size: 1.2em; line-height: 1.4; font-weight: 500; }
         .fc-controls { margin-top: 20px; width: 100%; display: flex; justify-content: space-between; align-items: center; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .flashcard.flipped ~ .fc-controls { opacity: 1; pointer-events: auto; }
+        .game-btn { padding: 12px 24px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 1em; }
+        .game-btn:active { transform: scale(0.95); }
+        .game-btn.miss { background: var(--error); }
+        .game-btn.got { background: var(--success); }
+        .score-display { position: absolute; top: -40px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1em; }
+
     </style>
 </head>
 <body class="bg-day">
-
-    <div id="quizOverlay">
-        <div id="quizModal">
-            <div id="quizScore" style="margin-bottom:10px; opacity:0.7;">Score: 0</div>
-            <div class="quiz-question" id="quizQuestion">VREF</div>
-            <div class="quiz-options" id="quizOptions">
-                </div>
-            <button id="closeQuizBtn" class="modal-btn cancel full" style="margin-top:20px;">End Exam</button>
-        </div>
-    </div>
 
     <div id="drawerOverlay" class="drawer-overlay"></div>
     <div id="sideDrawer" class="drawer">
@@ -258,11 +280,27 @@
             <h3>👜 Flight Bag</h3>
             <button class="icon-btn" id="closeDrawerBtn" style="font-size:1.2em;">✕</button>
         </div>
+        
         <div style="flex-grow:1; overflow-y:auto; display:flex; flex-direction:column; gap:20px;">
             <button class="modal-btn full" id="openQRHBtn" style="background:var(--history-color); color:white;">📋 Cockpit QRH</button>
-            <div class="tool-section"><span class="tool-label">METAR DECODER</span><input type="text" id="metarInput" placeholder="e.g. 16004KT 9999" autocomplete="off"><div id="metarResult">...</div></div>
-            <div class="tool-section"><span class="tool-label">SCRATCHPAD</span><textarea id="scratchpad" placeholder="Clearance, ATIS..."></textarea></div>
-            <div class="tool-section"><span class="tool-label">NATO PHONETIC</span><input type="text" id="natoInput" placeholder="Type text..." autocomplete="off"><div id="natoResult">...</div><button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button></div>
+
+            <div class="tool-section">
+                <span class="tool-label">METAR DECODER (SIMPLE)</span>
+                <input type="text" id="metarInput" placeholder="e.g. 16004KT 9999" autocomplete="off">
+                <div id="metarResult">...</div>
+            </div>
+
+            <div class="tool-section">
+                <span class="tool-label">SCRATCHPAD</span>
+                <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
+            </div>
+            
+            <div class="tool-section">
+                <span class="tool-label">NATO PHONETIC</span>
+                <input type="text" id="natoInput" placeholder="Type text here..." autocomplete="off">
+                <div id="natoResult">...</div>
+                <button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button>
+            </div>
         </div>
     </div>
 
@@ -306,6 +344,7 @@
                  <option value="Business">Business</option>
                  <option value="Other">Other</option>
              </select>
+
              <select id="searchMode" title="Mode" style="width: auto;">
                 <option value="contains">In</option>
                 <option value="starts">Start</option>
@@ -328,8 +367,7 @@
         <button class="fab-main" id="fabTrigger" title="Menu">＋</button>
         <div class="fab-items">
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
-            <button class="fab-mini" id="quizBtn" data-label="Exam Mode">🅰️🅱️</button> <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button>
-            <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
@@ -337,20 +375,211 @@
 
     <div id="toast">Message</div>
 
-    <div id="helpModalOverlay" class="modal-overlay"></div><div id="helpModal" class="modal"><h3>Flight Manual 📘</h3><div class="help-content"><h4>🔍 Search & Study</h4><ul><li><strong>Search:</strong> Type definitions or acronyms.</li><li><strong>Smart Links:</strong> Click highlighted terms to jump.</li><li><strong>Share:</strong> Click the Share icon to get a link.</li></ul><h4>✈️ Training</h4><ul><li><strong>Exam Mode (🅰️🅱️):</strong> Multiple choice quiz.</li><li><strong>Flashcards (🎲):</strong> Self-graded study.</li></ul></div><div class="modal-buttons" style="margin-top:15px;"><button id="closeHelpBtn" class="modal-btn send full">Roger!</button></div></div>
-    <div id="qrhModalOverlay" class="modal-overlay"></div><div id="qrhModal" class="modal"><h3>📋 Cockpit QRH</h3><div style="display:flex;gap:5px;margin-bottom:15px;flex-wrap:wrap;"><button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1;">Airspace</button><button class="modal-btn" onclick="showQRHTab('light')" style="flex:1;">Lights</button><button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1;">XPDR</button><button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1;">V-Spd</button></div><div id="qrh-airspace"><select id="airspaceSelect" style="width:100%;margin-bottom:10px;"><option value="B">Class B</option><option value="C">Class C</option><option value="D">Class D</option><option value="E">Class E <10k</option><option value="G">Class G Day</option></select><div class="airspace-vis" id="airspaceVis"></div><p id="airspaceText" style="text-align:center;font-weight:bold;margin-top:10px;"></p></div><div id="qrh-light" style="display:none;"><table class="qrh-table"><tr><th>Signal</th><th>Flight</th><th>Ground</th></tr><tr><td class="sig-green">Green</td><td>Land</td><td>Takeoff</td></tr><tr><td class="sig-red">Red</td><td>Circle</td><td>STOP</td></tr></table></div><div id="qrh-xpdr" style="display:none;"><table class="qrh-table"><tr><th>Code</th><th>Meaning</th></tr><tr><td>7500</td><td class="sig-red">Hijack</td></tr><tr><td>7600</td><td class="sig-red">Radio Fail</td></tr><tr><td>7700</td><td class="sig-red">Emergency</td></tr></table></div><div id="qrh-vspeed" style="display:none;"><table class="qrh-table"><tr><th>Speed</th><th>Desc</th></tr><tr><td>Vr</td><td>Rotate</td></tr><tr><td>Vso</td><td>Stall Ldg</td></tr></table></div><div class="modal-buttons" style="margin-top:15px;"><button id="closeQRHBtn" class="modal-btn cancel full">Close</button></div></div>
-    <div id="noteModalOverlay" class="modal-overlay"></div><div id="noteModal" class="modal"><h3>Add Note</h3><p id="noteTargetAcronym" style="font-weight:bold;color:var(--accent);"></p><textarea id="noteContent" placeholder="Note..."></textarea><div class="modal-buttons"><button id="deleteNoteBtn" class="modal-btn" style="color:var(--error);margin-right:auto;">Delete</button><button id="closeNoteBtn" class="modal-btn cancel">Cancel</button><button id="saveNoteBtn" class="modal-btn send">Save</button></div></div>
-    <div id="addModalOverlay" class="modal-overlay"></div><div id="addModal" class="modal"><h3>Add Acronym</h3><input type="text" id="newAcronym" placeholder="Acronym"><textarea id="newMeaning" placeholder="Meaning"></textarea><select id="newCategory"><option>General</option><option>Operations</option><option>Weather</option></select><div class="modal-buttons"><button id="cancelAddBtn" class="modal-btn cancel">Cancel</button><button id="saveAcronymBtn" class="modal-btn send">Save</button></div></div>
-    <div id="modalOverlay" class="modal-overlay"></div><div id="reportModal" class="modal"><h3>Report</h3><textarea id="reportComment" placeholder="Error..."></textarea><div class="modal-buttons"><button id="cancelModalBtn" class="modal-btn cancel">Cancel</button><button id="sendEmailBtn" class="modal-btn send">Draft</button></div></div>
-    <div id="settingsOverlay" class="modal-overlay"></div><div id="settingsModal" class="modal"><h3>Settings</h3><div class="toggle-row"><span>Weather BG</span><select id="weatherSelect" style="width:auto;"><option value="auto">Auto</option><option value="bg-day">Day</option></select></div><div class="toggle-row"><span>SFX</span><label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label></div><button id="exportBtn" class="modal-btn send modal-btn full">Export</button><button id="importBtn" class="modal-btn cancel modal-btn full">Import</button><input type="file" id="fileInput" style="display:none"><div style="margin-top:15px;text-align:right;"><button id="closeSettingsBtn" class="modal-btn cancel">Close</button></div></div>
-    <div id="debriefOverlay" class="modal-overlay"></div><div id="debriefModal" class="modal"><h3>Debrief</h3><div style="text-align:center;"><div style="font-size:3em;" id="debriefGrade"></div><div id="debriefScore"></div></div><div class="report-list" id="debriefList"></div><button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button></div>
-    <div id="flashcardOverlay" class="modal-overlay"><div class="flashcard-wrapper"><div class="score-display" id="sessionScore">0%</div><div class="flashcard" id="theFlashcard"><div class="card-face front"><span class="source-tag" id="fcSource"></span><h1 class="fc-acronym" id="fcAcronym"></h1><div class="fc-hint">Tap</div></div><div class="card-face back"><div class="fc-meaning" id="fcMeaning"></div></div></div><div class="fc-controls"><button id="missBtn" class="game-btn miss">Miss</button><button id="closeFcBtn" class="modal-btn cancel">Exit</button><button id="gotBtn" class="game-btn got">Got it</button></div></div></div>
+    <div id="helpModalOverlay" class="modal-overlay"></div>
+    <div id="helpModal" class="modal">
+        <h3>Flight Manual 📘</h3>
+        <div class="help-content">
+            <h4>🔍 Search & Study</h4>
+            <ul>
+                <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
+                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them. Use <strong>⬅</strong> to go back.</li>
+                <li><strong>Notes (📝):</strong> Click the memo icon on any card to add personal sticky notes.</li>
+            </ul>
+            <h4>✈️ Training</h4>
+            <ul>
+                <li><strong>Flashcards (🎲):</strong> Quizzes you based on your current filter.</li>
+                <li><strong>Rank:</strong> Mark cards "Got It" to gain XP and rank up from Student to Captain.</li>
+            </ul>
+            <h4>👜 Flight Bag & Tools</h4>
+            <ul>
+                <li><strong>Adv. Weather (🌤️):</strong> Open full Notion METAR decoder.</li>
+                <li><strong>QRH:</strong> Quick Reference for Airspace, Lights & V-Speeds.</li>
+                <li><strong>Airspace Visualizer:</strong> See cloud clearances dynamically.</li>
+                <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
+            </ul>
+            <h4>💾 Data Safety</h4>
+            <ul>
+                <li>All data is local. Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup.</li>
+            </ul>
+        </div>
+        <div class="modal-buttons" style="margin-top:15px;">
+            <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+        </div>
+    </div>
+
+    <div id="qrhModalOverlay" class="modal-overlay"></div>
+    <div id="qrhModal" class="modal">
+        <h3>📋 Cockpit QRH</h3>
+        <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
+            <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
+            <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
+            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
+            <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
+        </div>
+        
+        <div id="qrh-airspace">
+            <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
+                <option value="B">Class B</option>
+                <option value="C">Class C</option>
+                <option value="D">Class D</option>
+                <option value="E">Class E (<10k MSL)</option>
+                <option value="E10">Class E (>10k MSL)</option>
+                <option value="G">Class G (Day, <1200 AGL)</option>
+            </select>
+            <div class="airspace-vis" id="airspaceVis"></div>
+            <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
+        </div>
+
+        <div id="qrh-light" style="display:none;">
+            <table class="qrh-table">
+                <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
+                <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
+                <tr><td class="sig-green">Flash Green</td><td>Return for Land</td><td>Cleared Taxi</td></tr>
+                <tr><td class="sig-red">Steady Red</td><td>Give Way / Circle</td><td>STOP</td></tr>
+                <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
+                <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
+            </table>
+        </div>
+        
+        <div id="qrh-xpdr" style="display:none;">
+            <table class="qrh-table">
+                <tr><th>Code</th><th>Meaning</th></tr>
+                <tr><td>7500</td><td class="sig-red">Hijack</td></tr>
+                <tr><td>7600</td><td class="sig-red">Radio Failure</td></tr>
+                <tr><td>7700</td><td class="sig-red">Emergency</td></tr>
+                <tr><td>1200</td><td>VFR</td></tr>
+            </table>
+        </div>
+
+        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
+            <table class="qrh-table">
+                <tr><th>Speed</th><th>Description</th></tr>
+                <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
+                <tr><td>Vso</td><td>Stall Speed (Landing Config)</td></tr>
+                <tr><td>Vr</td><td>Rotation Speed</td></tr>
+                <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
+                <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
+                <tr><td>Va</td><td>Maneuvering Speed</td></tr>
+                <tr><td>Vno</td><td>Max Structural Cruise</td></tr>
+                <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
+                <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
+                <tr><td>Vlo</td><td>Max Landing Gear Ops</td></tr>
+                <tr><td>Vle</td><td>Max Landing Gear Ext</td></tr>
+                <tr><td>Vmc</td><td>Min Controllable (Multi)</td></tr>
+                <tr><td>Vyse</td><td>Best Rate Single Engine</td></tr>
+                <tr><td>Vref</td><td>Ref Landing Speed</td></tr>
+            </table>
+        </div>
+
+        <div class="modal-buttons" style="margin-top:15px;">
+            <button id="closeQRHBtn" class="modal-btn cancel full">Close</button>
+        </div>
+    </div>
+
+    <div id="noteModalOverlay" class="modal-overlay"></div>
+    <div id="noteModal" class="modal">
+        <h3>Add Note</h3>
+        <p id="noteTargetAcronym" style="font-weight:bold; color:var(--accent);">V1</p>
+        <textarea id="noteContent" placeholder="Enter your personal note here..."></textarea>
+        <div class="modal-buttons">
+            <button id="deleteNoteBtn" class="modal-btn" style="color:var(--error); margin-right:auto;">Delete</button>
+            <button id="closeNoteBtn" class="modal-btn cancel">Cancel</button>
+            <button id="saveNoteBtn" class="modal-btn send">Save Note</button>
+        </div>
+    </div>
+
+    <div id="addModalOverlay" class="modal-overlay"></div>
+    <div id="addModal" class="modal">
+        <h3>Add New Acronym</h3>
+        <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
+        <textarea id="newMeaning" placeholder="Definition..."></textarea>
+        <select id="newCategory">
+            <option value="General">General</option>
+            <option value="Operations">Operations</option>
+            <option value="Weather">Weather</option>
+            <option value="Systems">Systems</option>
+            <option value="Regulations">Regulations</option>
+        </select>
+        <div class="modal-buttons">
+            <button id="cancelAddBtn" class="modal-btn cancel">Cancel</button>
+            <button id="saveAcronymBtn" class="modal-btn send">Save</button>
+        </div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay"></div>
+    <div id="reportModal" class="modal">
+        <h3 id="modalTitle">Report Error</h3>
+        <textarea id="reportComment" placeholder="Describe the error..."></textarea>
+        <div class="modal-buttons">
+            <button id="cancelModalBtn" class="modal-btn cancel">Cancel</button>
+            <button id="sendEmailBtn" class="modal-btn send">Draft Email</button>
+        </div>
+    </div>
+
+    <div id="settingsOverlay" class="modal-overlay"></div>
+    <div id="settingsModal" class="modal">
+        <h3>System Settings</h3>
+        <div class="toggle-row">
+            <span>Weather Background</span>
+            <select id="weatherSelect" style="width:auto; padding:4px;">
+                <option value="auto">Auto</option>
+                <option value="bg-sunrise">Sunrise</option>
+                <option value="bg-day">Day</option>
+                <option value="bg-sunset">Sunset</option>
+                <option value="bg-night">Night</option>
+            </select>
+        </div>
+        <div class="toggle-row">
+            <span>Sound Effects (SFX)</span>
+            <label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label>
+        </div>
+        <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
+        <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
+        <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
+        <input type="file" id="fileInput" style="display:none" accept=".json">
+        <div style="margin-top:15px; text-align:right;">
+            <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
+        </div>
+    </div>
+
+    <div id="debriefOverlay" class="modal-overlay"></div>
+    <div id="debriefModal" class="modal">
+        <h3>Flight Debriefing</h3>
+        <div style="text-align:center; margin-bottom:15px;">
+            <div style="font-size:3em; font-weight:bold; color:var(--accent);" id="debriefGrade">A</div>
+            <div style="font-size:1.2em;" id="debriefScore">10/10</div>
+        </div>
+        <p>Review Items:</p>
+        <div class="report-list" id="debriefList"></div>
+        <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
+    </div>
+
+    <div id="flashcardOverlay" class="modal-overlay">
+        <div class="flashcard-wrapper">
+            <div class="score-display" id="sessionScore">Session Accuracy: 0%</div>
+            <div class="flashcard" id="theFlashcard">
+                <div class="card-face front">
+                    <span class="source-tag" id="fcSource">FAA</span>
+                    <h1 class="fc-acronym" id="fcAcronym">VASI</h1>
+                    <div class="fc-hint">Tap to Flip</div>
+                </div>
+                <div class="card-face back">
+                    <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
+                </div>
+            </div>
+            <div class="fc-controls">
+                <button id="missBtn" class="game-btn miss">⬅️ Missed</button>
+                <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black; font-size:0.8em;">Exit</button>
+                <button id="gotBtn" class="game-btn got">Got it ➡️</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // CONFIG
         const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
-        const GROUP_CONFIG = { "Operations": { desc: "Nav, Ops", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics", keywords: ["Avionics", "System", "Maintenance"] }, "Regulations": { desc: "Rules", keywords: ["Regulat", "Safety"] }, "Business": { desc: "Airline", keywords: ["Airline", "Commerc"] }, "All": { desc: "" } };
+        const GROUP_CONFIG = { "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics, Maint, Infra", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] }, "Regulations": { desc: "ICAO, Safety, Rules", keywords: ["Regulat", "Safety", "Standard"] }, "Business": { desc: "Airline, Commercial, IT", keywords: ["Airline", "Commerc", "Training", "Military"] }, "All": { desc: "Searching DB." }, "Favorites": { desc: "Saved." }, "History": { desc: "Recent." }, "My Acronyms": { desc: "User defined." }, "Other": { desc: "Uncategorized." } };
         const NATO_MAP = { 'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot', 'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima', 'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo', 'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray', 'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four', '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal' };
 
         // STATE
@@ -359,19 +588,90 @@
         let pilotNotes = JSON.parse(localStorage.getItem('pilotNotes')) || {}; 
         let currentNoteAcronym = null; 
         let sessionStats={total:0,correct:0,missedItems:[]};
-        let quizState = { currentQuestion: null, correctOption: null }; // NEW QUIZ STATE
 
-        // AUDIO
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
-            if(!settings.sfx) return; if(audioCtx.state==='suspended') audioCtx.resume(); if('vibrate' in navigator) navigator.vibrate(10);
+            if(!settings.sfx) return; if(audioCtx.state==='suspended') audioCtx.resume();
+            if('vibrate' in navigator) navigator.vibrate(10);
             const osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
             if(type==='click'){osc.type='sine';osc.frequency.setValueAtTime(800,audioCtx.currentTime);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.05);}
             else if(type==='success'){osc.type='sine';osc.frequency.setValueAtTime(600,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(1200,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
             else if(type==='error'){osc.type='sawtooth';osc.frequency.setValueAtTime(150,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(100,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
         }
 
-        // LOAD
+        // Theme
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+        // Help Modal
+        const helpOverlay = document.getElementById('helpModalOverlay');
+        const helpModal = document.getElementById('helpModal');
+        document.getElementById('helpBtn').addEventListener('click', () => { helpOverlay.style.display='block'; helpModal.style.display='block'; });
+        document.getElementById('closeHelpBtn').addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
+        helpOverlay.addEventListener('click', () => { helpOverlay.style.display='none'; helpModal.style.display='none'; });
+
+        // QRH Logic
+        const qrhOverlay = document.getElementById('qrhModalOverlay');
+        const qrhModal = document.getElementById('qrhModal');
+        window.showQRHTab = function(id) {
+            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
+            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
+            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
+            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
+        };
+        document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
+        document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+        qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+
+        // Airspace Vis
+        const airspaceSelect = document.getElementById('airspaceSelect');
+        const airspaceVis = document.getElementById('airspaceVis');
+        const airspaceText = document.getElementById('airspaceText');
+        function renderAirspace() {
+            const val = airspaceSelect.value;
+            let html = '', text = '';
+            const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
+            const cloud = `<div class="cloud"></div>`;
+            if (val === 'B') { html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; text = "3 SM, Clear of Clouds"; } 
+            else if (['C','D','E'].includes(val)) {
+                html = `${plane}<div class="cloud" style="top:20%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div><div class="dist-label" style="top:35%; left:52%;">1000' Above</div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div><div class="dist-label" style="top:65%; left:52%;">500' Below</div><div class="cloud" style="top:50%; left:85%;"></div><div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div><div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>`;
+                text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
+            } else if (val === 'E10') {
+                html = `${plane}<div class="cloud" style="top:10%; left:50%;"></div><div class="dist-label" style="top:25%; left:52%;">1000' Above</div><div class="cloud" style="top:90%; left:50%;"></div><div class="dist-label" style="top:75%; left:52%;">1000' Below</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>`;
+                text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
+            } else if (val === 'G') { text = "1 SM, Clear of Clouds (Day)"; html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; }
+            airspaceVis.innerHTML = html; airspaceText.innerText = text;
+        }
+        airspaceSelect.addEventListener('change', renderAirspace);
+
+        // Note Logic
+        const noteOverlay = document.getElementById('noteModalOverlay');
+        const noteModal = document.getElementById('noteModal');
+        window.openNoteModal = function(acronym) {
+            currentNoteAcronym = acronym;
+            document.getElementById('noteTargetAcronym').innerText = acronym;
+            document.getElementById('noteContent').value = pilotNotes[acronym] || "";
+            noteOverlay.style.display = 'block'; noteModal.style.display = 'block';
+        };
+        document.getElementById('saveNoteBtn').addEventListener('click', () => {
+            const txt = document.getElementById('noteContent').value.trim();
+            if(txt) pilotNotes[currentNoteAcronym] = txt; else delete pilotNotes[currentNoteAcronym];
+            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+            noteOverlay.style.display='none'; noteModal.style.display='none';
+            runSearch(); showToast("Note Saved");
+        });
+        document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
+        document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
+
+        // Core Functions
+        function updateBackground() { document.body.className=''; if(settings.weather!=='auto'){document.body.classList.add(settings.weather);return;} const h=new Date().getHours(); if(h>=5&&h<8)document.body.classList.add('bg-sunrise');else if(h>=8&&h<17)document.body.classList.add('bg-day');else if(h>=17&&h<20)document.body.classList.add('bg-sunset');else document.body.classList.add('bg-night'); }
+        setInterval(updateBackground,60000); updateBackground();
+
         function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
         function loadData(m){
             document.getElementById('results').innerHTML=`<div class="loader-container"><div class="radar"></div></div>`;
@@ -379,139 +679,29 @@
             Promise.all(p).then(r=>{
                 let csvData = r.flat(); allData = [...customData, ...csvData]; acronymSet=new Set(allData.map(i=>i.acronym));
                 activeGroup='All'; filteredData=[...allData]; updateRankHUD();
-                
-                // DEEP LINK CHECK
-                if(window.location.hash) {
-                    const term = decodeURIComponent(window.location.hash.substring(1));
-                    document.getElementById('searchBox').value = term;
-                    runSearch();
-                } else if(document.getElementById('searchBox').value.length>0) runSearch();
-                else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+                if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
             }).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
         }
 
-        // SHARE LOGIC
-        window.shareAcronym = function(acronym) {
-            const url = window.location.origin + window.location.pathname + '#' + encodeURIComponent(acronym);
-            navigator.clipboard.writeText(url).then(() => showToast("Link Copied!"));
-        };
-
-        // QUIZ LOGIC (NEW)
-        const quizOverlay = document.getElementById('quizOverlay');
-        document.getElementById('quizBtn').addEventListener('click', startQuiz);
-        document.getElementById('closeQuizBtn').addEventListener('click', () => { quizOverlay.style.display='none'; });
-
-        function startQuiz() {
-            if(filteredData.length < 4) { showToast("Need more items for Quiz"); return; }
-            sessionStats = { total: 0, correct: 0 };
-            document.getElementById('fabContainer').classList.remove('active');
-            quizOverlay.style.display = 'block';
-            nextQuestion();
-        }
-
-        function nextQuestion() {
-            // Pick Target
-            const target = filteredData[Math.floor(Math.random() * filteredData.length)];
-            quizState.correctOption = target;
-            
-            // Pick 3 Distractors (Try same category)
-            let distractors = filteredData.filter(i => i.acronym !== target.acronym && i.group === target.group);
-            if(distractors.length < 3) distractors = filteredData.filter(i => i.acronym !== target.acronym); // Fallback
-            
-            // Shuffle distractors and pick 3
-            distractors.sort(() => 0.5 - Math.random());
-            let options = distractors.slice(0, 3);
-            options.push(target);
-            options.sort(() => 0.5 - Math.random());
-
-            // UI Update
-            document.getElementById('quizScore').innerText = `Score: ${sessionStats.correct}/${sessionStats.total}`;
-            document.getElementById('quizQuestion').innerText = target.acronym;
-            const optDiv = document.getElementById('quizOptions');
-            optDiv.innerHTML = '';
-            
-            options.forEach(opt => {
-                const btn = document.createElement('div');
-                btn.className = 'quiz-option';
-                btn.innerText = opt.meaning;
-                btn.onclick = () => checkAnswer(btn, opt);
-                optDiv.appendChild(btn);
-            });
-        }
-
-        function checkAnswer(btn, selection) {
-            sessionStats.total++;
-            if (selection.acronym === quizState.correctOption.acronym) {
-                btn.classList.add('correct');
-                sessionStats.correct++;
-                playSound('success');
-                setTimeout(nextQuestion, 1000);
-            } else {
-                btn.classList.add('wrong');
-                playSound('error');
-                // Highlight correct one
-                const opts = document.querySelectorAll('.quiz-option');
-                opts.forEach(o => { if(o.innerText === quizState.correctOption.meaning) o.classList.add('correct'); });
-                setTimeout(nextQuestion, 2000);
-            }
-        }
-
-        // SEARCH & CARD RENDERING (Updated with Share button)
-        function runSearch(){
-            const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim();
-            res.innerHTML=''; let tf=allData;
-            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym));
-            else if(activeGroup==='History') tf=historyLog;
-            else if(activeGroup==='My Acronyms') tf=customData;
-            else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
-            if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
-            if(term) tf=tf.filter(i=>i.acronym.toLowerCase().startsWith(term) || i.meaning.toLowerCase().includes(term));
-            filteredData=[...tf];
-
-            if(tf.length>0){
-                tf.slice(0,50).forEach((i,idx)=>{
-                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER', hasNote = pilotNotes[i.acronym];
-                    const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
-                    let dm=i.meaning; if(term) dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
-                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
-                    if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
-                    let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-
-                    c.innerHTML=`
-                    <div class="card-content">
-                        <div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div>
-                        <div class="meaning">${autoLink(dm)}</div>${noteHTML}
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
-                        <button class="action-btn" onclick="shareAcronym('${i.acronym}')" title="Share">🔗</button> <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
-                        <button class="action-btn speak">🔊</button>
-                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
-                        ${actionBtn}
-                    </div>`;
-                    if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
-                    c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); 
-                    c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
-                    res.appendChild(c);
-                });
-            } else res.innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
-        }
-
-        // STANDARD FUNCTIONS (Minified for brevity, fully functional)
-        function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('theme',d?'light':'dark');} document.getElementById('themeBtn').addEventListener('click',toggleTheme);
-        const storedTheme=localStorage.getItem('theme'); if(storedTheme){document.documentElement.setAttribute('data-theme',storedTheme);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}
+        function autoLink(t){return t.replace(/\b([A-Z0-9]{2,})\b/g,(m)=>{if(acronymSet.has(m))return `<span class="term-link" onclick="navigateFor('${m}')">${m}</span>`;return m;});}
+        window.navigateFor=function(t){const v=document.getElementById('searchBox').value;if(v)searchStack.push(v);document.getElementById('backBtn').style.display='block';document.getElementById('searchBox').value=t;document.getElementById('clearBtn').style.display='block';runSearch();playSound('click');};
+        document.getElementById('backBtn').addEventListener('click',()=>{if(searchStack.length>0){document.getElementById('searchBox').value=searchStack.pop();runSearch();playSound('click');}if(searchStack.length===0)document.getElementById('backBtn').style.display='none';});
         
-        // ... (Rest of event listeners, modal logic, and data handling from V40 preserved) ...
-        // Re-injecting vital logic for V41 completeness:
-        document.getElementById('weatherToolBtn').addEventListener('click', () => { window.open('https://vincent6786.github.io/Notion_metar_advanced/metarv46.html', '_blank'); });
-        window.addEventListener('scroll', () => { const c=document.getElementById('controls'); if(window.scrollY>50)c.classList.add('compact'); else c.classList.remove('compact'); });
-        document.getElementById('categorySelect').addEventListener('change', (e) => { activeGroup=e.target.value; exactCategoryFilter=null; document.getElementById('groupDesc').innerText=GROUP_CONFIG[activeGroup]?GROUP_CONFIG[activeGroup].desc:""; searchStack=[]; document.getElementById('backBtn').style.display='none'; runSearch(); playSound('click'); });
-        document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
-        document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
-        document.getElementById('fabTrigger').addEventListener('click',(e)=>{e.stopPropagation();fabCont.classList.toggle('active');});
-        document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
-        
-        // ... (Remaining modal/data logic identical to V40) ...
+        window.filterByRawCategory=function(c){exactCategoryFilter=c;activeGroup='All';document.getElementById('searchBox').value='';document.getElementById('groupDesc').innerHTML=`Filtering: <b>${c}</b> <span class="reset-filter-link" onclick="clearRawCategory()">[Clear]</span>`;document.getElementById('categorySelect').value='All';runSearch();playSound('click');};
+        window.clearRawCategory=function(){exactCategoryFilter=null;document.getElementById('groupDesc').textContent="Searching entire database.";runSearch();playSound('click');};
+
+        // Init
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) { document.documentElement.setAttribute('data-theme', storedTheme); } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.setAttribute('data-theme', 'dark'); }
+        document.getElementById('scratchpad').value=scratchpadText;document.getElementById('weatherSelect').value=settings.weather||'auto';document.getElementById('toggleSfx').checked=settings.sfx;
+        loadData('sofema');
+
+        // Scroll Collapse
+        window.addEventListener('scroll', () => {
+            const controls = document.getElementById('controls');
+            if (window.scrollY > 50) controls.classList.add('compact'); else controls.classList.remove('compact');
+        });
+
         function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','My Acronyms','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
         function updateRankHUD(){const t=Object.keys(mastery).length;let r="Student Pilot",p=Math.min(100,Math.round((t/allData.length)*100));if(t>200)r="👨‍✈️ Captain";else if(t>100)r="First Officer";else if(t>50)r="Commercial";else if(t>10)r="Private Pilot";document.getElementById('rankBadge').innerText=r;document.getElementById('rankProgress').style.width=`${p}%`;document.getElementById('rankPct').innerText=`${t} Mastered`;}
@@ -519,12 +709,130 @@
         function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
         function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
         function speakText(t){if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;window.speechSynthesis.speak(u);}}
-        function autoLink(t){return t.replace(/\b([A-Z0-9]{2,})\b/g,(m)=>{if(acronymSet.has(m))return `<span class="term-link" onclick="navigateFor('${m}')">${m}</span>`;return m;});}
-        window.filterByRawCategory=function(c){exactCategoryFilter=c;activeGroup='All';document.getElementById('searchBox').value='';document.getElementById('groupDesc').innerHTML=`Filtering: <b>${c}</b> <span class="reset-filter-link" onclick="clearRawCategory()">[Clear]</span>`;document.getElementById('categorySelect').value='All';runSearch();playSound('click');};
-        window.clearRawCategory=function(){exactCategoryFilter=null;document.getElementById('groupDesc').textContent="Searching entire database.";runSearch();playSound('click');};
+
+        function runSearch(){
+            const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim(), mode=document.getElementById('searchMode').value, sort=document.getElementById('sortSelect').value;
+            res.innerHTML=''; let tf=allData;
+            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup==='My Acronyms') tf=customData; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
+            if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
+            if(term) tf=tf.filter(i=>{const a=i.acronym.toLowerCase(),m=i.meaning.toLowerCase();if(mode==='starts')return a.startsWith(term);if(mode==='exact')return a===term;return a.includes(term)||m.includes(term);});
+            filteredData=[...tf];
+            if(sort==='az') tf.sort((a,b)=>a.acronym.localeCompare(b.acronym)); else if(sort==='za') tf.sort((a,b)=>b.acronym.localeCompare(a.acronym));
+
+            if(tf.length>0){
+                tf.slice(0,50).forEach((i,idx)=>{
+                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER', hasNote = pilotNotes[i.acronym];
+                    const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
+                    let dm=i.meaning; if(term&&mode==='contains') dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
+                    if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
+
+                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
+                    if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
+                    c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
+                    res.appendChild(c);
+                });
+            } else res.innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
+        }
+
+        // Category Select Event
+        document.getElementById('categorySelect').addEventListener('change', (e) => {
+            activeGroup = e.target.value; exactCategoryFilter = null; document.getElementById('groupDesc').innerText = GROUP_CONFIG[activeGroup] ? GROUP_CONFIG[activeGroup].desc : ""; searchStack = []; document.getElementById('backBtn').style.display='none'; runSearch(); playSound('click');
+        });
+
+        // FAB
+        const fabCont=document.getElementById('fabContainer');
+        document.getElementById('fabTrigger').addEventListener('click',(e)=>{e.stopPropagation();fabCont.classList.toggle('active');});
+        document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
+        document.addEventListener('scroll',()=>{fabCont.classList.remove('active');});
+
+        // Weather Link Button (NEW)
+        document.getElementById('weatherToolBtn').addEventListener('click', () => { window.open('https://vincent6786.github.io/Notion_metar_advanced/metarv46.html', '_blank'); });
+
+        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
+        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
+        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
+            if(!acr || !mean) { showToast("Fill all fields"); return; }
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
+            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        });
+
+        const fo=document.getElementById('flashcardOverlay'), tfc=document.getElementById('theFlashcard'), dbo=document.getElementById('debriefOverlay'), dbm=document.getElementById('debriefModal');
+        function startFlashcardSession(){if(filteredData.length===0){showToast("No cards");return;}sessionStats={total:0,correct:0,missedItems:[]};updateScoreUI();showNextCard();fo.style.display='block';playSound('click');}
+        function endFlashcardSession(){fo.style.display='none';runSearch();showDebrief();}
+        function showDebrief(){
+            if(sessionStats.total===0)return; const p=Math.round((sessionStats.correct/sessionStats.total)*100);
+            document.getElementById('debriefGrade').innerText=p===100?'S':(p>=90?'A':(p>=70?'C':'F'));
+            document.getElementById('debriefScore').innerText=`${p}% Accuracy`;
+            const l=document.getElementById('debriefList'); l.innerHTML='';
+            if(sessionStats.missedItems.length===0)l.innerHTML='<div>Perfect!</div>';else sessionStats.missedItems.forEach(i=>{l.innerHTML+=`<div class="report-item missed"><span>${i.acronym}</span><span>Missed</span></div>`;});
+            dbo.style.display='block';dbm.style.display='block';playSound('success');
+        }
+        function showNextCard(){
+            let p=filteredData, u=filteredData.filter(i=>!mastery[i.acronym]); if(u.length>0&&Math.random()>0.3)p=u;
+            currentFlashcardItem=p[Math.floor(Math.random()*p.length)]; addToHistory(currentFlashcardItem);
+            document.getElementById('fcAcronym').innerText=currentFlashcardItem.acronym; document.getElementById('fcMeaning').innerText=currentFlashcardItem.meaning;
+            tfc.classList.remove('flipped','shake','pulse-green');
+        }
+        function updateScoreUI(){const p=sessionStats.total===0?0:Math.round((sessionStats.correct/sessionStats.total)*100);document.getElementById('sessionScore').innerText=`${p}% (${sessionStats.correct}/${sessionStats.total})`;}
+        function handleGameResult(c){
+            sessionStats.total++;
+            if(c){sessionStats.correct++;tfc.classList.add('pulse-green');playSound('success');mastery[currentFlashcardItem.acronym]=true;}
+            else{tfc.classList.add('shake');playSound('error');sessionStats.missedItems.push(currentFlashcardItem);delete mastery[currentFlashcardItem.acronym];}
+            localStorage.setItem('pilotMastery',JSON.stringify(mastery));updateScoreUI();updateRankHUD();setTimeout(showNextCard,600);
+        }
+
+        document.getElementById('randomBtn').addEventListener('click',startFlashcardSession);
+        document.getElementById('closeFcBtn').addEventListener('click',endFlashcardSession);
+        document.getElementById('missBtn').addEventListener('click',(e)=>{e.stopPropagation();handleGameResult(false);});
+        document.getElementById('gotBtn').addEventListener('click',(e)=>{e.stopPropagation();handleGameResult(true);});
+        tfc.addEventListener('click',()=>{tfc.classList.toggle('flipped');playSound('click');});
+        document.getElementById('closeDebriefBtn').addEventListener('click',()=>{dbo.style.display='none';dbm.style.display='none';});
+
+        document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='block';document.getElementById('settingsModal').style.display='block';});
+        document.getElementById('closeSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='none';document.getElementById('settingsModal').style.display='none';});
+        document.getElementById('weatherSelect').addEventListener('change',(e)=>{settings.weather=e.target.value;localStorage.setItem('pilotSettings',JSON.stringify(settings));updateBackground();});
+        document.getElementById('toggleSfx').addEventListener('change',(e)=>{settings.sfx=e.target.checked;localStorage.setItem('pilotSettings',JSON.stringify(settings));});
+
+        const sd=document.getElementById('sideDrawer'), dor=document.getElementById('drawerOverlay');
+        function toggleDrawer(){if(sd.classList.contains('open')){sd.classList.remove('open');dor.style.display='none';}else{sd.classList.add('open');dor.style.display='block';}}
+        document.getElementById('openDrawerBtn').addEventListener('click',toggleDrawer); document.getElementById('closeDrawerBtn').addEventListener('click',toggleDrawer); dor.addEventListener('click',toggleDrawer);
+
+        document.getElementById('dbSource').addEventListener('change',(e)=>loadData(e.target.value));
+        document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
+        document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
+        document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
+        
+        document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
+        
+        document.getElementById('natoInput').addEventListener('input',(e)=>{
+            const v=e.target.value.toUpperCase(); let r=[]; for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));
+            document.getElementById('natoResult').innerText=r.join(' ');
+        });
+        document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
+
+        document.getElementById('metarInput').addEventListener('input', (e) => {
+            const raw = e.target.value.toUpperCase(); let decoded = [];
+            const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/); if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
+            if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)"); else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
+            if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)"); if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)"); if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
+            const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/); if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
+            const qnh = raw.match(/Q(\d{4})/); if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
+            document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
+        });
+
+        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData,notes:pilotNotes},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
+        document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
+        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.notes)pilotNotes=d.notes;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotNotes',JSON.stringify(pilotNotes));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
+
+        function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
+        document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
+        document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
-        
     </script>
 </body>
 </html>
