@@ -1204,12 +1204,49 @@
             limit: 10,
             mode: 'mc' // 'mc' or 'written'
         };
-
-        // 1. Open The Briefing Room
+        // 1. Open The Briefing Room (Dynamic Version)
         window.startExam = function() {
             document.getElementById('fabContainer').classList.remove('active');
+            
+            // --- NEW: DYNAMIC DECK BUILDER ---
+            const select = document.getElementById('quizDeckSelect');
+            
+            // 1. Keep the special options
+            select.innerHTML = `
+                <option value="All">🔀 All Subjects</option>
+                <option value="Favorites">⭐ My Favorites</option>
+                <option value="Weakest">⚠️ My Weakest Links</option>
+                <option disabled>──────────</option>
+            `;
+
+            // 2. Find all unique categories in the current 'allData'
+            // We use a Set to remove duplicates
+            const uniqueCats = [...new Set(allData.map(i => i.category))].sort();
+
+            // 3. Create an option for each category found
+            uniqueCats.forEach(cat => {
+                // Skip empty categories if any
+                if(!cat) return;
+                
+                const opt = document.createElement('option');
+                opt.value = cat;
+                
+                // Optional: Add emoji based on text (Simple mapping)
+                let emoji = '📂'; 
+                if(cat.includes('Weath')) emoji = '☁️';
+                else if(cat.includes('Nav')) emoji = '🧭';
+                else if(cat.includes('Reg')) emoji = '⚖️';
+                else if(cat.includes('Sys')) emoji = '⚙️';
+                else if(cat.includes('Op')) emoji = '🛫';
+                
+                opt.innerText = `${emoji} ${cat}`;
+                select.appendChild(opt);
+            });
+            // ---------------------------------
+
             quizOverlay.style.display = 'block';
             returnToBriefing(); // Reset UI
+            playSound('click');
         };
 
         function returnToBriefing() {
