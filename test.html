@@ -269,7 +269,43 @@
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
         .score-display { position: absolute; top: -40px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1em; }
-
+        /* --- NEW AIRSPACE STYLES --- */
+        .airspace-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+        .as-card {
+            background: rgba(150,150,150,0.1);
+            padding: 8px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+        .as-label {
+            display: block;
+            font-size: 0.75em;
+            opacity: 0.7;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .as-value {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .as-req-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        .as-req-table td {
+            padding: 6px;
+            border-bottom: 1px solid rgba(150,150,150,0.1);
+        }
+        .as-req-icon { margin-right: 6px; }
     </style>
 </head>
 <body class="bg-day">
@@ -418,16 +454,45 @@
         </div>
         
         <div id="qrh-airspace">
-            <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
-                <option value="B">Class B</option>
-                <option value="C">Class C</option>
-                <option value="D">Class D</option>
-                <option value="E">Class E (<10k MSL)</option>
-                <option value="E10">Class E (>10k MSL)</option>
-                <option value="G">Class G (Day, <1200 AGL)</option>
-            </select>
-            <div class="airspace-vis" id="airspaceVis"></div>
-            <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <select id="airspaceSelect" style="flex:1; margin-right:10px;">
+                    <option value="B">Class B (Bravo)</option>
+                    <option value="C">Class C (Charlie)</option>
+                    <option value="D">Class D (Delta)</option>
+                    <option value="E">Class E (Below 10k)</option>
+                    <option value="E10">Class E (Above 10k)</option>
+                    <option value="G_DAY">Class G (Day &lt;1200)</option>
+                    <option value="G_NIGHT">Class G (Night)</option>
+                </select>
+                <div id="as-badge" style="background:var(--accent); color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.9em;">B</div>
+            </div>
+        
+            <div class="airspace-vis" id="airspaceVis" style="height:140px;"></div>
+        
+            <div class="airspace-details">
+                <div class="as-card">
+                    <span class="as-label">Visibility</span>
+                    <span class="as-value" id="as-vis">3 SM</span>
+                </div>
+                <div class="as-card">
+                    <span class="as-label">Cloud Dist</span>
+                    <span class="as-value" id="as-cloud">Clear of Clouds</span>
+                </div>
+            </div>
+        
+            <table class="as-req-table">
+                <tr>
+                    <td>🎙️ <b>Comms:</b> <span id="as-comm">Hear & Speak</span></td>
+                </tr>
+                <tr>
+                    <td>📡 <b>Equip:</b> <span id="as-equip">Mode C</span></td>
+                </tr>
+                <tr>
+                    <td>👮 <b>Entry:</b> <span id="as-entry">Clearance</span></td>
+                </tr>
+            </table>
+            
+            
         </div>
 
         <div id="qrh-light" style="display:none;">
@@ -681,25 +746,66 @@
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
 
-        // Airspace Vis
+        /* --- NEW ADVANCED AIRSPACE LOGIC --- */
         const airspaceSelect = document.getElementById('airspaceSelect');
         const airspaceVis = document.getElementById('airspaceVis');
-        const airspaceText = document.getElementById('airspaceText');
+        
+        // Airspace Rule Database
+        const AS_DATA = {
+            'B': {
+                vis: "3 SM", clouds: "Clear of Clouds",
+                comm: "Two-Way Radio", equip: "Mode C / ADS-B Out", entry: "ATC Clearance Required", badge: "B",
+                html: `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`
+            },
+            'C': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "Two-Way Radio (Name)", equip: "Mode C / ADS-B Out", entry: "2-Way Dialogue", badge: "C",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'D': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "Two-Way Radio", equip: "None (unless w/in 30nm)", entry: "2-Way Dialogue", badge: "D",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'E': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "None (VFR)", equip: "None (unless >10k)", entry: "None", badge: "E",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'E10': {
+                vis: "5 SM", clouds: "1000↓ 1000↑ 1SM↔",
+                comm: "None (VFR)", equip: "Mode C (if >10k MSL)", entry: "None", badge: "E",
+                html: `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:10%; left:40%;"></div><div class="dist-label" style="top:25%; left:42%;">1000'</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM</div>`
+            },
+            'G_DAY': {
+                vis: "1 SM", clouds: "Clear of Clouds",
+                comm: "None", equip: "None", entry: "None", badge: "G",
+                html: `<div class="plane-icon" style="top:60%; left:30%;">✈️</div><div class="cloud" style="top:60%; left:50%;"></div><div class="dist-label" style="bottom:10px; left:10px; opacity:0.5;">Ground < 1200'</div>`
+            },
+            'G_NIGHT': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "None", equip: "None", entry: "None", badge: "G",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div>`
+            }
+        };
+        
         function renderAirspace() {
-            const val = airspaceSelect.value;
-            let html = '', text = '';
-            const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
-            const cloud = `<div class="cloud"></div>`;
-            if (val === 'B') { html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; text = "3 SM, Clear of Clouds"; } 
-            else if (['C','D','E'].includes(val)) {
-                html = `${plane}<div class="cloud" style="top:20%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div><div class="dist-label" style="top:35%; left:52%;">1000' Above</div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div><div class="dist-label" style="top:65%; left:52%;">500' Below</div><div class="cloud" style="top:50%; left:85%;"></div><div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div><div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>`;
-                text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
-            } else if (val === 'E10') {
-                html = `${plane}<div class="cloud" style="top:10%; left:50%;"></div><div class="dist-label" style="top:25%; left:52%;">1000' Above</div><div class="cloud" style="top:90%; left:50%;"></div><div class="dist-label" style="top:75%; left:52%;">1000' Below</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>`;
-                text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
-            } else if (val === 'G') { text = "1 SM, Clear of Clouds (Day)"; html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; }
-            airspaceVis.innerHTML = html; airspaceText.innerText = text;
+            const code = airspaceSelect.value;
+            const data = AS_DATA[code];
+        
+            // Update Visuals
+            airspaceVis.innerHTML = data.html;
+            
+            // Update Text Data
+            document.getElementById('as-vis').innerText = data.vis;
+            document.getElementById('as-cloud').innerText = data.clouds;
+            document.getElementById('as-comm').innerText = data.comm;
+            document.getElementById('as-equip').innerText = data.equip;
+            document.getElementById('as-entry').innerText = data.entry;
+            document.getElementById('as-badge').innerText = data.badge;
         }
+        
+        // Attach listener
         airspaceSelect.addEventListener('change', renderAirspace);
 
         // Note Logic
