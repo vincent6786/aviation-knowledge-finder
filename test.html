@@ -306,6 +306,20 @@
             border-bottom: 1px solid rgba(150,150,150,0.1);
         }
         .as-req-icon { margin-right: 6px; }
+
+        .quiz-opt {
+                padding: 15px 5px;
+                font-size: 1.1em;
+                font-weight: 800;
+                border: 1px solid rgba(150,150,150,0.3);
+                background: rgba(0,0,0,0.05);
+                color: var(--text);
+                transition: all 0.2s;
+            }
+            .quiz-opt:active { transform: scale(0.95); }
+            .quiz-opt.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
+            .quiz-opt.wrong { background: var(--error) !important; color: white !important; opacity: 0.5; }
+        
     </style>
 </head>
 <body class="bg-day">
@@ -405,6 +419,7 @@
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
             <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
+            <button class="fab-mini" onclick="startExam()" data-label="Exam Mode">📝</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
     </div>
@@ -690,6 +705,31 @@
         </div>
     </div>
 
+    <div id="quizOverlay" class="modal-overlay">
+            <div class="flashcard-wrapper">
+                <div class="score-display" id="quizScoreDisplay">Score: 0</div>
+                
+                <div class="card" style="background:var(--modal-bg); border:1px solid var(--glass-border); padding:20px; text-align:center; height:auto; min-height:300px; display:flex; flex-direction:column; justify-content:center;">
+                    
+                    <div style="font-size:0.8em; text-transform:uppercase; opacity:0.6; margin-bottom:10px;">Identify this Acronym</div>
+                    <div id="quizQuestion" style="font-size:1.3em; font-weight:500; margin-bottom:20px; height:80px; overflow-y:auto; display:flex; align-items:center; justify-content:center;">
+                        ...
+                    </div>
+    
+                    <div id="quizOptions" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%;">
+                        <button class="modal-btn quiz-opt">OPT 1</button>
+                        <button class="modal-btn quiz-opt">OPT 2</button>
+                        <button class="modal-btn quiz-opt">OPT 3</button>
+                        <button class="modal-btn quiz-opt">OPT 4</button>
+                    </div>
+    
+                    <div id="quizFeedback" style="height:30px; margin-top:15px; font-weight:bold; opacity:0;">Correct!</div>
+                </div>
+    
+                <button id="closeQuizBtn" class="modal-btn cancel full" style="margin-top:20px; background:white; color:black;">End Exam</button>
+            </div>
+        </div>
+        
     <script>
         // CONFIG
         const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
@@ -1043,6 +1083,103 @@
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
+
+        /* --- EXAM MODE LOGIC --- */
+        const quizOverlay = document.getElementById('quizOverlay');
+        const quizQuestion = document.getElementById('quizQuestion');
+        const quizOptions = document.getElementById('quizOptions');
+        const quizFeedback = document.getElementById('quizFeedback');
+        let currentQuizItem = null;
+        let quizScore = 0;
+
+        function startExam() {
+            // Close other menus
+            document.getElementById('fabContainer').classList.remove('active');
+            if(filteredData.length < 4) { showToast("Need more acronyms!"); return; }
+            
+            quizScore = 0;
+            updateQuizScore();
+            quizOverlay.style.display = 'block';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            quizFeedback.style.opacity = '0';
+            
+            // 1. Pick a Target (Correct Answer)
+            // Prioritize unmastered items
+            let pool = filteredData.filter(i => !mastery[i.acronym]);
+            if(pool.length === 0) pool = filteredData;
+            
+            currentQuizItem = pool[Math.floor(Math.random() * pool.length)];
+
+            // 2. Pick 3 Distractors (Wrong Answers)
+            // Try to pick from same category for difficulty
+            let distractors = filteredData.filter(i => i.acronym !== currentQuizItem.acronym && i.category === currentQuizItem.category);
+            // If not enough in category, pick from global
+            if(distractors.length < 3) distractors = filteredData.filter(i => i.acronym !== currentQuizItem.acronym);
+            
+            // Shuffle and slice 3
+            distractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            // 3. Combine and Shuffle Options
+            let options = [currentQuizItem, ...distractors];
+            options.sort(() => 0.5 - Math.random());
+
+            // 4. Render
+            quizQuestion.innerText = currentQuizItem.meaning; // Show Definition
+            quizOptions.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-btn quiz-opt';
+                btn.innerText = opt.acronym; // Show Acronyms as options
+                btn.onclick = () => handleQuizAnswer(btn, opt.acronym === currentQuizItem.acronym);
+                quizOptions.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(btn, isCorrect) {
+            // Disable all buttons to prevent double clicking
+            const allBtns = document.querySelectorAll('.quiz-opt');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                quizFeedback.innerText = "Correct! ✅";
+                quizFeedback.style.color = "var(--success)";
+                quizFeedback.style.opacity = "1";
+                playSound('success');
+                quizScore++;
+                // Mark as mastered if correct? Optional.
+                // mastery[currentQuizItem.acronym] = true;
+            } else {
+                btn.classList.add('wrong');
+                // Highlight the correct one
+                allBtns.forEach(b => {
+                    if(b.innerText === currentQuizItem.acronym) b.classList.add('correct');
+                });
+                quizFeedback.innerText = `Wrong! It was ${currentQuizItem.acronym}`;
+                quizFeedback.style.color = "var(--error)";
+                quizFeedback.style.opacity = "1";
+                playSound('error');
+            }
+            updateQuizScore();
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quizScoreDisplay').innerText = `Score: ${quizScore}`;
+        }
+
+        // Event Listeners
+        document.getElementById('closeQuizBtn').addEventListener('click', () => quizOverlay.style.display = 'none');
+        
+        // Add a button to the FAB to trigger this
+        // (You'll need to update your FAB HTML to include a button for this)
+        
     </script>
 </body>
 </html>
