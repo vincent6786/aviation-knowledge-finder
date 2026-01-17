@@ -534,36 +534,42 @@
     <div id="toast">Message</div>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
-    <div id="helpModal" class="modal">
-        <h3>Flight Manual 📘</h3>
-        <div class="help-content">
-            <h4>🔍 Search & Study</h4>
-            <ul>
-                <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
-                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them. Use <strong>⬅</strong> to go back.</li>
-                <li><strong>Notes (📝):</strong> Click the memo icon on any card to add personal sticky notes.</li>
-            </ul>
-            <h4>✈️ Training</h4>
-            <ul>
-                <li><strong>Flashcards (🎲):</strong> Quizzes you based on your current filter.</li>
-                <li><strong>Rank:</strong> Mark cards "Got It" to gain XP and rank up from Student to Captain.</li>
-            </ul>
-            <h4>👜 Flight Bag & Tools</h4>
-            <ul>
-                <li><strong>Adv. Weather (🌤️):</strong> Open full Notion METAR decoder.</li>
-                <li><strong>QRH:</strong> Quick Reference for Airspace, Lights & V-Speeds.</li>
-                <li><strong>Airspace Visualizer:</strong> See cloud clearances dynamically.</li>
-                <li><strong>Scratchpad:</strong> Auto-saving notepad for clearances.</li>
-            </ul>
-            <h4>💾 Data Safety</h4>
-            <ul>
-                <li>All data is local. Go to <strong>Settings ⚙️</strong> to <strong>Export</strong> a backup.</li>
-            </ul>
+        <div id="helpModal" class="modal">
+            <h3>Flight Manual 📘</h3>
+            <div class="help-content">
+                <h4>🔍 Search & Study</h4>
+                <ul>
+                    <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
+                    <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
+                    <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
+                    <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
+                </ul>
+    
+                <h4>🎓 Exam Mode (New!)</h4>
+                <ul>
+                    <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
+                    <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
+                    <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
+                    <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
+                </ul>
+    
+                <h4>👜 Flight Bag Tools</h4>
+                <ul>
+                    <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
+                    <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
+                    <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
+                </ul>
+    
+                <h4>⚙️ Settings & Data</h4>
+                <ul>
+                    <li><strong>Databases:</strong> Switch between FAA, SOFEMA, or EVA Airlines data sources.</li>
+                    <li><strong>Backup:</strong> Use <strong>Export</strong> to save your notes/progress to a file.</li>
+                </ul>
+            </div>
+            <div class="modal-buttons" style="margin-top:15px;">
+                <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+            </div>
         </div>
-        <div class="modal-buttons" style="margin-top:15px;">
-            <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
-        </div>
-    </div>
 
     <div id="qrhModalOverlay" class="modal-overlay"></div>
     <div id="qrhModal" class="modal">
