@@ -321,7 +321,19 @@
             .quiz-opt:active { transform: scale(0.95); }
             .quiz-opt.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
             .quiz-opt.wrong { background: var(--error) !important; color: white !important; opacity: 0.5; }
-                
+
+            /* Confidence & Priority Styles */
+            .card.priority-high { border: 2px solid #ff4757; box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
+            .card.priority-high::before { content: '🔥 HIGH PRIORITY'; position: absolute; top: -10px; right: 10px; background: #ff4757; color: white; font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+            
+            .conf-bar { display: flex; gap: 4px; margin-top: 8px; }
+            .conf-dot { flex: 1; height: 4px; border-radius: 2px; background: rgba(150,150,150,0.2); transition: 0.3s; }
+            .conf-dot.red.active { background: #ff4757; box-shadow: 0 0 5px #ff4757; }
+            .conf-dot.yellow.active { background: #eab000; box-shadow: 0 0 5px #eab000; }
+            .conf-dot.green.active { background: #2ed573; box-shadow: 0 0 5px #2ed573; }
+            
+            .family-btn { font-size: 0.8em; color: var(--accent); cursor: pointer; text-decoration: underline; }
+        
     </style>
 </head>
 <body class="bg-day">
@@ -1004,6 +1016,37 @@
         function updateRankHUD(){const t=Object.keys(mastery).length;let r="Student Pilot",p=Math.min(100,Math.round((t/allData.length)*100));if(t>200)r="👨‍✈️ Captain";else if(t>100)r="First Officer";else if(t>50)r="Commercial";else if(t>10)r="Private Pilot";document.getElementById('rankBadge').innerText=r;document.getElementById('rankProgress').style.width=`${p}%`;document.getElementById('rankPct').innerText=`${t} Mastered`;}
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
         function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
+        // Initialize Priority List from LocalStorage
+        let priorityList = JSON.parse(localStorage.getItem('pilotPriority')) || [];
+        // Function to set Confidence Level (1: Red, 2: Yellow, 3: Green)
+        window.setConfidence = function(acr, level) {
+            mastery[acr] = level;
+            localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+            runSearch();
+            if(level === 3) playSound('success');
+            else playSound('click');
+        };
+        // Function to toggle High Priority status
+        window.togglePriority = function(acr) {
+            const idx = priorityList.indexOf(acr);
+            if (idx === -1) {
+                priorityList.push(acr);
+            } else {
+                priorityList.splice(idx, 1);
+            }
+            localStorage.setItem('pilotPriority', JSON.stringify(priorityList));
+            runSearch();
+            showToast(idx === -1 ? "🔥 High Priority Set" : "Priority Removed");
+        };
+        // Function to filter by "Family" (Group)
+        window.filterByFamily = function(groupName) {
+            activeGroup = groupName;
+            // Update the UI dropdown to match the family
+            document.getElementById('categorySelect').value = groupName;
+            document.getElementById('searchBox').value = '';
+            runSearch();
+            showToast(`Showing ${groupName} Family`);
+        };
         function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
         function speakText(t){if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;window.speechSynthesis.speak(u);}}
 
@@ -1013,9 +1056,6 @@
                     const term = rawTerm.toLowerCase();
                     const mode = document.getElementById('searchMode').value;
                     const sort = document.getElementById('sortSelect').value;
-                    
-                    // NEW: Check if "Def Only" is active
-                    // (We use optional chaining ?. in case the element doesn't exist yet, avoiding errors)
                     const searchDefs = document.getElementById('defSearchToggle')?.checked || false;
         
                     res.innerHTML = '';
@@ -1033,13 +1073,7 @@
                     if (term) tf = tf.filter(i => {
                         const a = i.acronym.toLowerCase();
                         const m = i.meaning.toLowerCase();
-                        
-                        // NEW: Priority Search on Definition
-                        if (searchDefs) {
-                            return m.includes(term);
-                        }
-        
-                        // Standard Search
+                        if (searchDefs) return m.includes(term);
                         if (mode === 'starts') return a.startsWith(term);
                         if (mode === 'exact') return a === term;
                         return a.includes(term) || m.includes(term);
@@ -1055,36 +1089,31 @@
                     if (tf.length > 0) {
                         tf.slice(0, 50).forEach((i, idx) => {
                             const isFav = favorites.includes(i.acronym);
-                            const isM = mastery[i.acronym];
-                            const isUser = i.source === 'USER';
                             const hasNote = pilotNotes[i.acronym];
+                            const isUser = i.source === 'USER';
+                            
+                            // NEW: Confidence & Priority Data
+                            const confidence = mastery[i.acronym] || 0; // 0: None, 1: Red, 2: Yellow, 3: Green
+                            const isPriority = priorityList.includes(i.acronym);
         
                             const c = document.createElement('div');
-                            c.className = 'card';
+                            c.className = `card ${isPriority ? 'priority-high' : ''}`;
                             c.style.animationDelay = `${idx * 0.05}s`;
                             
-                            // Highlight matching terms in definition
                             let dm = i.meaning;
                             if (term && (mode === 'contains' || searchDefs)) {
                                  dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
                             }
                             
-                            // --- NEW: "SEE ALSO" GENERATOR ---
-                            // Finds up to 3 items in the same category that start with the same letter
+                            // Related items logic (See Also)
                             let seeAlsoHTML = '';
-                            const related = allData.filter(x => 
-                                x.category === i.category && 
-                                x.acronym !== i.acronym && 
-                                x.acronym.charAt(0) === i.acronym.charAt(0)
-                            ).slice(0, 3);
-                            
+                            const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
                             if (related.length > 0) {
                                 seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
                                     <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
-                                    ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px; cursor:pointer; color:var(--link-color); text-decoration:underline;">${r.acronym}</span>`).join('')}
+                                    ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
                                 </div>`;
                             }
-                            // ---------------------------------
         
                             let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                             if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
@@ -1099,14 +1128,22 @@
                                         <div class="meta-tags">
                                             <span class="source-tag ${i.source}">${i.source}</span>
                                             <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
-                                            ${isM ? '<span class="mastered-dot"></span>' : ''}
+                                            <span class="family-btn" onclick="filterByFamily('${i.group}')">📁 Related</span>
                                         </div>
                                     </div>
                                     <div class="meaning">${autoLink(dm)}</div>
+                                    
+                                    <div class="conf-bar">
+                                        <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 1)" title="No Idea"></div>
+                                        <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 2)" title="Vague"></div>
+                                        <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 3)" title="Got it!"></div>
+                                    </div>
+        
                                     ${seeAlsoHTML}
                                     ${noteHTML}
                                 </div>
                                 <div class="card-actions">
+                                    <button class="action-btn" onclick="togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
                                     <button class="action-btn star ${isFav ? 'active' : ''}">⭐</button>
                                     <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button>
                                     <button class="action-btn speak">🔊</button>
@@ -1120,17 +1157,8 @@
                             res.appendChild(c);
                         });
                     } else {
-                        // FALLBACK: Show Google Search Button
                         if (rawTerm) {
-                            res.innerHTML = `
-                                <div style="text-align:center; margin-top:40px; padding:20px; animation: slideUp 0.3s ease forwards;">
-                                    <div style="font-size:3em; margin-bottom:10px;">🤔</div>
-                                    <div style="opacity:0.7; font-size:1.1em; margin-bottom:20px;">"${rawTerm}" not found in database.</div>
-                                    <a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send" style="text-decoration:none; display:inline-block; padding:12px 24px; color:white; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                                        🌐 Search Google
-                                    </a>
-                                </div>
-                            `;
+                            res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;"><a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send">🌐 Search Google</a></div>`;
                         } else {
                             res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
                         }
@@ -1258,8 +1286,10 @@
             const select = document.getElementById('quizDeckSelect');
             select.innerHTML = `
                 <option value="All">🔀 All Categories</option>
+                <option value="Priority">🔥 HIGH PRIORITY ONLY</option>
+                <option value="WeakSpots">⚠️ Need Work (Red/Yellow)</option>
                 <option value="Favorites">⭐ My Favorites</option>
-                <option value="Weakest">⚠️ My Weakest Links</option>
+                <option value="Unseen">🆕 New/Unseen Items</option>
                 <option disabled>──────────</option>
             `;
             
@@ -1314,21 +1344,29 @@
             else if (source === 'FAA') sourcePool = allData.filter(i => i.source === 'FAA');
             // 'All' keeps everyone
 
-            // FILTER 2: CATEGORY/DECK
+        // FILTER 2: CATEGORY/DECK (Updated for Confidence & Priority)
             let finalPool = [];
             if (deck === 'All') {
                 finalPool = sourcePool;
+            } else if (deck === 'Priority') {
+                finalPool = sourcePool.filter(i => priorityList.includes(i.acronym));
+            } else if (deck === 'WeakSpots') {
+                // Includes anything marked Red (1) or Yellow (2)
+                finalPool = sourcePool.filter(i => mastery[i.acronym] === 1 || mastery[i.acronym] === 2);
+            } else if (deck === 'Unseen') {
+                // Items with no confidence level set yet
+                finalPool = sourcePool.filter(i => !mastery[i.acronym] || mastery[i.acronym] === 0);
             } else if (deck === 'Favorites') {
                 finalPool = sourcePool.filter(i => favorites.includes(i.acronym));
-            } else if (deck === 'Weakest') {
-                finalPool = sourcePool.filter(i => !mastery[i.acronym]);
-                if (finalPool.length < 5) finalPool = sourcePool; // Fallback
             } else {
+                // Dynamic Category filtering
                 finalPool = sourcePool.filter(i => i.group === deck || i.category === deck);
             }
-
-            if (finalPool.length < 4) { showToast(`Not enough cards in ${source}!`); return; }
-
+            // Safety check: if the specific filter is empty, warn the user
+            if (finalPool.length < 1) { 
+                showToast(`No cards found in ${deck}!`); 
+                return; 
+            }
             // Init Session
             quizSession.pool = finalPool.sort(() => 0.5 - Math.random());
             quizSession.limit = limit;
@@ -1342,22 +1380,43 @@
         };
 
         function nextQuizQuestion() {
-            if (quizSession.count >= quizSession.limit) {
-                finishExam();
-                return;
-            }
-            quizSession.count++;
-            updateQuizUI();
-            
-            // Loop pool if smaller than limit
-            quizSession.current = quizSession.pool[(quizSession.count - 1) % quizSession.pool.length];
-
-            const qEl = document.getElementById('quizQuestion');
-            qEl.innerText = quizSession.current.meaning;
-            document.getElementById('quizFeedback').style.opacity = '0';
-
-            if (quizSession.mode === 'mc') renderMC(); else renderWritten();
-        }
+                    // Check if we have reached the limit of the session
+                    if (quizSession.count >= quizSession.limit) {
+                        finishExam(); // End exam and show debrief
+                        return;
+                    }
+        
+                    quizSession.count++;
+                    updateQuizUI(); // Updates the "Q: 1/10" text
+        
+                    // Select the current item from the shuffled pool
+                    quizSession.current = quizSession.pool[(quizSession.count - 1) % quizSession.pool.length];
+        
+                    const qEl = document.getElementById('quizQuestion');
+                    
+                    // --- NEW: VISUAL HINT HIERARCHY ---
+                    // Shows the Source and Category so you know the context (e.g., Weather vs Systems)
+                    const hintHTML = `
+                        <div style="font-size:0.65em; text-transform:uppercase; letter-spacing:1px; opacity:0.5; margin-bottom:8px; display:flex; justify-content:center; gap:10px;">
+                            <span style="border:1px solid currentColor; padding:1px 4px; border-radius:3px;">${quizSession.current.source}</span>
+                            <span>•</span>
+                            <span>${quizSession.current.category}</span>
+                        </div>
+                    `;
+                    
+                    // Set the question text
+                    qEl.innerHTML = hintHTML + `<div style="line-height:1.4;">${quizSession.current.meaning}</div>`;
+                    
+                    // Reset feedback and input areas
+                    document.getElementById('quizFeedback').style.opacity = '0';
+        
+                    // Determine which interface to show based on mode (Multiple Choice or Written)
+                    if (quizSession.mode === 'mc') {
+                        renderMC();
+                    } else {
+                        renderWritten();
+                    }
+                }
 
         // --- EXAM LOGIC HELPERS ---
         function renderMC() {
