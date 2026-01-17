@@ -333,6 +333,41 @@
             .conf-dot.green.active { background: #2ed573; box-shadow: 0 0 5px #2ed573; }
             
             .family-btn { font-size: 0.8em; color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+            /* --- CALCULATOR CARD STYLES --- */
+            .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+            .calc-box {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(150,150,150,0.2);
+                padding: 10px;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .calc-title { font-size: 0.7em; font-weight: bold; opacity: 0.7; color: var(--accent); letter-spacing: 0.5px; }
+            .calc-input-row { display: flex; align-items: center; gap: 5px; }
+            .calc-input {
+                width: 100%;
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid rgba(150,150,150,0.3);
+                color: var(--text);
+                font-size: 1.1em;
+                font-weight: bold;
+                padding: 2px;
+                text-align: right;
+                outline: none;
+            }
+            .calc-input::placeholder { opacity: 0.3; }
+            .calc-unit { font-size: 0.8em; opacity: 0.5; }
+            .calc-result { 
+                text-align: right; 
+                font-size: 0.9em; 
+                color: var(--success); 
+                font-weight: 600; 
+                min-height: 1.2em;
+            }
         
     </style>
 </head>
@@ -354,6 +389,55 @@
                 <div id="metarResult">...</div>
             </div>
 
+            <div class="tool-section">
+                <span class="tool-label">QUICK CONVERTER</span>
+                <div class="calc-grid">
+                    
+                    <div class="calc-box">
+                        <span class="calc-title">TEMP</span>
+                        <div class="calc-input-row">
+                            <input type="number" id="inTemp" class="calc-input" placeholder="0">
+                            <span class="calc-unit">°C</span>
+                        </div>
+                        <div class="calc-result" id="outTemp">32 °F</div>
+                    </div>
+            
+                    <div class="calc-box">
+                        <span class="calc-title">ALTIMETER</span>
+                        <div class="calc-input-row">
+                            <input type="number" id="inPress" class="calc-input" placeholder="1013">
+                            <span class="calc-unit">hPa</span>
+                        </div>
+                        <div class="calc-result" id="outPress">29.92 inHg</div>
+                    </div>
+            
+                    <div class="calc-box">
+                        <span class="calc-title">WEIGHT</span>
+                        <div class="calc-input-row">
+                            <input type="number" id="inWt" class="calc-input" placeholder="Kg">
+                            <span class="calc-unit">KG</span>
+                        </div>
+                        <div class="calc-result" id="outWt">-- Lbs</div>
+                    </div>
+            
+                    <div class="calc-box">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="calc-title">FUEL</span>
+                            <select id="fuelType" style="font-size:0.7em; padding:0; border:none; background:transparent; color:var(--text); text-align:right; width:auto; height:auto; min-height:0;">
+                                <option value="6.0">Avgas</option>
+                                <option value="6.7">Jet A</option>
+                            </select>
+                        </div>
+                        <div class="calc-input-row">
+                            <input type="number" id="inFuel" class="calc-input" placeholder="Gal">
+                            <span class="calc-unit">GAL</span>
+                        </div>
+                        <div class="calc-result" id="outFuel">-- Lbs</div>
+                    </div>
+            
+                </div>
+            </div>
+            
             <div class="tool-section">
                 <span class="tool-label">FLIGHT COMPUTER</span>
                 <button class="modal-btn send full" onclick="window.open('https://mediafiles.aero.und.edu/aero.und.edu/aviation/trainers/e6b/', '_blank')" style="background:#2c3e50; color:white; display:flex; align-items:center; justify-content:center; gap:10px;">
@@ -874,6 +958,50 @@
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
 
+        /* --- CALCULATOR LOGIC --- */
+        // 1. Temperature: Celsius -> Fahrenheit
+        // Formula: (C * 9/5) + 32
+        document.getElementById('inTemp').addEventListener('input', (e) => {
+            const c = parseFloat(e.target.value);
+            const res = document.getElementById('outTemp');
+            if(isNaN(c)) { res.innerText = "-- °F"; return; }
+            const f = Math.round((c * 9/5) + 32);
+            res.innerText = `${f} °F`;
+        });
+
+        // 2. Pressure: hPa -> inHg
+        // Formula: hPa * 0.02953
+        document.getElementById('inPress').addEventListener('input', (e) => {
+            const h = parseFloat(e.target.value);
+            const res = document.getElementById('outPress');
+            if(isNaN(h)) { res.innerText = "-- inHg"; return; }
+            const i = (h * 0.02953).toFixed(2);
+            res.innerText = `${i} inHg`;
+        });
+
+        // 3. Weight: Kg -> Lbs
+        // Formula: Kg * 2.2046
+        document.getElementById('inWt').addEventListener('input', (e) => {
+            const k = parseFloat(e.target.value);
+            const res = document.getElementById('outWt');
+            if(isNaN(k)) { res.innerText = "-- Lbs"; return; }
+            const l = Math.round(k * 2.2046);
+            res.innerText = `${l} Lbs`;
+        });
+
+        // 4. Fuel: Gallons -> Lbs
+        // Formula: Gal * Density (6.0 or 6.7)
+        function calcFuel() {
+            const g = parseFloat(document.getElementById('inFuel').value);
+            const density = parseFloat(document.getElementById('fuelType').value);
+            const res = document.getElementById('outFuel');
+            if(isNaN(g)) { res.innerText = "-- Lbs"; return; }
+            const l = (g * density).toFixed(1);
+            res.innerText = `${l} Lbs`;
+        }
+        document.getElementById('inFuel').addEventListener('input', calcFuel);
+        document.getElementById('fuelType').addEventListener('change', calcFuel);
+        
         /* --- NEW ADVANCED AIRSPACE LOGIC --- */
         const airspaceSelect = document.getElementById('airspaceSelect');
         const airspaceVis = document.getElementById('airspaceVis');
