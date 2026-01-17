@@ -147,6 +147,8 @@
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.USER { background: var(--user-color); }
+        .source-tag.EVA { background: #00a86b; } /* EVA Green */
+        .source-tag.WIP { background: #7f8c8d; } /* Grey for work in progress */
         .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
         
         .meaning { 
@@ -366,10 +368,12 @@
 
         <div class="top-row" style="margin-top: 5px;">
             <select id="dbSource" title="Select Database" style="flex-grow: 1;">
-                <option value="sofema" selected>🇪🇺 SOFEMA</option>
-                <option value="faa">🇺🇸 FAA</option>
-                <option value="both">🌎 ALL</option>
-            </select>
+                            <option value="sofema" selected>🇪🇺 SOFEMA</option>
+                            <option value="faa">🇺🇸 FAA</option>
+                            <option value="eva">✈️ EVA Cadet</option>
+                            <option value="building">🏗️ Still Building</option>
+                            <option value="both">🌎 ALL SOURCES</option>
+                        </select>
             <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -786,7 +790,12 @@
 
     <script>
         // CONFIG
-        const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
+        const LINKS = { 
+            faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", 
+            sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv",
+            eva: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsZ9p-Uvp6o12OVVcIet-HjeWekvLZjcTc09pJkXSClYFrRqwrOLpCOsHJg7mcml-iImwQWIaatxA/pub?output=csv",
+            building: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ09AvSLNUUdzxczvtKxvagiUqSIQ836JB_QwewFa4fRmhHHpZHAow3CvwcTWSTO_BHBtffp1vw2XtY/pub?output=csv"
+        };        
         const REPORT_EMAIL = "vincent6786@gmail.com"; 
         const GROUP_CONFIG = { "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics, Maint, Infra", keywords: ["Avionics", "System", "Maintenance", "Infrastruct"] }, "Regulations": { desc: "ICAO, Safety, Rules", keywords: ["Regulat", "Safety", "Standard"] }, "Business": { desc: "Airline, Commercial, IT", keywords: ["Airline", "Commerc", "Training", "Military"] }, "All": { desc: "Searching DB." }, "Favorites": { desc: "Saved." }, "History": { desc: "Recent." }, "My Acronyms": { desc: "User defined." }, "Other": { desc: "Uncategorized." } };
         const NATO_MAP = { 'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot', 'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima', 'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo', 'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray', 'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four', '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal' };
@@ -926,15 +935,46 @@
         setInterval(updateBackground,60000); updateBackground();
 
         function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
-        function loadData(m){
-            document.getElementById('results').innerHTML=`<div class="loader-container"><div class="radar"></div></div>`;
-            let p=[]; if(m==='faa')p.push(fetchSheet(LINKS.faa,'FAA')); else if(m==='sofema')p.push(fetchSheet(LINKS.sofema,'SOFEMA')); else if(m==='both'){p.push(fetchSheet(LINKS.faa,'FAA'));p.push(fetchSheet(LINKS.sofema,'SOFEMA'));}
-            Promise.all(p).then(r=>{
-                let csvData = r.flat(); allData = [...customData, ...csvData]; acronymSet=new Set(allData.map(i=>i.acronym));
-                activeGroup='All'; filteredData=[...allData]; updateRankHUD();
-                if(document.getElementById('searchBox').value.length>0)runSearch();else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
-            }).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
-        }
+        function loadData(m) {
+                    document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
+                    let p = [];
+                    
+                    // Logic to pick which sheets to load
+                    if (m === 'faa') {
+                        p.push(fetchSheet(LINKS.faa, 'FAA'));
+                    } else if (m === 'sofema') {
+                        p.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
+                    } else if (m === 'eva') {
+                        p.push(fetchSheet(LINKS.eva, 'EVA')); // Tag will show "EVA"
+                    } else if (m === 'building') {
+                        p.push(fetchSheet(LINKS.building, 'WIP')); // Tag will show "WIP"
+                    } else if (m === 'both') {
+                        // Load Everything
+                        p.push(fetchSheet(LINKS.faa, 'FAA'));
+                        p.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
+                        p.push(fetchSheet(LINKS.eva, 'EVA'));
+                        p.push(fetchSheet(LINKS.building, 'WIP'));
+                    }
+        
+                    Promise.all(p).then(r => {
+                        let csvData = r.flat();
+                        allData = [...customData, ...csvData];
+                        acronymSet = new Set(allData.map(i => i.acronym));
+                        
+                        // Reset filters to avoid getting stuck in a category that doesn't exist in the new DB
+                        activeGroup = 'All'; 
+                        document.getElementById('categorySelect').value = 'All';
+                        
+                        filteredData = [...allData];
+                        updateRankHUD();
+                        
+                        if (document.getElementById('searchBox').value.length > 0) runSearch();
+                        else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+                    }).catch(e => {
+                        document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
+                        console.error(e);
+                    });
+                }
 
         function autoLink(t){return t.replace(/\b([A-Z0-9]{2,})\b/g,(m)=>{if(acronymSet.has(m))return `<span class="term-link" onclick="navigateFor('${m}')">${m}</span>`;return m;});}
         window.navigateFor=function(t){const v=document.getElementById('searchBox').value;if(v)searchStack.push(v);document.getElementById('backBtn').style.display='block';document.getElementById('searchBox').value=t;document.getElementById('clearBtn').style.display='block';runSearch();playSound('click');};
