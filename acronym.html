@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
     <title>Aviation Acronym V40</title>
     
-    <link rel="apple-touch-icon" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
-    <link rel="icon" type="image/png" href="https://github.com/vincent6786/aviation-knowledge-finder/blob/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png?raw=true">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
 
     <style>
         /* --- THEME VARIABLES --- */
@@ -269,7 +269,57 @@
         .game-btn.miss { background: var(--error); }
         .game-btn.got { background: var(--success); }
         .score-display { position: absolute; top: -40px; width: 100%; text-align: center; color: white; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); font-size: 1em; }
+        /* --- NEW AIRSPACE STYLES --- */
+        .airspace-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+        .as-card {
+            background: rgba(150,150,150,0.1);
+            padding: 8px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+        }
+        .as-label {
+            display: block;
+            font-size: 0.75em;
+            opacity: 0.7;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .as-value {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .as-req-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        .as-req-table td {
+            padding: 6px;
+            border-bottom: 1px solid rgba(150,150,150,0.1);
+        }
+        .as-req-icon { margin-right: 6px; }
 
+        .quiz-opt {
+                padding: 15px 5px;
+                font-size: 1.1em;
+                font-weight: 800;
+                border: 1px solid rgba(150,150,150,0.3);
+                background: rgba(0,0,0,0.05);
+                color: var(--text);
+                transition: all 0.2s;
+            }
+            .quiz-opt:active { transform: scale(0.95); }
+            .quiz-opt.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
+            .quiz-opt.wrong { background: var(--error) !important; color: white !important; opacity: 0.5; }
+                
     </style>
 </head>
 <body class="bg-day">
@@ -332,30 +382,36 @@
         </div>
         
         <div class="filter-row" style="margin-top:10px;">
-             <select id="categorySelect" title="Category">
-                 <option value="All">All Categories</option>
-                 <option value="Favorites">⭐ Favorites</option>
-                 <option value="History">🕒 History</option>
-                 <option value="My Acronyms">👤 My Acronyms</option>
-                 <option value="Operations">Operations</option>
-                 <option value="Weather">Weather</option>
-                 <option value="Systems">Systems</option>
-                 <option value="Regulations">Regulations</option>
-                 <option value="Business">Business</option>
-                 <option value="Other">Other</option>
-             </select>
-
-             <select id="searchMode" title="Mode" style="width: auto;">
-                <option value="contains">In</option>
-                <option value="starts">Start</option>
-                <option value="exact">Exact</option>
-            </select>
-            <select id="sortSelect" title="Sort" style="width: auto;">
-                <option value="default">Orig</option>
-                <option value="az">A-Z</option>
-                <option value="za">Z-A</option>
-            </select>
-        </div>
+                     <select id="categorySelect" title="Category">
+                         <option value="All">All Categories</option>
+                         <option value="Favorites">⭐ Favorites</option>
+                         <option value="History">🕒 History</option>
+                         <option value="My Acronyms">👤 My Acronyms</option>
+                         <option value="Operations">Operations</option>
+                         <option value="Weather">Weather</option>
+                         <option value="Systems">Systems</option>
+                         <option value="Regulations">Regulations</option>
+                         <option value="Business">Business</option>
+                         <option value="Other">Other</option>
+                     </select>
+        
+                     <label style="display:flex; align-items:center; font-size:0.85em; gap:5px; margin-left:5px; background:rgba(255,255,255,0.1); padding:6px 10px; border-radius:12px; border:1px solid rgba(150,150,150,0.3); cursor:pointer;">
+                        <input type="checkbox" id="defSearchToggle">
+                        <span>Def Only</span>
+                     </label>
+        
+                     <select id="searchMode" title="Mode" style="width: auto;">
+                        <option value="contains">In</option>
+                        <option value="starts">Start</option>
+                        <option value="exact">Exact</option>
+                    </select>
+        
+                    <select id="sortSelect" title="Sort" style="width: auto;">
+                        <option value="default">Orig</option>
+                        <option value="az">A-Z</option>
+                        <option value="za">Z-A</option>
+                    </select>
+                </div>
         <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
     </div>
 
@@ -367,6 +423,7 @@
         <button class="fab-main" id="fabTrigger" title="Menu">＋</button>
         <div class="fab-items">
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
+            <button class="fab-mini" onclick="startExam()" data-label="Exam Mode">📝</button>
             <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
@@ -413,21 +470,50 @@
         <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
             <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
             <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
-            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
+            <button class="modal-btn" onclick="showQRHTab('memory')" style="flex:1; padding:4px; font-size:0.8em;">Memory</button> <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
             <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
         </div>
         
         <div id="qrh-airspace">
-            <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
-                <option value="B">Class B</option>
-                <option value="C">Class C</option>
-                <option value="D">Class D</option>
-                <option value="E">Class E (<10k MSL)</option>
-                <option value="E10">Class E (>10k MSL)</option>
-                <option value="G">Class G (Day, <1200 AGL)</option>
-            </select>
-            <div class="airspace-vis" id="airspaceVis"></div>
-            <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <select id="airspaceSelect" style="flex:1; margin-right:10px;">
+                    <option value="B">Class B (Bravo)</option>
+                    <option value="C">Class C (Charlie)</option>
+                    <option value="D">Class D (Delta)</option>
+                    <option value="E">Class E (Below 10k)</option>
+                    <option value="E10">Class E (Above 10k)</option>
+                    <option value="G_DAY">Class G (Day &lt;1200)</option>
+                    <option value="G_NIGHT">Class G (Night)</option>
+                </select>
+                <div id="as-badge" style="background:var(--accent); color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.9em;">B</div>
+            </div>
+        
+            <div class="airspace-vis" id="airspaceVis" style="height:140px;"></div>
+        
+            <div class="airspace-details">
+                <div class="as-card">
+                    <span class="as-label">Visibility</span>
+                    <span class="as-value" id="as-vis">3 SM</span>
+                </div>
+                <div class="as-card">
+                    <span class="as-label">Cloud Dist</span>
+                    <span class="as-value" id="as-cloud">Clear of Clouds</span>
+                </div>
+            </div>
+        
+            <table class="as-req-table">
+                <tr>
+                    <td>🎙️ <b>Comms:</b> <span id="as-comm">Hear & Speak</span></td>
+                </tr>
+                <tr>
+                    <td>📡 <b>Equip:</b> <span id="as-equip">Mode C</span></td>
+                </tr>
+                <tr>
+                    <td>👮 <b>Entry:</b> <span id="as-entry">Clearance</span></td>
+                </tr>
+            </table>
+            
+            
         </div>
 
         <div id="qrh-light" style="display:none;">
@@ -439,6 +525,56 @@
                 <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
                 <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
             </table>
+        </div>
+
+        <div id="qrh-memory" style="display:none; max-height:300px; overflow-y:auto; padding-right:5px;">
+            <style>
+                .mem-item { margin-bottom:12px; border-bottom:1px solid rgba(150,150,150,0.1); padding-bottom:8px; }
+                .mem-title { color:var(--accent); font-weight:800; font-size:1.1em; letter-spacing:0.5px; }
+                .mem-ctx { font-size:0.75em; opacity:0.6; font-style:italic; margin-left:5px; text-transform:uppercase; }
+                .mem-body { margin-top:4px; font-size:0.9em; line-height:1.4; }
+                .mem-body b { color:var(--text); opacity:0.9; }
+            </style>
+
+            <div class="mem-item">
+                <span class="mem-title">IMSAFE</span><span class="mem-ctx">Pilot Fitness</span>
+                <div class="mem-body"><b>I</b>llness, <b>M</b>edication, <b>S</b>tress, <b>A</b>lcohol, <b>F</b>atigue, <b>E</b>ating/Emotion</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ARROW</span><span class="mem-ctx">Required Docs</span>
+                <div class="mem-body"><b>A</b>irworthiness, <b>R</b>egistration, <b>R</b>adio Lic (Intl), <b>O</b>perating Handbook, <b>W</b>eight & Balance</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ABCDE</span><span class="mem-ctx">Engine Failure</span>
+                <div class="mem-body"><b>A</b>irspeed (Best Glide), <b>B</b>est Field, <b>C</b>hecklist (Restart), <b>D</b>eclare (Mayday), <b>E</b>xecute (Shutdown)</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">GUMPS</span><span class="mem-ctx">Pre-Landing</span>
+                <div class="mem-body"><b>G</b>as (Selector/Pump), <b>U</b>ndercarriage, <b>M</b>ixture, <b>P</b>rop, <b>S</b>eatbelts/Switches</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">A TOMATO FLAMES</span><span class="mem-ctx">VFR Day Equip</span>
+                <div class="mem-body">Altimeter, Tach, Oil Press, Manifold, Airspeed, Temp (Liquid), Oil Temp, Fuel Gauge, Ldg Gear Pos, Anti-collision, Mag Compass, ELT, Seatbelts</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">5 C's</span><span class="mem-ctx">Lost Proc</span>
+                <div class="mem-body"><b>C</b>limb, <b>C</b>ircle, <b>C</b>ommunicate, <b>C</b>onfess, <b>C</b>omply</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">CRAFT</span><span class="mem-ctx">IFR Clearance</span>
+                <div class="mem-body"><b>C</b>leared to, <b>R</b>oute, <b>A</b>ltitude, <b>F</b>requency, <b>T</b>ransponder</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ANDS / UNOS</span><span class="mem-ctx">Compass Errors</span>
+                <div class="mem-body"><b>A</b>ccelerate <b>N</b>orth, <b>D</b>ecelerate <b>S</b>outh.<br><b>U</b>ndershoot <b>N</b>orth, <b>O</b>vershoot <b>S</b>outh.</div>
+            </div>
         </div>
         
         <div id="qrh-xpdr" style="display:none;">
@@ -575,6 +711,31 @@
         </div>
     </div>
 
+    <div id="quizOverlay" class="modal-overlay">
+        <div class="flashcard-wrapper">
+            <div class="score-display" id="quizScoreDisplay">Score: 0</div>
+            
+            <div class="card" style="background:var(--modal-bg); border:1px solid var(--glass-border); padding:20px; text-align:center; height:auto; min-height:300px; display:flex; flex-direction:column; justify-content:center;">
+                
+                <div style="font-size:0.8em; text-transform:uppercase; opacity:0.6; margin-bottom:10px;">Identify this Acronym</div>
+                <div id="quizQuestion" style="font-size:1.3em; font-weight:500; margin-bottom:20px; height:80px; overflow-y:auto; display:flex; align-items:center; justify-content:center;">
+                    ...
+                </div>
+
+                <div id="quizOptions" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%;">
+                    <button class="modal-btn quiz-opt">OPT 1</button>
+                    <button class="modal-btn quiz-opt">OPT 2</button>
+                    <button class="modal-btn quiz-opt">OPT 3</button>
+                    <button class="modal-btn quiz-opt">OPT 4</button>
+                </div>
+
+                <div id="quizFeedback" style="height:30px; margin-top:15px; font-weight:bold; opacity:0;">Correct!</div>
+            </div>
+
+            <button id="closeQuizBtn" class="modal-btn cancel full" style="margin-top:20px; background:white; color:black;">End Exam</button>
+        </div>
+    </div>
+
     <script>
         // CONFIG
         const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
@@ -619,34 +780,78 @@
         const qrhOverlay = document.getElementById('qrhModalOverlay');
         const qrhModal = document.getElementById('qrhModal');
         window.showQRHTab = function(id) {
-            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
-            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
-            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
-            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
+            document.getElementById('qrh-light').style.display = id === 'light' ? 'block' : 'none';
+            document.getElementById('qrh-xpdr').style.display = id === 'xpdr' ? 'block' : 'none';
+            document.getElementById('qrh-vspeed').style.display = id === 'vspeed' ? 'block' : 'none';
+            document.getElementById('qrh-airspace').style.display = id === 'airspace' ? 'block' : 'none';
+            // New Memory Tab Logic
+            const memTab = document.getElementById('qrh-memory');
+            if (memTab) memTab.style.display = id === 'memory' ? 'block' : 'none';
         };
         document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
 
-        // Airspace Vis
+        /* --- NEW ADVANCED AIRSPACE LOGIC --- */
         const airspaceSelect = document.getElementById('airspaceSelect');
         const airspaceVis = document.getElementById('airspaceVis');
-        const airspaceText = document.getElementById('airspaceText');
+        
+        // Airspace Rule Database
+        const AS_DATA = {
+            'B': {
+                vis: "3 SM", clouds: "Clear of Clouds",
+                comm: "Two-Way Radio", equip: "Mode C / ADS-B Out", entry: "ATC Clearance Required", badge: "B",
+                html: `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`
+            },
+            'C': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "Two-Way Radio (Name)", equip: "Mode C / ADS-B Out", entry: "2-Way Dialogue", badge: "C",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'D': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "Two-Way Radio", equip: "None (unless w/in 30nm)", entry: "2-Way Dialogue", badge: "D",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'E': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "None (VFR)", equip: "None (unless >10k)", entry: "None", badge: "E",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div><div class="dist-label" style="top:65%; left:52%;">500'</div>`
+            },
+            'E10': {
+                vis: "5 SM", clouds: "1000↓ 1000↑ 1SM↔",
+                comm: "None (VFR)", equip: "Mode C (if >10k MSL)", entry: "None", badge: "E",
+                html: `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:10%; left:40%;"></div><div class="dist-label" style="top:25%; left:42%;">1000'</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM</div>`
+            },
+            'G_DAY': {
+                vis: "1 SM", clouds: "Clear of Clouds",
+                comm: "None", equip: "None", entry: "None", badge: "G",
+                html: `<div class="plane-icon" style="top:60%; left:30%;">✈️</div><div class="cloud" style="top:60%; left:50%;"></div><div class="dist-label" style="bottom:10px; left:10px; opacity:0.5;">Ground < 1200'</div>`
+            },
+            'G_NIGHT': {
+                vis: "3 SM", clouds: "500↓ 1000↑ 2000↔",
+                comm: "None", equip: "None", entry: "None", badge: "G",
+                html: `<div class="plane-icon" style="top:50%; left:50%;">✈️</div><div class="cloud" style="top:20%; left:50%;"></div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-label" style="top:35%; left:52%;">1000'</div>`
+            }
+        };
+        
         function renderAirspace() {
-            const val = airspaceSelect.value;
-            let html = '', text = '';
-            const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
-            const cloud = `<div class="cloud"></div>`;
-            if (val === 'B') { html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; text = "3 SM, Clear of Clouds"; } 
-            else if (['C','D','E'].includes(val)) {
-                html = `${plane}<div class="cloud" style="top:20%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div><div class="dist-label" style="top:35%; left:52%;">1000' Above</div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div><div class="dist-label" style="top:65%; left:52%;">500' Below</div><div class="cloud" style="top:50%; left:85%;"></div><div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div><div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>`;
-                text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
-            } else if (val === 'E10') {
-                html = `${plane}<div class="cloud" style="top:10%; left:50%;"></div><div class="dist-label" style="top:25%; left:52%;">1000' Above</div><div class="cloud" style="top:90%; left:50%;"></div><div class="dist-label" style="top:75%; left:52%;">1000' Below</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>`;
-                text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
-            } else if (val === 'G') { text = "1 SM, Clear of Clouds (Day)"; html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; }
-            airspaceVis.innerHTML = html; airspaceText.innerText = text;
+            const code = airspaceSelect.value;
+            const data = AS_DATA[code];
+        
+            // Update Visuals
+            airspaceVis.innerHTML = data.html;
+            
+            // Update Text Data
+            document.getElementById('as-vis').innerText = data.vis;
+            document.getElementById('as-cloud').innerText = data.clouds;
+            document.getElementById('as-comm').innerText = data.comm;
+            document.getElementById('as-equip').innerText = data.equip;
+            document.getElementById('as-entry').innerText = data.entry;
+            document.getElementById('as-badge').innerText = data.badge;
         }
+        
+        // Attach listener
         airspaceSelect.addEventListener('change', renderAirspace);
 
         // Note Logic
@@ -710,31 +915,135 @@
         function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
         function speakText(t){if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;window.speechSynthesis.speak(u);}}
 
-        function runSearch(){
-            const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim(), mode=document.getElementById('searchMode').value, sort=document.getElementById('sortSelect').value;
-            res.innerHTML=''; let tf=allData;
-            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym)); else if(activeGroup==='History') tf=historyLog; else if(activeGroup==='My Acronyms') tf=customData; else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
-            if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
-            if(term) tf=tf.filter(i=>{const a=i.acronym.toLowerCase(),m=i.meaning.toLowerCase();if(mode==='starts')return a.startsWith(term);if(mode==='exact')return a===term;return a.includes(term)||m.includes(term);});
-            filteredData=[...tf];
-            if(sort==='az') tf.sort((a,b)=>a.acronym.localeCompare(b.acronym)); else if(sort==='za') tf.sort((a,b)=>b.acronym.localeCompare(a.acronym));
-
-            if(tf.length>0){
-                tf.slice(0,50).forEach((i,idx)=>{
-                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER', hasNote = pilotNotes[i.acronym];
-                    const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
-                    let dm=i.meaning; if(term&&mode==='contains') dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
-                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
-                    if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
-                    let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-
-                    c.innerHTML=`<div class="card-content"><div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div><div class="meaning">${autoLink(dm)}</div>${noteHTML}</div><div class="card-actions"><button class="action-btn star ${isFav?'active':''}">⭐</button><button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button><button class="action-btn speak">🔊</button><a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>${actionBtn}</div>`;
-                    if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
-                    c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
-                    res.appendChild(c);
-                });
-            } else res.innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
-        }
+        function runSearch() {
+                    const res = document.getElementById('results');
+                    const rawTerm = document.getElementById('searchBox').value.trim();
+                    const term = rawTerm.toLowerCase();
+                    const mode = document.getElementById('searchMode').value;
+                    const sort = document.getElementById('sortSelect').value;
+                    
+                    // NEW: Check if "Def Only" is active
+                    // (We use optional chaining ?. in case the element doesn't exist yet, avoiding errors)
+                    const searchDefs = document.getElementById('defSearchToggle')?.checked || false;
+        
+                    res.innerHTML = '';
+                    let tf = allData;
+        
+                    // 1. Filter by Group/Category
+                    if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
+                    else if (activeGroup === 'History') tf = historyLog;
+                    else if (activeGroup === 'My Acronyms') tf = customData;
+                    else if (activeGroup !== 'All') tf = tf.filter(i => i.group === activeGroup);
+        
+                    if (exactCategoryFilter) tf = tf.filter(i => i.category === exactCategoryFilter);
+        
+                    // 2. Filter by Search Term
+                    if (term) tf = tf.filter(i => {
+                        const a = i.acronym.toLowerCase();
+                        const m = i.meaning.toLowerCase();
+                        
+                        // NEW: Priority Search on Definition
+                        if (searchDefs) {
+                            return m.includes(term);
+                        }
+        
+                        // Standard Search
+                        if (mode === 'starts') return a.startsWith(term);
+                        if (mode === 'exact') return a === term;
+                        return a.includes(term) || m.includes(term);
+                    });
+        
+                    filteredData = [...tf];
+        
+                    // 3. Sort
+                    if (sort === 'az') tf.sort((a, b) => a.acronym.localeCompare(b.acronym));
+                    else if (sort === 'za') tf.sort((a, b) => b.acronym.localeCompare(a.acronym));
+        
+                    // 4. Render Results
+                    if (tf.length > 0) {
+                        tf.slice(0, 50).forEach((i, idx) => {
+                            const isFav = favorites.includes(i.acronym);
+                            const isM = mastery[i.acronym];
+                            const isUser = i.source === 'USER';
+                            const hasNote = pilotNotes[i.acronym];
+        
+                            const c = document.createElement('div');
+                            c.className = 'card';
+                            c.style.animationDelay = `${idx * 0.05}s`;
+                            
+                            // Highlight matching terms in definition
+                            let dm = i.meaning;
+                            if (term && (mode === 'contains' || searchDefs)) {
+                                 dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                            }
+                            
+                            // --- NEW: "SEE ALSO" GENERATOR ---
+                            // Finds up to 3 items in the same category that start with the same letter
+                            let seeAlsoHTML = '';
+                            const related = allData.filter(x => 
+                                x.category === i.category && 
+                                x.acronym !== i.acronym && 
+                                x.acronym.charAt(0) === i.acronym.charAt(0)
+                            ).slice(0, 3);
+                            
+                            if (related.length > 0) {
+                                seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
+                                    <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
+                                    ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px; cursor:pointer; color:var(--link-color); text-decoration:underline;">${r.acronym}</span>`).join('')}
+                                </div>`;
+                            }
+                            // ---------------------------------
+        
+                            let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
+                            if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                            
+                            let noteHTML = '';
+                            if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
+        
+                            c.innerHTML = `
+                                <div class="card-content">
+                                    <div class="acronym-header">
+                                        <span class="acronym-badge">${i.acronym}</span>
+                                        <div class="meta-tags">
+                                            <span class="source-tag ${i.source}">${i.source}</span>
+                                            <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                            ${isM ? '<span class="mastered-dot"></span>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="meaning">${autoLink(dm)}</div>
+                                    ${seeAlsoHTML}
+                                    ${noteHTML}
+                                </div>
+                                <div class="card-actions">
+                                    <button class="action-btn star ${isFav ? 'active' : ''}">⭐</button>
+                                    <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button>
+                                    <button class="action-btn speak">🔊</button>
+                                    <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                                    ${actionBtn}
+                                </div>`;
+                            
+                            if (!isUser) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
+                            c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
+                            c.querySelector('.speak').addEventListener('click', () => { speakText(i.meaning); addToHistory(i); });
+                            res.appendChild(c);
+                        });
+                    } else {
+                        // FALLBACK: Show Google Search Button
+                        if (rawTerm) {
+                            res.innerHTML = `
+                                <div style="text-align:center; margin-top:40px; padding:20px; animation: slideUp 0.3s ease forwards;">
+                                    <div style="font-size:3em; margin-bottom:10px;">🤔</div>
+                                    <div style="opacity:0.7; font-size:1.1em; margin-bottom:20px;">"${rawTerm}" not found in database.</div>
+                                    <a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send" style="text-decoration:none; display:inline-block; padding:12px 24px; color:white; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                        🌐 Search Google
+                                    </a>
+                                </div>
+                            `;
+                        } else {
+                            res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
+                        }
+                    }
+                }
 
         // Category Select Event
         document.getElementById('categorySelect').addEventListener('change', (e) => {
@@ -833,6 +1142,109 @@
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
+
+        /* --- EXAM MODE LOGIC --- */
+        const quizOverlay = document.getElementById('quizOverlay');
+        const quizQuestion = document.getElementById('quizQuestion');
+        const quizOptions = document.getElementById('quizOptions');
+        const quizFeedback = document.getElementById('quizFeedback');
+        let currentQuizItem = null;
+        let quizScore = 0;
+
+        function startExam() {
+            // Close other menus
+            document.getElementById('fabContainer').classList.remove('active');
+            if(filteredData.length < 4) { showToast("Need more acronyms!"); return; }
+            
+            quizScore = 0;
+            updateQuizScore();
+            quizOverlay.style.display = 'block';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            quizFeedback.style.opacity = '0';
+            
+            // 1. Pick a Target (Correct Answer)
+            // Prioritize unmastered items
+            let pool = filteredData.filter(i => !mastery[i.acronym]);
+            if(pool.length === 0) pool = filteredData;
+            
+            currentQuizItem = pool[Math.floor(Math.random() * pool.length)];
+
+            // 2. Pick 3 Distractors (Wrong Answers)
+            // Try to pick from same category for difficulty
+            let distractors = filteredData.filter(i => i.acronym !== currentQuizItem.acronym && i.category === currentQuizItem.category);
+            // If not enough in category, pick from global
+            if(distractors.length < 3) distractors = filteredData.filter(i => i.acronym !== currentQuizItem.acronym);
+            
+            // Shuffle and slice 3
+            distractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            // 3. Combine and Shuffle Options
+            let options = [currentQuizItem, ...distractors];
+            options.sort(() => 0.5 - Math.random());
+
+            // 4. Render
+            quizQuestion.innerText = currentQuizItem.meaning; // Show Definition
+            quizOptions.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-btn quiz-opt';
+                btn.innerText = opt.acronym; // Show Acronyms as options
+                btn.onclick = () => handleQuizAnswer(btn, opt.acronym === currentQuizItem.acronym);
+                quizOptions.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(btn, isCorrect) {
+            // Disable all buttons to prevent double clicking
+            const allBtns = document.querySelectorAll('.quiz-opt');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                quizFeedback.innerText = "Correct! ✅";
+                quizFeedback.style.color = "var(--success)";
+                quizFeedback.style.opacity = "1";
+                playSound('success');
+                quizScore++;
+                // Mark as mastered if correct? Optional.
+                // mastery[currentQuizItem.acronym] = true;
+            } else {
+                btn.classList.add('wrong');
+                // Highlight the correct one
+                allBtns.forEach(b => {
+                    if(b.innerText === currentQuizItem.acronym) b.classList.add('correct');
+                });
+                quizFeedback.innerText = `Wrong! It was ${currentQuizItem.acronym}`;
+                quizFeedback.style.color = "var(--error)";
+                quizFeedback.style.opacity = "1";
+                playSound('error');
+            }
+            updateQuizScore();
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        function updateQuizScore() {
+            document.getElementById('quizScoreDisplay').innerText = `Score: ${quizScore}`;
+        }
+
+        // Event Listeners
+        document.getElementById('closeQuizBtn').addEventListener('click', () => quizOverlay.style.display = 'none');
+        
+        // Add a button to the FAB to trigger this
+        // (You'll need to update your FAB HTML to include a button for this)
+
+        // Add this at the end of your script
+        document.getElementById('defSearchToggle').addEventListener('change', () => {
+            runSearch();
+            playSound('click');
+        });
+        
     </script>
 </body>
 </html>
