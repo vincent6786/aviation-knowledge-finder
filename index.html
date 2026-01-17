@@ -413,7 +413,7 @@
         <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
             <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
             <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
-            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
+            <button class="modal-btn" onclick="showQRHTab('memory')" style="flex:1; padding:4px; font-size:0.8em;">Memory</button> <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
             <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
         </div>
         
@@ -439,6 +439,56 @@
                 <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
                 <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
             </table>
+        </div>
+
+        <div id="qrh-memory" style="display:none; max-height:300px; overflow-y:auto; padding-right:5px;">
+            <style>
+                .mem-item { margin-bottom:12px; border-bottom:1px solid rgba(150,150,150,0.1); padding-bottom:8px; }
+                .mem-title { color:var(--accent); font-weight:800; font-size:1.1em; letter-spacing:0.5px; }
+                .mem-ctx { font-size:0.75em; opacity:0.6; font-style:italic; margin-left:5px; text-transform:uppercase; }
+                .mem-body { margin-top:4px; font-size:0.9em; line-height:1.4; }
+                .mem-body b { color:var(--text); opacity:0.9; }
+            </style>
+
+            <div class="mem-item">
+                <span class="mem-title">IMSAFE</span><span class="mem-ctx">Pilot Fitness</span>
+                <div class="mem-body"><b>I</b>llness, <b>M</b>edication, <b>S</b>tress, <b>A</b>lcohol, <b>F</b>atigue, <b>E</b>ating/Emotion</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ARROW</span><span class="mem-ctx">Required Docs</span>
+                <div class="mem-body"><b>A</b>irworthiness, <b>R</b>egistration, <b>R</b>adio Lic (Intl), <b>O</b>perating Handbook, <b>W</b>eight & Balance</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ABCDE</span><span class="mem-ctx">Engine Failure</span>
+                <div class="mem-body"><b>A</b>irspeed (Best Glide), <b>B</b>est Field, <b>C</b>hecklist (Restart), <b>D</b>eclare (Mayday), <b>E</b>xecute (Shutdown)</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">GUMPS</span><span class="mem-ctx">Pre-Landing</span>
+                <div class="mem-body"><b>G</b>as (Selector/Pump), <b>U</b>ndercarriage, <b>M</b>ixture, <b>P</b>rop, <b>S</b>eatbelts/Switches</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">A TOMATO FLAMES</span><span class="mem-ctx">VFR Day Equip</span>
+                <div class="mem-body">Altimeter, Tach, Oil Press, Manifold, Airspeed, Temp (Liquid), Oil Temp, Fuel Gauge, Ldg Gear Pos, Anti-collision, Mag Compass, ELT, Seatbelts</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">5 C's</span><span class="mem-ctx">Lost Proc</span>
+                <div class="mem-body"><b>C</b>limb, <b>C</b>ircle, <b>C</b>ommunicate, <b>C</b>onfess, <b>C</b>omply</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">CRAFT</span><span class="mem-ctx">IFR Clearance</span>
+                <div class="mem-body"><b>C</b>leared to, <b>R</b>oute, <b>A</b>ltitude, <b>F</b>requency, <b>T</b>ransponder</div>
+            </div>
+
+            <div class="mem-item">
+                <span class="mem-title">ANDS / UNOS</span><span class="mem-ctx">Compass Errors</span>
+                <div class="mem-body"><b>A</b>ccelerate <b>N</b>orth, <b>D</b>ecelerate <b>S</b>outh.<br><b>U</b>ndershoot <b>N</b>orth, <b>O</b>vershoot <b>S</b>outh.</div>
+            </div>
         </div>
         
         <div id="qrh-xpdr" style="display:none;">
@@ -619,10 +669,13 @@
         const qrhOverlay = document.getElementById('qrhModalOverlay');
         const qrhModal = document.getElementById('qrhModal');
         window.showQRHTab = function(id) {
-            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
-            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
-            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
-            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
+            document.getElementById('qrh-light').style.display = id === 'light' ? 'block' : 'none';
+            document.getElementById('qrh-xpdr').style.display = id === 'xpdr' ? 'block' : 'none';
+            document.getElementById('qrh-vspeed').style.display = id === 'vspeed' ? 'block' : 'none';
+            document.getElementById('qrh-airspace').style.display = id === 'airspace' ? 'block' : 'none';
+            // New Memory Tab Logic
+            const memTab = document.getElementById('qrh-memory');
+            if (memTab) memTab.style.display = id === 'memory' ? 'block' : 'none';
         };
         document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
