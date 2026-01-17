@@ -683,16 +683,22 @@
     </div>
 
     <div id="debriefOverlay" class="modal-overlay"></div>
-    <div id="debriefModal" class="modal">
-        <h3>Flight Debriefing</h3>
-        <div style="text-align:center; margin-bottom:15px;">
-            <div style="font-size:3em; font-weight:bold; color:var(--accent);" id="debriefGrade">A</div>
-            <div style="font-size:1.2em;" id="debriefScore">10/10</div>
+    <div id="debriefModal" class="modal" style="max-height:80vh; overflow-y:auto;">
+            <h3>Flight Debriefing</h3>
+            <div style="text-align:center; margin-bottom:15px;">
+                <div style="font-size:3em; font-weight:bold; color:var(--accent);" id="debriefGrade">-</div>
+                <div style="font-size:1.2em;" id="debriefScore">0/0</div>
+            </div>
+            
+            <div id="debriefActions" style="display:flex; gap:10px; margin-bottom:15px;">
+                <button id="reviewMissedBtn" class="modal-btn" style="flex:1; border:1px solid var(--error); color:var(--error);" onclick="toggleReviewDetails()">🔍 Review Missed</button>
+            </div>
+    
+            <div id="debriefReviewList" style="display:none; text-align:left; margin-bottom:15px; font-size:0.9em;">
+                </div>
+    
+            <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
         </div>
-        <p>Review Items:</p>
-        <div class="report-list" id="debriefList"></div>
-        <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
-    </div>
 
     <div id="flashcardOverlay" class="modal-overlay">
         <div class="flashcard-wrapper">
@@ -722,23 +728,26 @@
                     <h3 style="margin-top:0; color:var(--accent);">📝 Exam Briefing</h3>
                     
                     <div style="margin-bottom:15px;">
-                        <label style="font-size:0.8em; font-weight:bold; opacity:0.7;">SELECT DECK</label>
-                        <select id="quizDeckSelect" style="width:100%; margin-top:5px;">
-                            <option value="All">🔀 All Subjects</option>
-                            <option value="Operations">🛫 Operations</option>
-                            <option value="Weather">☁️ Weather</option>
-                            <option value="Systems">⚙️ Systems</option>
-                            <option value="Regulations">⚖️ Regulations</option>
-                            <option value="Favorites">⭐ My Favorites</option>
-                            <option value="Weakest">⚠️ My Weakest Links</option>
+                        <label style="font-size:0.8em; font-weight:bold; opacity:0.7;">TARGET DATABASE</label>
+                        <select id="quizSourceSelect" style="width:100%; margin-top:5px; font-weight:bold; color:var(--accent);">
+                            <option value="EVA">✈️ EVA Cadet (Priority)</option>
+                            <option value="USER">👤 My Acronyms</option>
+                            <option value="All">🌎 All Databases</option>
+                            <option value="FAA">🇺🇸 FAA Only</option>
                         </select>
                     </div>
     
                     <div style="margin-bottom:15px;">
-                        <label style="font-size:0.8em; font-weight:bold; opacity:0.7;">EXAM MODE</label>
+                        <label style="font-size:0.8em; font-weight:bold; opacity:0.7;">CATEGORY / DECK</label>
+                        <select id="quizDeckSelect" style="width:100%; margin-top:5px;">
+                            </select>
+                    </div>
+    
+                    <div style="margin-bottom:15px;">
+                        <label style="font-size:0.8em; font-weight:bold; opacity:0.7;">MODE</label>
                         <div style="display:flex; gap:10px; margin-top:5px;">
                             <button class="modal-btn" id="modeMC" onclick="selectQuizMode('mc')" style="flex:1; background:var(--accent); color:white;">Multiple Choice</button>
-                            <button class="modal-btn" id="modeWritten" onclick="selectQuizMode('written')" style="flex:1; opacity:0.6;">Written (Hard)</button>
+                            <button class="modal-btn" id="modeWritten" onclick="selectQuizMode('written')" style="flex:1; opacity:0.6;">Written</button>
                         </div>
                     </div>
     
@@ -748,9 +757,11 @@
                             <option value="10">10 Questions</option>
                             <option value="20">20 Questions</option>
                             <option value="50">50 Questions</option>
-                            <option value="9999">Infinite</option>
                         </select>
                     </div>
+    
+                    <div id="quizHistoryLog" style="font-size:0.75em; opacity:0.6; margin-bottom:15px; text-align:center;">
+                        </div>
     
                     <button class="modal-btn send full" onclick="launchQuizSession()">🚀 Take Off</button>
                     <button class="modal-btn cancel full" onclick="closeQuiz()">Cancel</button>
@@ -758,18 +769,13 @@
     
                 <div id="quizActive" style="display:none;">
                     <div class="score-display" id="quizScoreDisplay">Score: 0/0</div>
-                    
                     <div class="card" style="background:var(--modal-bg); border:1px solid var(--glass-border); padding:20px; text-align:center; min-height:320px; display:flex; flex-direction:column; justify-content:center;">
-                        
                         <div style="font-size:0.8em; text-transform:uppercase; opacity:0.6; margin-bottom:10px;">Definition</div>
                         <div id="quizQuestion" style="font-size:1.2em; font-weight:500; margin-bottom:20px; max-height:100px; overflow-y:auto; line-height:1.4;">...</div>
-    
                         <div id="quizOptions" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%;"></div>
-    
                         <div id="quizWrittenInput" style="display:none; width:100%; flex-direction:column; gap:10px;">
-                            <textarea id="writtenAnswer" placeholder="Type answer here (optional)..." style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid rgba(150,150,150,0.3); resize:none;"></textarea>
+                            <textarea id="writtenAnswer" placeholder="Type answer here..." style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid rgba(150,150,150,0.3); resize:none;"></textarea>
                             <button id="revealBtn" class="modal-btn send full">👀 Reveal Answer</button>
-                            
                             <div id="writtenGrading" style="display:none; margin-top:10px;">
                                 <div style="font-size:0.9em; opacity:0.7; margin-bottom:5px;">CORRECT ANSWER:</div>
                                 <div id="correctAnswerDisplay" style="font-weight:900; font-size:1.5em; color:var(--accent); margin-bottom:15px;">V1</div>
@@ -779,12 +785,10 @@
                                 </div>
                             </div>
                         </div>
-    
                         <div id="quizFeedback" style="height:30px; margin-top:15px; font-weight:bold; opacity:0;">Correct!</div>
                     </div>
                     <button class="modal-btn cancel full" onclick="returnToBriefing()" style="margin-top:20px; background:white; color:black;">🏳️ Abort Exam</button>
                 </div>
-    
             </div>
         </div>
 
@@ -1231,61 +1235,54 @@
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
 
-        /* --- ADVANCED EXAM ENGINE --- */
+        /* --- ADVANCED EXAM ENGINE V2 --- */
         const quizOverlay = document.getElementById('quizOverlay');
         const quizSetup = document.getElementById('quizSetup');
         const quizActive = document.getElementById('quizActive');
         
         let quizSession = {
             pool: [],
+            missed: [], // Track missed items for review
             current: null,
             score: 0,
             count: 0,
             limit: 10,
-            mode: 'mc' // 'mc' or 'written'
+            mode: 'mc'
         };
-        // 1. Open The Briefing Room (Dynamic Version)
+
+        // 1. Open Briefing Room & Load Dynamic Options
         window.startExam = function() {
             document.getElementById('fabContainer').classList.remove('active');
             
-            // --- NEW: DYNAMIC DECK BUILDER ---
+            // Build Category Dropdown
             const select = document.getElementById('quizDeckSelect');
-            
-            // 1. Keep the special options
             select.innerHTML = `
-                <option value="All">🔀 All Subjects</option>
+                <option value="All">🔀 All Categories</option>
                 <option value="Favorites">⭐ My Favorites</option>
                 <option value="Weakest">⚠️ My Weakest Links</option>
                 <option disabled>──────────</option>
             `;
-
-            // 2. Find all unique categories in the current 'allData'
-            // We use a Set to remove duplicates
+            
             const uniqueCats = [...new Set(allData.map(i => i.category))].sort();
-
-            // 3. Create an option for each category found
             uniqueCats.forEach(cat => {
-                // Skip empty categories if any
                 if(!cat) return;
-                
                 const opt = document.createElement('option');
                 opt.value = cat;
-                
-                // Optional: Add emoji based on text (Simple mapping)
-                let emoji = '📂'; 
-                if(cat.includes('Weath')) emoji = '☁️';
-                else if(cat.includes('Nav')) emoji = '🧭';
-                else if(cat.includes('Reg')) emoji = '⚖️';
-                else if(cat.includes('Sys')) emoji = '⚙️';
-                else if(cat.includes('Op')) emoji = '🛫';
-                
-                opt.innerText = `${emoji} ${cat}`;
+                opt.innerText = `📂 ${cat}`;
                 select.appendChild(opt);
             });
-            // ---------------------------------
+
+            // Load History
+            const hist = JSON.parse(localStorage.getItem('examHistory') || '[]');
+            const histLog = document.getElementById('quizHistoryLog');
+            if(hist.length > 0) {
+                histLog.innerHTML = "Recent: " + hist.map(h => `<span style="margin-left:5px; color:${h.grade=='A'?'var(--success)':'var(--text)'}">${h.score}%</span>`).join(' | ');
+            } else {
+                histLog.innerHTML = "";
+            }
 
             quizOverlay.style.display = 'block';
-            returnToBriefing(); // Reset UI
+            returnToBriefing();
             playSound('click');
         };
 
@@ -1293,48 +1290,52 @@
             quizSetup.style.display = 'block';
             quizActive.style.display = 'none';
         }
-        
         window.closeQuiz = function() { quizOverlay.style.display = 'none'; };
 
-        // 2. Select Mode (UI Toggle)
         window.selectQuizMode = function(m) {
             quizSession.mode = m;
             document.getElementById('modeMC').style.opacity = m === 'mc' ? '1' : '0.6';
             document.getElementById('modeWritten').style.opacity = m === 'written' ? '1' : '0.6';
+            // Visual toggle styles...
             document.getElementById('modeMC').style.background = m === 'mc' ? 'var(--accent)' : 'transparent';
             document.getElementById('modeWritten').style.background = m === 'written' ? 'var(--accent)' : 'transparent';
-            document.getElementById('modeMC').style.color = m === 'mc' ? 'white' : 'var(--text)';
-            document.getElementById('modeWritten').style.color = m === 'written' ? 'white' : 'var(--text)';
         };
 
-        // 3. Launch the Session (Filter the Data)
+        // 2. Launch Exam with Source Logic
         window.launchQuizSession = function() {
+            const source = document.getElementById('quizSourceSelect').value;
             const deck = document.getElementById('quizDeckSelect').value;
             const limit = parseInt(document.getElementById('quizLength').value);
             
-            // FILTERING LOGIC
-            let pool = [];
+            // FILTER 1: SOURCE
+            let sourcePool = allData;
+            if (source === 'EVA') sourcePool = allData.filter(i => i.source === 'EVA');
+            else if (source === 'USER') sourcePool = allData.filter(i => i.source === 'USER');
+            else if (source === 'FAA') sourcePool = allData.filter(i => i.source === 'FAA');
+            // 'All' keeps everyone
+
+            // FILTER 2: CATEGORY/DECK
+            let finalPool = [];
             if (deck === 'All') {
-                pool = [...allData];
+                finalPool = sourcePool;
             } else if (deck === 'Favorites') {
-                pool = allData.filter(i => favorites.includes(i.acronym));
+                finalPool = sourcePool.filter(i => favorites.includes(i.acronym));
             } else if (deck === 'Weakest') {
-                // Items NOT in mastery or items marked hard (future feature)
-                pool = allData.filter(i => !mastery[i.acronym]);
-                if (pool.length < 5) pool = [...allData]; // Fallback if user is a genius
+                finalPool = sourcePool.filter(i => !mastery[i.acronym]);
+                if (finalPool.length < 5) finalPool = sourcePool; // Fallback
             } else {
-                pool = allData.filter(i => i.group === deck || i.category === deck);
+                finalPool = sourcePool.filter(i => i.group === deck || i.category === deck);
             }
 
-            if (pool.length < 4) { showToast("Deck too small! Add items."); return; }
+            if (finalPool.length < 4) { showToast(`Not enough cards in ${source}!`); return; }
 
-            // Initialize Session
-            quizSession.pool = pool.sort(() => 0.5 - Math.random()); // Shuffle entire deck
+            // Init Session
+            quizSession.pool = finalPool.sort(() => 0.5 - Math.random());
             quizSession.limit = limit;
             quizSession.score = 0;
             quizSession.count = 0;
+            quizSession.missed = []; // Reset missed list
 
-            // Switch UI
             quizSetup.style.display = 'none';
             quizActive.style.display = 'block';
             nextQuizQuestion();
@@ -1342,123 +1343,140 @@
 
         function nextQuizQuestion() {
             if (quizSession.count >= quizSession.limit) {
-                // End of Exam
-                showDebrief(); // Use your existing debrief function
-                quizOverlay.style.display = 'none';
+                finishExam();
                 return;
             }
-
             quizSession.count++;
             updateQuizUI();
-
-            // Pick Card
-            // We use modulus to cycle through if pool < limit, or just next item
+            
+            // Loop pool if smaller than limit
             quizSession.current = quizSession.pool[(quizSession.count - 1) % quizSession.pool.length];
 
-            // Render based on mode
             const qEl = document.getElementById('quizQuestion');
             qEl.innerText = quizSession.current.meaning;
             document.getElementById('quizFeedback').style.opacity = '0';
 
-            if (quizSession.mode === 'mc') {
-                renderMC();
-            } else {
-                renderWritten();
-            }
+            if (quizSession.mode === 'mc') renderMC(); else renderWritten();
         }
 
-        // --- MULTIPLE CHOICE LOGIC ---
+        // --- EXAM LOGIC HELPERS ---
         function renderMC() {
             document.getElementById('quizOptions').style.display = 'grid';
             document.getElementById('quizWrittenInput').style.display = 'none';
             const cont = document.getElementById('quizOptions');
             cont.innerHTML = '';
 
-            // Generate Distractors
-            let distractors = allData.filter(i => i.acronym !== quizSession.current.acronym && i.category === quizSession.current.category);
-            if (distractors.length < 3) distractors = allData.filter(i => i.acronym !== quizSession.current.acronym);
-            distractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 3);
-            
+            let distractors = allData.filter(i => i.acronym !== quizSession.current.acronym).sort(() => 0.5 - Math.random()).slice(0, 3);
             let options = [quizSession.current, ...distractors].sort(() => 0.5 - Math.random());
 
             options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'modal-btn quiz-opt';
                 btn.innerText = opt.acronym;
-                btn.onclick = () => checkMCAnswer(btn, opt.acronym === quizSession.current.acronym);
+                btn.onclick = () => checkAnswer(btn, opt.acronym === quizSession.current.acronym);
                 cont.appendChild(btn);
             });
         }
 
-        function checkMCAnswer(btn, isCorrect) {
-            const allBtns = document.querySelectorAll('.quiz-opt');
-            allBtns.forEach(b => b.disabled = true);
-            
-            if (isCorrect) {
-                btn.classList.add('correct');
-                playSound('success');
-                quizSession.score++;
-                document.getElementById('quizFeedback').innerText = "Correct! ✅";
-                document.getElementById('quizFeedback').style.color = "var(--success)";
-            } else {
-                btn.classList.add('wrong');
-                allBtns.forEach(b => { if(b.innerText === quizSession.current.acronym) b.classList.add('correct'); });
-                playSound('error');
-                document.getElementById('quizFeedback').innerText = `It was ${quizSession.current.acronym}`;
-                document.getElementById('quizFeedback').style.color = "var(--error)";
-            }
-            document.getElementById('quizFeedback').style.opacity = '1';
-            updateQuizUI();
-            setTimeout(nextQuizQuestion, 1500);
-        }
-
-        // --- WRITTEN (HARD) MODE LOGIC ---
         function renderWritten() {
             document.getElementById('quizOptions').style.display = 'none';
             const wCont = document.getElementById('quizWrittenInput');
             wCont.style.display = 'flex';
-            
-            // Reset States
             document.getElementById('writtenAnswer').value = '';
             document.getElementById('revealBtn').style.display = 'block';
             document.getElementById('writtenGrading').style.display = 'none';
             
-            // One-time listener for Reveal
-            const revBtn = document.getElementById('revealBtn');
-            revBtn.onclick = () => {
-                revBtn.style.display = 'none';
+            document.getElementById('revealBtn').onclick = () => {
+                document.getElementById('revealBtn').style.display = 'none';
                 document.getElementById('writtenGrading').style.display = 'block';
                 document.getElementById('correctAnswerDisplay').innerText = quizSession.current.acronym;
             };
         }
 
         window.handleWrittenGrade = function(isCorrect) {
+            checkAnswer(null, isCorrect, true); // Pass true for 'isWritten'
+        };
+
+        function checkAnswer(btn, isCorrect, isWritten=false) {
+            if(!isWritten) {
+                const allBtns = document.querySelectorAll('.quiz-opt');
+                allBtns.forEach(b => b.disabled = true);
+                if(isCorrect) btn.classList.add('correct');
+                else {
+                     btn.classList.add('wrong');
+                     allBtns.forEach(b => { if(b.innerText === quizSession.current.acronym) b.classList.add('correct'); });
+                }
+            }
+
             if (isCorrect) {
                 quizSession.score++;
                 playSound('success');
+                document.getElementById('quizFeedback').innerText = "Correct! ✅";
+                document.getElementById('quizFeedback').style.color = "var(--success)";
             } else {
                 playSound('error');
-                // Optional: Add to "Weakest" list logic here
+                document.getElementById('quizFeedback').innerText = `Missed!`;
+                document.getElementById('quizFeedback').style.color = "var(--error)";
+                // ADD TO MISSED LIST
+                quizSession.missed.push(quizSession.current);
             }
+            document.getElementById('quizFeedback').style.opacity = '1';
             updateQuizUI();
-            nextQuizQuestion();
-        };
+            setTimeout(nextQuizQuestion, 1500);
+        }
 
         function updateQuizUI() {
             document.getElementById('quizScoreDisplay').innerText = `Q: ${quizSession.count}/${quizSession.limit} | Score: ${quizSession.score}`;
         }
 
-        // Event Listeners
-        document.getElementById('closeQuizBtn').addEventListener('click', () => quizOverlay.style.display = 'none');
-        
-        // Add a button to the FAB to trigger this
-        // (You'll need to update your FAB HTML to include a button for this)
+        // --- DEBRIEF & REVIEW LOGIC ---
+        function finishExam() {
+            quizOverlay.style.display = 'none';
+            const p = Math.round((quizSession.score / quizSession.limit) * 100);
+            
+            // Save History
+            let hist = JSON.parse(localStorage.getItem('examHistory') || '[]');
+            hist.unshift({ score: p, grade: p>=90?'A':(p>=70?'C':'F'), date: new Date().getTime() });
+            if(hist.length > 5) hist.pop();
+            localStorage.setItem('examHistory', JSON.stringify(hist));
 
-        // Add this at the end of your script
-        document.getElementById('defSearchToggle').addEventListener('change', () => {
-            runSearch();
-            playSound('click');
-        });
+            // Show Modal
+            document.getElementById('debriefGrade').innerText = p===100?'S':(p>=90?'A':(p>=70?'C':'F'));
+            document.getElementById('debriefScore').innerText = `${p}% (${quizSession.score}/${quizSession.limit})`;
+            
+            // Setup Review List
+            const list = document.getElementById('debriefReviewList');
+            const btn = document.getElementById('reviewMissedBtn');
+            list.style.display = 'none';
+            list.innerHTML = '';
+            
+            if(quizSession.missed.length > 0) {
+                btn.style.display = 'block';
+                quizSession.missed.forEach(item => {
+                    list.innerHTML += `
+                        <div style="background:rgba(231, 76, 60, 0.1); padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid var(--error);">
+                            <div style="font-weight:bold; color:var(--text);">${item.acronym}</div>
+                            <div style="font-size:0.9em; opacity:0.8;">${item.meaning}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                btn.style.display = 'none'; // Perfect score
+            }
+
+            document.getElementById('debriefModal').style.display = 'block';
+            document.getElementById('debriefOverlay').style.display = 'block';
+            if(p >= 70) playSound('success');
+        }
+
+        window.toggleReviewDetails = function() {
+            const list = document.getElementById('debriefReviewList');
+            if(list.style.display === 'none') {
+                list.style.display = 'block';
+            } else {
+                list.style.display = 'none';
+            }
+        };
         
     </script>
 </body>
