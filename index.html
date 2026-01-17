@@ -407,74 +407,113 @@
         </div>
     </div>
 
-    <div id="qrhModalOverlay" class="modal-overlay"></div>
     <div id="qrhModal" class="modal">
-        <h3>📋 Cockpit QRH</h3>
-        <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
-            <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
-            <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
-            <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
-            <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
+            <h3>📋 Cockpit QRH</h3>
+            <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
+                <button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1; padding:4px; font-size:0.8em;">Airspace</button>
+                <button class="modal-btn" onclick="showQRHTab('light')" style="flex:1; padding:4px; font-size:0.8em;">Lights</button>
+                <button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1; padding:4px; font-size:0.8em;">XPDR</button>
+                <button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1; padding:4px; font-size:0.8em;">V-Spd</button>
+                <button class="modal-btn" onclick="showQRHTab('memory')" style="flex:1; padding:4px; font-size:0.8em; background:var(--history-color); color:white;">Memory</button>
+            </div>
+            
+            <div id="qrh-airspace">
+                <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
+                    <option value="B">Class B</option>
+                    <option value="C">Class C</option>
+                    <option value="D">Class D</option>
+                    <option value="E">Class E (<10k MSL)</option>
+                    <option value="E10">Class E (>10k MSL)</option>
+                    <option value="G">Class G (Day, <1200 AGL)</option>
+                </select>
+                <div class="airspace-vis" id="airspaceVis"></div>
+                <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
+            </div>
+    
+            <div id="qrh-light" style="display:none;">
+                <table class="qrh-table">
+                    <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
+                    <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
+                    <tr><td class="sig-green">Flash Green</td><td>Return for Land</td><td>Cleared Taxi</td></tr>
+                    <tr><td class="sig-red">Steady Red</td><td>Give Way / Circle</td><td>STOP</td></tr>
+                    <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
+                    <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
+                </table>
+            </div>
+            
+            <div id="qrh-xpdr" style="display:none;">
+                <table class="qrh-table">
+                    <tr><th>Code</th><th>Meaning</th></tr>
+                    <tr><td>7500</td><td class="sig-red">Hijack</td></tr>
+                    <tr><td>7600</td><td class="sig-red">Radio Failure</td></tr>
+                    <tr><td>7700</td><td class="sig-red">Emergency</td></tr>
+                    <tr><td>1200</td><td>VFR</td></tr>
+                </table>
+            </div>
+    
+            <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
+                <table class="qrh-table">
+                    <tr><th>Speed</th><th>Description</th></tr>
+                    <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
+                    <tr><td>Vso</td><td>Stall Speed (Landing Config)</td></tr>
+                    <tr><td>Vr</td><td>Rotation Speed</td></tr>
+                    <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
+                    <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
+                    <tr><td>Va</td><td>Maneuvering Speed</td></tr>
+                    <tr><td>Vno</td><td>Max Structural Cruise</td></tr>
+                    <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
+                    <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
+                    <tr><td>Vlo</td><td>Max Landing Gear Ops</td></tr>
+                    <tr><td>Vle</td><td>Max Landing Gear Ext</td></tr>
+                    <tr><td>Vmc</td><td>Min Controllable (Multi)</td></tr>
+                    <tr><td>Vyse</td><td>Best Rate Single Engine</td></tr>
+                    <tr><td>Vref</td><td>Ref Landing Speed</td></tr>
+                </table>
+            </div>
+    
+            <div id="qrh-memory" style="display:none; max-height:300px; overflow-y:auto;">
+                <table class="qrh-table">
+                    <tr><th style="width:30%">Code</th><th>Checklist Items</th></tr>
+                    
+                    <tr><td><strong>ARROW</strong><br><span style="font-size:0.7em; opacity:0.7;">DOCS</span></td>
+                    <td><strong>A</strong>irworthiness<br><strong>R</strong>egistration<br><strong>R</strong>adio License (Intl)<br><strong>O</strong>perating Manual<br><strong>W</strong>eight & Balance</td></tr>
+    
+                    <tr><td><strong>CIGARS</strong><br><span style="font-size:0.7em; opacity:0.7;">TAKEOFF</span></td>
+                    <td><strong>C</strong>ontrols<br><strong>I</strong>nstruments<br><strong>G</strong>as<br><strong>A</strong>ttitude (Trim)<br><strong>R</strong>un-up<br><strong>S</strong>afety</td></tr>
+    
+                    <tr><td><strong>CRAFT</strong><br><span style="font-size:0.7em; opacity:0.7;">IFR CLR</span></td>
+                    <td><strong>C</strong>leared to...<br><strong>R</strong>oute<br><strong>A</strong>ltitude<br><strong>F</strong>requency<br><strong>T</strong>ransponder</td></tr>
+    
+                    <tr><td><strong>GUMPS</strong><br><span style="font-size:0.7em; opacity:0.7;">LANDING</span></td>
+                    <td><strong>G</strong>as (Fuel)<br><strong>U</strong>ndercarriage (Gear)<br><strong>M</strong>ixture<br><strong>P</strong>rop<br><strong>S</strong>eatbelts / Switches</td></tr>
+    
+                    <tr><td><strong>IMSAFE</strong><br><span style="font-size:0.7em; opacity:0.7;">HEALTH</span></td>
+                    <td><strong>I</strong>llness<br><strong>M</strong>edication<br><strong>S</strong>tress<br><strong>A</strong>lcohol<br><strong>F</strong>atigue<br><strong>E</strong>ating</td></tr>
+    
+                    <tr><td><strong>ABCDE</strong><br><span style="font-size:0.7em; opacity:0.7;">ENG FAIL</span></td>
+                    <td><strong>A</strong>irspeed (Glide)<br><strong>B</strong>est Place to Land<br><strong>C</strong>hecklist<br><strong>D</strong>eclare (Mayday)<br><strong>E</strong>xecute</td></tr>
+    
+                    <tr><td><strong>5 Ts</strong><br><span style="font-size:0.7em; opacity:0.7;">HOLD/APP</span></td>
+                    <td><strong>T</strong>ime<br><strong>T</strong>urn<br><strong>T</strong>hrottle<br><strong>T</strong>une<br><strong>T</strong>alk</td></tr>
+    
+                    <tr><td><strong>5 Cs</strong><br><span style="font-size:0.7em; opacity:0.7;">LOST</span></td>
+                    <td><strong>C</strong>limb<br><strong>C</strong>ircle<br><strong>C</strong>ommunicate<br><strong>C</strong>onfess<br><strong>C</strong>omply</td></tr>
+                    
+                    <tr><td><strong>ANDS</strong><br><span style="font-size:0.7em; opacity:0.7;">COMPASS</span></td>
+                    <td><strong>A</strong>ccelerate <strong>N</strong>orth<br><strong>D</strong>ecelerate <strong>S</strong>outh</td></tr>
+    
+                    <tr><td><strong>UNOS</strong><br><span style="font-size:0.7em; opacity:0.7;">COMPASS</span></td>
+                    <td><strong>U</strong>ndershoot <strong>N</strong>orth<br><strong>O</strong>vershoot <strong>S</strong>outh</td></tr>
+                    
+                    <tr><td><strong>TOMATO<br>FLAMES</strong><br><span style="font-size:0.7em; opacity:0.7;">VFR DAY</span></td>
+                    <td><strong>T</strong>ach <strong>O</strong>il(P) <strong>M</strong>anifold <strong>A</strong>ltimeter <strong>T</strong>emp <strong>O</strong>il(T)<br><strong>F</strong>uel <strong>L</strong>dg Gear <strong>A</strong>irspeed <strong>M</strong>ag Compass <strong>E</strong>LT <strong>S</strong>eatbelts</td></tr>
+                </table>
+            </div>
+    
+            <div class="modal-buttons" style="margin-top:15px;">
+                <button id="closeQRHBtn" class="modal-btn cancel full">Close</button>
+            </div>
         </div>
-        
-        <div id="qrh-airspace">
-            <select id="airspaceSelect" style="width:100%; margin-bottom:10px;">
-                <option value="B">Class B</option>
-                <option value="C">Class C</option>
-                <option value="D">Class D</option>
-                <option value="E">Class E (<10k MSL)</option>
-                <option value="E10">Class E (>10k MSL)</option>
-                <option value="G">Class G (Day, <1200 AGL)</option>
-            </select>
-            <div class="airspace-vis" id="airspaceVis"></div>
-            <p id="airspaceText" style="text-align:center; font-weight:bold; margin-top:10px;">3 SM, Clear of Clouds</p>
-        </div>
-
-        <div id="qrh-light" style="display:none;">
-            <table class="qrh-table">
-                <tr><th>Signal</th><th>In Flight</th><th>On Ground</th></tr>
-                <tr><td class="sig-green">Steady Green</td><td>Cleared to Land</td><td>Cleared Takeoff</td></tr>
-                <tr><td class="sig-green">Flash Green</td><td>Return for Land</td><td>Cleared Taxi</td></tr>
-                <tr><td class="sig-red">Steady Red</td><td>Give Way / Circle</td><td>STOP</td></tr>
-                <tr><td class="sig-red">Flash Red</td><td>Airport Unsafe</td><td>Taxi Clear of Runway</td></tr>
-                <tr><td class="sig-white">Flash White</td><td>N/A</td><td>Return to Start</td></tr>
-            </table>
-        </div>
-        
-        <div id="qrh-xpdr" style="display:none;">
-            <table class="qrh-table">
-                <tr><th>Code</th><th>Meaning</th></tr>
-                <tr><td>7500</td><td class="sig-red">Hijack</td></tr>
-                <tr><td>7600</td><td class="sig-red">Radio Failure</td></tr>
-                <tr><td>7700</td><td class="sig-red">Emergency</td></tr>
-                <tr><td>1200</td><td>VFR</td></tr>
-            </table>
-        </div>
-
-        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
-            <table class="qrh-table">
-                <tr><th>Speed</th><th>Description</th></tr>
-                <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
-                <tr><td>Vso</td><td>Stall Speed (Landing Config)</td></tr>
-                <tr><td>Vr</td><td>Rotation Speed</td></tr>
-                <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
-                <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
-                <tr><td>Va</td><td>Maneuvering Speed</td></tr>
-                <tr><td>Vno</td><td>Max Structural Cruise</td></tr>
-                <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
-                <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
-                <tr><td>Vlo</td><td>Max Landing Gear Ops</td></tr>
-                <tr><td>Vle</td><td>Max Landing Gear Ext</td></tr>
-                <tr><td>Vmc</td><td>Min Controllable (Multi)</td></tr>
-                <tr><td>Vyse</td><td>Best Rate Single Engine</td></tr>
-                <tr><td>Vref</td><td>Ref Landing Speed</td></tr>
-            </table>
-        </div>
-
-        <div class="modal-buttons" style="margin-top:15px;">
-            <button id="closeQRHBtn" class="modal-btn cancel full">Close</button>
-        </div>
-    </div>
 
     <div id="noteModalOverlay" class="modal-overlay"></div>
     <div id="noteModal" class="modal">
@@ -619,11 +658,12 @@
         const qrhOverlay = document.getElementById('qrhModalOverlay');
         const qrhModal = document.getElementById('qrhModal');
         window.showQRHTab = function(id) {
-            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
-            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
-            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
-            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
-        };
+            document.getElementById('qrh-light').style.display = id === 'light' ? 'block' : 'none';
+            document.getElementById('qrh-xpdr').style.display = id === 'xpdr' ? 'block' : 'none';
+            document.getElementById('qrh-vspeed').style.display = id === 'vspeed' ? 'block' : 'none';
+            document.getElementById('qrh-airspace').style.display = id === 'airspace' ? 'block' : 'none';
+            document.getElementById('qrh-memory').style.display = id === 'memory' ? 'block' : 'none';
+        };;
         document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
         document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
         qrhOverlay.addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
