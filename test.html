@@ -1238,6 +1238,12 @@
         
         // Add a button to the FAB to trigger this
         // (You'll need to update your FAB HTML to include a button for this)
+
+        // Add this at the end of your script
+        document.getElementById('defSearchToggle').addEventListener('change', () => {
+            runSearch();
+            playSound('click');
+        });
         
     </script>
 </body>
