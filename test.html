@@ -355,6 +355,14 @@
             </div>
 
             <div class="tool-section">
+                <span class="tool-label">FLIGHT COMPUTER</span>
+                <button class="modal-btn send full" onclick="window.open('https://mediafiles.aero.und.edu/aero.und.edu/aviation/trainers/e6b/', '_blank')" style="background:#2c3e50; color:white; display:flex; align-items:center; justify-content:center; gap:10px;">
+                    ⚙️ Open Visual E6-B
+                </button>
+                <p style="font-size:0.7em; opacity:0.6; margin-top:4px; text-align:center;">External Tool: UND Aerospace Trainer</p>
+            </div>
+            
+            <div class="tool-section">
                 <span class="tool-label">SCRATCHPAD</span>
                 <textarea id="scratchpad" placeholder="Clearance, ATIS, or notes..."></textarea>
             </div>
@@ -441,6 +449,7 @@
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
             <button class="fab-mini" onclick="startExam()" data-label="Exam Mode">📝</button>
             <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" onclick="window.open('https://mediafiles.aero.und.edu/aero.und.edu/aviation/trainers/e6b/', '_blank')" data-label="E6-B Computer">⚙️</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
@@ -1128,7 +1137,6 @@
                                         <div class="meta-tags">
                                             <span class="source-tag ${i.source}">${i.source}</span>
                                             <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
-                                            <span class="family-btn" onclick="filterByFamily('${i.group}')">📁 Related</span>
                                         </div>
                                     </div>
                                     <div class="meaning">${autoLink(dm)}</div>
@@ -1252,11 +1260,59 @@
             const qnh = raw.match(/Q(\d{4})/); if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
             document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
         });
-
-        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData,notes:pilotNotes},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const data = {
+                history: historyLog,
+                favorites: favorites,
+                mastery: mastery, // Stores Confidence (1-3)
+                priority: priorityList, // Stores 🔥 Priority
+                notes: pilotNotes,
+                custom: customData,
+                scratchpad: document.getElementById('scratchpad').value
+            };
+            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `EVA_Cadet_Study_Backup.json`;
+            a.click();
+        });
         document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
-        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.notes)pilotNotes=d.notes;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotNotes',JSON.stringify(pilotNotes));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
-
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+                    const r = new FileReader();
+                    r.onload = (x) => {
+                        try {
+                            const d = JSON.parse(x.target.result);
+                            
+                            // 1. Restore Data to Variables
+                            if (d.history) historyLog = d.history;
+                            if (d.favorites) favorites = d.favorites;
+                            if (d.mastery) mastery = d.mastery; // This now includes 1, 2, 3 levels
+                            if (d.custom) customData = d.custom;
+                            if (d.notes) pilotNotes = d.notes;
+                            if (d.priority) priorityList = d.priority; // NEW: High Priority list
+                            if (d.scratchpad) document.getElementById('scratchpad').value = d.scratchpad;
+        
+                            // 2. Save Everything back to LocalStorage
+                            localStorage.setItem('pilotHistory', JSON.stringify(historyLog));
+                            localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
+                            localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+                            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+                            localStorage.setItem('pilotPriority', JSON.stringify(priorityList)); // NEW
+                            localStorage.setItem('pilotScratchpad', d.scratchpad || "");
+        
+                            // 3. Refresh the App
+                            loadData(document.getElementById('dbSource').value);
+                            showToast("Restored Successfully!");
+                            
+                        } catch (z) {
+                            console.error(z);
+                            showToast("Error: Invalid Backup File");
+                        }
+                    };
+                    r.readAsText(e.target.files[0]);
+                });
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
