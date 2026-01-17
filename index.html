@@ -1,165 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aviation Knowledge Finder</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: var(--bg);
-      color: var(--text);
-      transition: background 0.3s, color 0.3s;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
+    <title>Aviation Acronym V41</title>
+    
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
 
-    :root {
-      --bg: #f0f0f0;
-      --text: #000;
-      --card: #fff;
-    }
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --text: #2c3e50;
+            --accent: #00a8ff;
+            --star-color: #f1c40f;
+            --user-color: #9b59b6;
+            --history-color: #34495e;
+            --link-color: #2980b9;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --note-bg: #fff9c4;
+            --note-text: #5d4037;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            --modal-overlay: rgba(15, 15, 15, 0.6);
+            --modal-bg: #ffffff;
+            --drawer-bg: #f8f9fa;
+            --source-faa: #2980b9;
+            --source-sof: #e67e22;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --cloud-color: #ecf0f1;
+        }
 
-    body.dark {
-      --bg: #121212;
-      --text: #fff;
-      --card: #1e1e1e;
-    }
+        [data-theme="dark"] {
+            --glass-bg: rgba(20, 25, 30, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #ecf0f1;
+            --accent: #00d2d3;
+            --star-color: #f39c12;
+            --user-color: #8e44ad;
+            --history-color: #95a5a6;
+            --link-color: #48dbfb;
+            --note-bg: #424242;
+            --note-text: #fff9c4;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --modal-bg: #1e272e;
+            --drawer-bg: #1e272e;
+            --cloud-color: #bdc3c7;
+        }
 
-    button, select, input[type="text"] {
-      padding: 0.5rem;
-      margin: 0.5rem;
-      font-size: 1rem;
-    }
+        /* BACKGROUNDS */
+        body.bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
+        body.bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        body.bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        body.bg-night { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); }
 
-    .knowledge {
-      background: var(--card);
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px; 
+            padding-top: calc(20px + var(--safe-top)); 
+            padding-bottom: calc(80px + var(--safe-bottom)); 
+            margin: 0; color: var(--text);
+            background-attachment: fixed; background-size: cover;
+            min-height: 100vh; transition: background 1s ease, color 0.3s;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+        }
 
-    .source {
-      font-size: 0.9rem;
-      color: #ccc;
-    }
-  </style>
+        /* --- CONTROLS --- */
+        .controls {
+            position: sticky; top: var(--safe-top); z-index: 90;
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 15px; box-shadow: var(--shadow);
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
+        .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
+
+        .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        select {
+            padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3);
+            background: rgba(255,255,255,0.1); color: var(--text); outline: none; cursor: pointer;
+            font-size: 0.9em; font-weight: 500; min-height: 40px; flex-grow: 1;
+        }
+        select option { background: var(--modal-bg); color: var(--text); }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
+        .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
+
+        .search-wrapper { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; }
+        .search-wrapper:focus-within { background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
+        [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
+        #searchBox { flex-grow: 1; border: none; background: transparent; padding: 8px 10px; font-size: 16px; color: var(--text); outline: none; }
+        #searchBtn { background-color: var(--accent); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #clearBtn { background: none; border: none; color: var(--text); opacity: 0.5; font-weight: 700; font-size: 0.8em; cursor: pointer; margin-right: 8px; display: none; padding: 10px;}
+        #backBtn { background: none; border: none; color: var(--accent); font-weight: 700; font-size: 1.2em; cursor: pointer; padding-left: 10px; display: none; }
+
+        .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
+
+        .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
+        .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+        .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s ease; }
+        .group-desc { font-size: 0.75em; opacity: 0.7; padding-left: 4px; font-style: italic; min-height: 1.2em; }
+
+        /* --- CARDS --- */
+        #results { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
+        .card { background: var(--glass-bg); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); animation: slideUp 0.3s ease forwards; transition: transform 0.2s; position: relative; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .card-content { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .acronym-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .acronym-badge { font-weight: 800; color: var(--accent); font-size: 1.3em; letter-spacing: 0.5px; word-break: break-all; }
+        .meta-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
+        .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+        .source-tag.FAA { background: var(--source-faa); }
+        .source-tag.SOFEMA { background: var(--source-sof); }
+        .source-tag.USER { background: var(--user-color); }
+        .mastered-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 5px var(--success); }
+        .meaning { line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; word-wrap: break-word; }
+        .meaning:active { color: var(--accent); }
+        .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
+        
+        .card-actions { display: flex; flex-direction: row; width: 100%; box-sizing: border-box; padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1); justify-content: flex-end; gap: 15px; }
+        @media (max-width: 600px) { .card-actions { justify-content: space-between; gap: 0; } }
+        .action-btn { font-size: 1.4em; cursor: pointer; opacity: 0.5; transition: 0.2s; border: none; background: none; padding: 5px 10px; }
+        .action-btn:active { opacity: 1; transform: scale(1.2); }
+        .action-btn.star.active { opacity: 1; color: var(--star-color); filter: drop-shadow(0 0 2px var(--star-color)); }
+        .action-btn.delete { color: var(--error); opacity: 0.6; }
+        .action-btn.delete:active { opacity: 1; }
+        .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
+        .note-icon-small { font-size: 1.1em; opacity: 0.6; }
+        .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
+
+        /* --- GOOGLE SEARCH BTN (NEW) --- */
+        .google-search-btn {
+            background: var(--accent); color: white; opacity: 1; padding: 12px 24px; 
+            border-radius: 30px; text-decoration: none; font-weight: bold; 
+            display: inline-flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s;
+        }
+        .google-search-btn:active { transform: scale(0.95); }
+
+        /* --- DRAWER --- */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
+        .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
+        .drawer.open { transform: translateY(0); }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .drawer h3 { margin: 0; font-size: 1.4em; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .tool-section { display: flex; flex-direction: column; gap: 10px; }
+        .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
+        #scratchpad { width: 100%; height: 100px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
+        #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
+        #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
+
+        /* --- MODALS --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; backdrop-filter: blur(5px); }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; z-index: 2001; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }
+        .modal h3 { margin: 0 0 15px 0; font-size: 1.2em; color: var(--text); }
+        .modal input[type="text"], .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-size: 16px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
+        .modal textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid rgba(150,150,150,0.3); background: rgba(0,0,0,0.05); color: var(--text); font-family: inherit; font-size: 16px; resize: none; box-sizing: border-box; outline: none; margin-bottom: 20px; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-btn { padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; border: none; font-weight: 600; }
+        .modal-btn.cancel { background: transparent; color: var(--text); border: 1px solid rgba(150,150,150,0.3); }
+        .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
+        .modal-btn.full { width: 100%; margin-bottom: 10px; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
+        .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
+        .qrh-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        .qrh-table th, .qrh-table td { padding: 8px; border: 1px solid rgba(150,150,150,0.3); text-align: left; }
+        .qrh-table th { background: rgba(0,0,0,0.05); }
+        .sig-green { color: #2ecc71; font-weight: bold; }
+        .sig-red { color: #e74c3c; font-weight: bold; }
+        .sig-white { color: #95a5a6; font-weight: bold; }
+
+        .airspace-vis { width: 100%; height: 180px; background: linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0) 100%); border-radius: 12px; position: relative; overflow: hidden; margin-top: 10px; border: 1px solid var(--glass-border); }
+        .cloud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 30px; background: var(--cloud-color); border-radius: 50px; box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        .cloud::after, .cloud::before { content: ''; position: absolute; background: var(--cloud-color); border-radius: 50%; }
+        .cloud::after { width: 40px; height: 40px; top: -20px; left: 10px; }
+        .cloud::before { width: 30px; height: 30px; top: -15px; right: 10px; }
+        .plane-icon { position: absolute; font-size: 24px; }
+        .dist-line { position: absolute; background: var(--error); opacity: 0.7; }
+        .dist-label { position: absolute; color: var(--text); font-size: 0.75em; font-weight: bold; background: var(--glass-bg); padding: 2px 4px; border-radius: 4px; }
+
+        /* FAB */
+        .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
+        .fab-items { display: flex; flex-direction: column-reverse; gap: 12px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease; }
+        .fab-container.active .fab-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .fab-mini { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--glass-bg); color: var(--text); font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; position: relative; }
+        .fab-mini:active { transform: scale(0.9); }
+        .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .fab-container.active .fab-mini:hover::after { opacity: 1; }
+
+        #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 100px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .radar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); position: relative; box-shadow: 0 0 10px var(--accent); }
+        .radar::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, transparent 60%, var(--accent) 100%); animation: scan 1.5s linear infinite; }
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* Flashcard */
+        #flashcardOverlay { display: none; z-index: 2000; }
+        .flashcard-wrapper { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 300px; perspective: 1000px; z-index: 2001; }
+        .flashcard { width: 100%; height: 260px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); cursor: pointer; }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .shake { animation: shake 0.5s; }
+        .pulse-green { animation: pulseGreen 0.5s; }
+        @keyframes shake { 0% { transform: rotateY(180deg) translateX(0); } 25% { transform: rotateY(180deg) translateX(-10px); } 75% { transform: rotateY(180deg) translateX(10px); } 100% { transform: rotateY(180deg) translateX(0); } }
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; background: var(--modal-bg); border: 1px solid var(--glass-border); box-shadow: 0 25px 50px rgba(0,0,0,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+        .card-face.front { z-index: 2; }
+        .card-face.back { transform: rotateY(180deg); background: var(--bg-gradient); color: var(--text); }
+        .fc-acronym { font-size: 3em; font-weight: 800; color: var(--accent); margin: 0; }
+        .fc-hint { font-size: 0.9em; opacity: 0.5; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .fc-meaning { font-size: 1.2em; line-height: 1.4; font-weight: 500; }
+        .fc-controls { margin-top: 20px; width: 100%; display: flex; justify-content: space-between; align-items: center; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .flashcard.flipped ~ .fc-controls { opacity: 1; pointer-events: auto; }
+    </style>
 </head>
-<body>
-  <h1>✈️ Aviation Knowledge Finder</h1>
+<body class="bg-day">
 
-  <label>
-    Generate from Category:
-    <select id="categorySelect">
-      <option value="any">Any</option>
-      <option value="Aircraft Systems">Aircraft Systems</option>
-      <option value="Flight Operations">Flight Operations</option>
-      <option value="Weather & Environment">Weather & Environment</option>
-      <option value="Performance & Limitations">Performance & Limitations</option>
-      <option value="Human Factors">Human Factors</option>
-      <option value="Aviation Psychology">Aviation Psychology</option>
-      <option value="Navigation & Instruments">Navigation & Instruments</option>
-      <option value="Air Law & Regulation">Air Law & Regulation</option>
-      <option value="Communication">Communication</option>
-      <option value="Emergencies & Abnormals">Emergencies & Abnormals</option>
-    </select>
-  </label>
-  <button onclick="generateKnowledge()">Generate Knowledge</button>
-  <button onclick="clearHistory()">🧹 Clear History</button>
-  <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
-
-  <br />
-  <input type="text" id="searchBox" placeholder="Search aviation knowledge..." oninput="renderHistory()" />
-
-  <div id="currentKnowledge"></div>
-
-  <div class="history">
-    <h2>📚 History</h2>
-    <div id="history"></div>
-  </div>
-
-  <script>
-    const aviationData = [
-      { category: "Aircraft Systems", text: "The Airbus A320 uses fly-by-wire technology.", source: "https://en.wikipedia.org/wiki/Airbus_A320_family" },
-      { category: "Weather & Environment", text: "Wind shear can cause sudden changes in aircraft altitude or airspeed.", source: "https://aviationweather.gov" },
-      { category: "Performance & Limitations", text: "Density altitude affects takeoff performance significantly.", source: "https://skybrary.aero" },
-      { category: "Human Factors", text: "Fatigue can reduce a pilot's reaction time and decision-making ability.", source: "https://www.faa.gov" },
-      { category: "Aviation Psychology", text: "Situational awareness is critical for safe flight operations." },
-      { category: "Flight Operations", text: "Standard Operating Procedures (SOPs) enhance crew coordination." },
-      { category: "Navigation & Instruments", text: "An ILS provides both lateral and vertical guidance to pilots during landing." },
-      { category: "Air Law & Regulation", text: "Pilots must comply with duty time regulations to ensure rest and safety." },
-      { category: "Communication", text: "The phrase 'Pan-Pan' indicates urgency, but not immediate danger." },
-      { category: "Emergencies & Abnormals", text: "In case of engine fire, the pilot should follow the memory items of the QRH." }
-    ];
-
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
-      localStorage.setItem("darkMode", document.body.classList.contains("dark") ? "true" : "false");
-    }
-
-    function clearHistory() {
-      if (confirm("Clear all stored knowledge history?")) {
-        localStorage.removeItem("aviationKnowledgeHistory");
-        renderHistory();
-      }
-    }
-
-    function saveToHistory(entry) {
-      const history = JSON.parse(localStorage.getItem("aviationKnowledgeHistory") || "[]");
-      history.unshift(entry);
-      localStorage.setItem("aviationKnowledgeHistory", JSON.stringify(history));
-      renderHistory();
-    }
-
-    function renderHistory() {
-      const searchTerm = document.getElementById("searchBox").value.toLowerCase();
-      const history = JSON.parse(localStorage.getItem("aviationKnowledgeHistory") || "[]");
-      const container = document.getElementById("history");
-      container.innerHTML = "";
-
-      const filtered = history.filter(item =>
-        item.text.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm)
-      );
-
-      filtered.forEach((entry, i) => {
-        const div = document.createElement("div");
-        div.className = "knowledge";
-        div.innerHTML = `
-          <strong>#${filtered.length - i} - ${entry.category}</strong><br>
-          ${entry.text}<br>
-          <small>${new Date(entry.timestamp).toLocaleString()}</small><br>
-          <div class="source">🔗 ${entry.source ? `<a href="${entry.source}" target="_blank">Source</a>` : "No source"}</div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function generateKnowledge() {
-      const selected = document.getElementById("categorySelect").value;
-      const filtered = selected === "any" ? aviationData : aviationData.filter(d => d.category === selected);
-      const entry = filtered[Math.floor(Math.random() * filtered.length)];
-      const fullEntry = {
-        ...entry,
-        timestamp: new Date().toISOString()
-      };
-
-      document.getElementById("currentKnowledge").innerHTML = `
-        <div class="knowledge">
-          <strong>${fullEntry.category}</strong><br>
-          ${fullEntry.text}<br>
-          <div class="source">🔗 ${fullEntry.source ? `<a href="${fullEntry.source}" target="_blank">Source</a>` : "No source"}</div>
+    <div id="quizOverlay">
+        <div id="quizModal">
+            <div id="quizScore" style="margin-bottom:10px; opacity:0.7;">Score: 0</div>
+            <div class="quiz-question" id="quizQuestion">VREF</div>
+            <div class="quiz-options" id="quizOptions"></div>
+            <button id="closeQuizBtn" class="modal-btn cancel full" style="margin-top:20px;">End Exam</button>
         </div>
-      `;
-      saveToHistory(fullEntry);
-    }
+    </div>
 
-    window.onload = () => {
-      if (localStorage.getItem("darkMode") === "true") {
-        document.body.classList.add("dark");
-      }
-      renderHistory();
-    };
-  </script>
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+    <div id="sideDrawer" class="drawer">
+        <div class="drawer-header"><h3>👜 Flight Bag</h3><button class="icon-btn" id="closeDrawerBtn" style="font-size:1.2em;">✕</button></div>
+        <div style="flex-grow:1; overflow-y:auto; display:flex; flex-direction:column; gap:20px;">
+            <button class="modal-btn full" id="openQRHBtn" style="background:var(--history-color); color:white;">📋 Cockpit QRH</button>
+            <div class="tool-section"><span class="tool-label">METAR DECODER</span><input type="text" id="metarInput" placeholder="e.g. 16004KT 9999" autocomplete="off"><div id="metarResult">...</div></div>
+            <div class="tool-section"><span class="tool-label">SCRATCHPAD</span><textarea id="scratchpad" placeholder="Clearance, ATIS..."></textarea></div>
+            <div class="tool-section"><span class="tool-label">NATO PHONETIC</span><input type="text" id="natoInput" placeholder="Type text..." autocomplete="off"><div id="natoResult">...</div><button id="natoSpeakBtn" class="modal-btn send" style="width:100%">🔊 Speak</button></div>
+        </div>
+    </div>
+
+    <div class="controls" id="controls">
+        <div class="hud-container">
+            <div class="rank-badge" id="rankBadge">👨‍✈️ Student Pilot</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span>Mastery:</span>
+                <div class="progress-bar"><div class="progress-fill" id="rankProgress"></div></div>
+                <span id="rankPct">0%</span>
+            </div>
+        </div>
+
+        <div class="top-row" style="margin-top: 5px;">
+            <select id="dbSource" title="Select Database" style="flex-grow: 1;">
+                <option value="sofema" selected>🇪🇺 SOFEMA</option>
+                <option value="faa">🇺🇸 FAA</option>
+                <option value="both">🌎 ALL</option>
+            </select>
+            <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
+            <button class="icon-btn" id="themeBtn">🌗</button>
+        </div>
+
+        <div class="search-wrapper" style="margin-top: 10px;">
+            <button id="backBtn">⬅</button>
+            <input type="text" id="searchBox" placeholder="Search..." autocomplete="off">
+            <button id="clearBtn">✕</button>
+            <button id="searchBtn">🔍</button>
+        </div>
+        
+        <div class="filter-row" style="margin-top:10px;">
+             <select id="categorySelect" title="Category">
+                 <option value="All">All Categories</option>
+                 <option value="Favorites">⭐ Favorites</option>
+                 <option value="History">🕒 History</option>
+                 <option value="My Acronyms">👤 My Acronyms</option>
+                 <option value="Operations">Operations</option>
+                 <option value="Weather">Weather</option>
+                 <option value="Systems">Systems</option>
+                 <option value="Regulations">Regulations</option>
+                 <option value="Business">Business</option>
+                 <option value="Other">Other</option>
+             </select>
+             <select id="searchMode" title="Mode" style="width: auto;">
+                <option value="contains">In</option>
+                <option value="starts">Start</option>
+                <option value="exact">Exact</option>
+            </select>
+            <select id="sortSelect" title="Sort" style="width: auto;">
+                <option value="default">Orig</option>
+                <option value="az">A-Z</option>
+                <option value="za">Z-A</option>
+            </select>
+        </div>
+        <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
+    </div>
+
+    <div id="results">
+        <div class="loader-container"><div class="radar"></div></div>
+    </div>
+
+    <div class="fab-container" id="fabContainer">
+        <button class="fab-main" id="fabTrigger" title="Menu">＋</button>
+        <div class="fab-items">
+            <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
+            <button class="fab-mini" id="quizBtn" data-label="Exam Mode">🅰️🅱️</button> 
+            <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button>
+            <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
+            <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
+        </div>
+    </div>
+
+    <div id="toast">Message</div>
+
+    <div id="helpModalOverlay" class="modal-overlay"></div><div id="helpModal" class="modal"><h3>Flight Manual 📘</h3><div class="help-content"><h4>🔍 Search & Study</h4><ul><li><strong>Search:</strong> Type definitions or acronyms.</li><li><strong>Smart Links:</strong> Click highlighted terms to jump.</li><li><strong>Share:</strong> Click the Share icon to get a link.</li></ul><h4>✈️ Training</h4><ul><li><strong>Exam Mode (🅰️🅱️):</strong> Multiple choice quiz.</li><li><strong>Flashcards (🎲):</strong> Self-graded study.</li></ul></div><div class="modal-buttons" style="margin-top:15px;"><button id="closeHelpBtn" class="modal-btn send full">Roger!</button></div></div>
+    <div id="qrhModalOverlay" class="modal-overlay"></div><div id="qrhModal" class="modal"><h3>📋 Cockpit QRH</h3><div style="display:flex;gap:5px;margin-bottom:15px;flex-wrap:wrap;"><button class="modal-btn" onclick="showQRHTab('airspace')" style="flex:1;">Airspace</button><button class="modal-btn" onclick="showQRHTab('light')" style="flex:1;">Lights</button><button class="modal-btn" onclick="showQRHTab('xpdr')" style="flex:1;">XPDR</button><button class="modal-btn" onclick="showQRHTab('vspeed')" style="flex:1;">V-Spd</button></div><div id="qrh-airspace"><select id="airspaceSelect" style="width:100%;margin-bottom:10px;"><option value="B">Class B</option><option value="C">Class C</option><option value="D">Class D</option><option value="E">Class E <10k</option><option value="G">Class G Day</option></select><div class="airspace-vis" id="airspaceVis"></div><p id="airspaceText" style="text-align:center;font-weight:bold;margin-top:10px;"></p></div><div id="qrh-light" style="display:none;"><table class="qrh-table"><tr><th>Signal</th><th>Flight</th><th>Ground</th></tr><tr><td class="sig-green">Green</td><td>Land</td><td>Takeoff</td></tr><tr><td class="sig-red">Red</td><td>Circle</td><td>STOP</td></tr></table></div><div id="qrh-xpdr" style="display:none;"><table class="qrh-table"><tr><th>Code</th><th>Meaning</th></tr><tr><td>7500</td><td class="sig-red">Hijack</td></tr><tr><td>7600</td><td class="sig-red">Radio Fail</td></tr><tr><td>7700</td><td class="sig-red">Emergency</td></tr></table></div><div id="qrh-vspeed" style="display:none; max-height:200px; overflow-y:auto;"><table class="qrh-table"><tr><th>Speed</th><th>Desc</th></tr><tr><td>Vs</td><td>Stall Clean</td></tr><tr><td>Vso</td><td>Stall Ldg</td></tr><tr><td>Vr</td><td>Rotate</td></tr><tr><td>Vx</td><td>Best Angle</td></tr><tr><td>Vy</td><td>Best Rate</td></tr><tr><td>Vne</td><td>Never Exceed</td></tr></table></div><div class="modal-buttons" style="margin-top:15px;"><button id="closeQRHBtn" class="modal-btn cancel full">Close</button></div></div>
+    <div id="noteModalOverlay" class="modal-overlay"></div><div id="noteModal" class="modal"><h3>Add Note</h3><p id="noteTargetAcronym" style="font-weight:bold;color:var(--accent);"></p><textarea id="noteContent" placeholder="Note..."></textarea><div class="modal-buttons"><button id="deleteNoteBtn" class="modal-btn" style="color:var(--error);margin-right:auto;">Delete</button><button id="closeNoteBtn" class="modal-btn cancel">Cancel</button><button id="saveNoteBtn" class="modal-btn send">Save</button></div></div>
+    <div id="addModalOverlay" class="modal-overlay"></div><div id="addModal" class="modal"><h3>Add Acronym</h3><input type="text" id="newAcronym" placeholder="Acronym"><textarea id="newMeaning" placeholder="Meaning"></textarea><select id="newCategory"><option>General</option><option>Operations</option><option>Weather</option></select><div class="modal-buttons"><button id="cancelAddBtn" class="modal-btn cancel">Cancel</button><button id="saveAcronymBtn" class="modal-btn send">Save</button></div></div>
+    <div id="modalOverlay" class="modal-overlay"></div><div id="reportModal" class="modal"><h3>Report</h3><textarea id="reportComment" placeholder="Error..."></textarea><div class="modal-buttons"><button id="cancelModalBtn" class="modal-btn cancel">Cancel</button><button id="sendEmailBtn" class="modal-btn send">Draft</button></div></div>
+    <div id="settingsOverlay" class="modal-overlay"></div><div id="settingsModal" class="modal"><h3>Settings</h3><div class="toggle-row"><span>Weather BG</span><select id="weatherSelect" style="width:auto;"><option value="auto">Auto</option><option value="bg-day">Day</option></select></div><div class="toggle-row"><span>SFX</span><label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label></div><button id="exportBtn" class="modal-btn send modal-btn full">Export</button><button id="importBtn" class="modal-btn cancel modal-btn full">Import</button><input type="file" id="fileInput" style="display:none"><div style="margin-top:15px;text-align:right;"><button id="closeSettingsBtn" class="modal-btn cancel">Close</button></div></div>
+    <div id="debriefOverlay" class="modal-overlay"></div><div id="debriefModal" class="modal"><h3>Debrief</h3><div style="text-align:center;"><div style="font-size:3em;" id="debriefGrade"></div><div id="debriefScore"></div></div><div class="report-list" id="debriefList"></div><button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button></div>
+    <div id="flashcardOverlay" class="modal-overlay"><div class="flashcard-wrapper"><div class="score-display" id="sessionScore">0%</div><div class="flashcard" id="theFlashcard"><div class="card-face front"><span class="source-tag" id="fcSource"></span><h1 class="fc-acronym" id="fcAcronym"></h1><div class="fc-hint">Tap</div></div><div class="card-face back"><div class="fc-meaning" id="fcMeaning"></div></div></div><div class="fc-controls"><button id="missBtn" class="game-btn miss">Miss</button><button id="closeFcBtn" class="modal-btn cancel">Exit</button><button id="gotBtn" class="game-btn got">Got it</button></div></div></div>
+
+    <script>
+        // CONFIG
+        const LINKS = { faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv" };
+        const REPORT_EMAIL = "vincent6786@gmail.com"; 
+        const GROUP_CONFIG = { "Operations": { desc: "Nav, Ops", keywords: ["Navigation", "Flight Op", "Traffic"] }, "Weather": { desc: "Met, Codes", keywords: ["Weather", "Meteorology"] }, "Systems": { desc: "Avionics", keywords: ["Avionics", "System", "Maintenance"] }, "Regulations": { desc: "Rules", keywords: ["Regulat", "Safety"] }, "Business": { desc: "Airline", keywords: ["Airline", "Commerc"] }, "All": { desc: "" } };
+        const NATO_MAP = { 'A':'Alpha', 'B':'Bravo', 'C':'Charlie', 'D':'Delta', 'E':'Echo', 'F':'Foxtrot', 'G':'Golf', 'H':'Hotel', 'I':'India', 'J':'Juliett', 'K':'Kilo', 'L':'Lima', 'M':'Mike', 'N':'November', 'O':'Oscar', 'P':'Papa', 'Q':'Quebec', 'R':'Romeo', 'S':'Sierra', 'T':'Tango', 'U':'Uniform', 'V':'Victor', 'W':'Whiskey', 'X':'X-ray', 'Y':'Yankee', 'Z':'Zulu', '0':'Zero', '1':'One', '2':'Two', '3':'Three', '4':'Four', '5':'Five', '6':'Six', '7':'Seven', '8':'Eight', '9':'Niner', '.':'Decimal' };
+
+        // STATE
+        let allData=[], acronymSet=new Set(), filteredData=[], activeGroup='All', exactCategoryFilter=null, currentReportItem=null, currentFlashcardItem=null, searchStack=[];
+        let favorites=JSON.parse(localStorage.getItem('pilotFavorites'))||[], mastery=JSON.parse(localStorage.getItem('pilotMastery'))||{}, historyLog=JSON.parse(localStorage.getItem('pilotHistory'))||[], settings=JSON.parse(localStorage.getItem('pilotSettings'))||{sfx:false,weather:'auto'}, scratchpadText=localStorage.getItem('pilotScratchpad')||"", customData=JSON.parse(localStorage.getItem('pilotCustomDB'))||[];
+        let pilotNotes = JSON.parse(localStorage.getItem('pilotNotes')) || {}; 
+        let currentNoteAcronym = null; 
+        let sessionStats={total:0,correct:0,missedItems:[]};
+        let quizState = { currentQuestion: null, correctOption: null };
+
+        // AUDIO
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if(!settings.sfx) return; if(audioCtx.state==='suspended') audioCtx.resume(); if('vibrate' in navigator) navigator.vibrate(10);
+            const osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type==='click'){osc.type='sine';osc.frequency.setValueAtTime(800,audioCtx.currentTime);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.05);}
+            else if(type==='success'){osc.type='sine';osc.frequency.setValueAtTime(600,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(1200,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
+            else if(type==='error'){osc.type='sawtooth';osc.frequency.setValueAtTime(150,audioCtx.currentTime);osc.frequency.linearRampToValueAtTime(100,audioCtx.currentTime+0.1);gain.gain.setValueAtTime(0.05,audioCtx.currentTime);osc.start();osc.stop(audioCtx.currentTime+0.15);}
+        }
+
+        // LOAD
+        function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
+        function loadData(m){
+            document.getElementById('results').innerHTML=`<div class="loader-container"><div class="radar"></div></div>`;
+            let p=[]; if(m==='faa')p.push(fetchSheet(LINKS.faa,'FAA')); else if(m==='sofema')p.push(fetchSheet(LINKS.sofema,'SOFEMA')); else if(m==='both'){p.push(fetchSheet(LINKS.faa,'FAA'));p.push(fetchSheet(LINKS.sofema,'SOFEMA'));}
+            Promise.all(p).then(r=>{
+                let csvData = r.flat(); allData = [...customData, ...csvData]; acronymSet=new Set(allData.map(i=>i.acronym));
+                activeGroup='All'; filteredData=[...allData]; updateRankHUD();
+                
+                if(window.location.hash) {
+                    const term = decodeURIComponent(window.location.hash.substring(1));
+                    document.getElementById('searchBox').value = term;
+                    runSearch();
+                } else if(document.getElementById('searchBox').value.length>0) runSearch();
+                else document.getElementById('results').innerHTML='<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+            }).catch(e=>{document.getElementById('results').innerHTML='ERROR';});
+        }
+
+        // SHARE LOGIC
+        window.shareAcronym = function(acronym) {
+            const url = window.location.origin + window.location.pathname + '#' + encodeURIComponent(acronym);
+            navigator.clipboard.writeText(url).then(() => showToast("Link Copied!"));
+        };
+
+        // QUIZ LOGIC
+        const quizOverlay = document.getElementById('quizOverlay');
+        document.getElementById('quizBtn').addEventListener('click', startQuiz);
+        document.getElementById('closeQuizBtn').addEventListener('click', () => { quizOverlay.style.display='none'; });
+
+        function startQuiz() {
+            if(filteredData.length < 4) { showToast("Need more items for Quiz"); return; }
+            sessionStats = { total: 0, correct: 0 };
+            document.getElementById('fabContainer').classList.remove('active');
+            quizOverlay.style.display = 'block';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            const target = filteredData[Math.floor(Math.random() * filteredData.length)];
+            quizState.correctOption = target;
+            let distractors = filteredData.filter(i => i.acronym !== target.acronym && i.group === target.group);
+            if(distractors.length < 3) distractors = filteredData.filter(i => i.acronym !== target.acronym); 
+            distractors.sort(() => 0.5 - Math.random());
+            let options = distractors.slice(0, 3);
+            options.push(target);
+            options.sort(() => 0.5 - Math.random());
+
+            document.getElementById('quizScore').innerText = `Score: ${sessionStats.correct}/${sessionStats.total}`;
+            document.getElementById('quizQuestion').innerText = target.acronym;
+            const optDiv = document.getElementById('quizOptions');
+            optDiv.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.innerText = opt.meaning;
+                btn.onclick = () => checkAnswer(btn, opt);
+                optDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btn, selection) {
+            sessionStats.total++;
+            if (selection.acronym === quizState.correctOption.acronym) {
+                btn.classList.add('correct');
+                sessionStats.correct++;
+                playSound('success');
+                setTimeout(nextQuestion, 1000);
+            } else {
+                btn.classList.add('wrong');
+                playSound('error');
+                const opts = document.querySelectorAll('.quiz-option');
+                opts.forEach(o => { if(o.innerText === quizState.correctOption.meaning) o.classList.add('correct'); });
+                setTimeout(nextQuestion, 2000);
+            }
+        }
+
+        // SEARCH & CARD RENDERING (FIXED LAYOUT)
+        function runSearch(){
+            const res=document.getElementById('results'), term=document.getElementById('searchBox').value.toLowerCase().trim();
+            res.innerHTML=''; let tf=allData;
+            if(activeGroup==='Favorites') tf=tf.filter(i=>favorites.includes(i.acronym));
+            else if(activeGroup==='History') tf=historyLog;
+            else if(activeGroup==='My Acronyms') tf=customData;
+            else if(activeGroup!=='All') tf=tf.filter(i=>i.group===activeGroup);
+            if(exactCategoryFilter) tf=tf.filter(i=>i.category===exactCategoryFilter);
+            if(term) tf=tf.filter(i=>i.acronym.toLowerCase().startsWith(term) || i.meaning.toLowerCase().includes(term));
+            filteredData=[...tf];
+
+            if(tf.length>0){
+                tf.slice(0,50).forEach((i,idx)=>{
+                    const isFav=favorites.includes(i.acronym), isM=mastery[i.acronym], isUser=i.source==='USER', hasNote = pilotNotes[i.acronym];
+                    const c=document.createElement('div'); c.className='card'; c.style.animationDelay=`${idx*0.05}s`;
+                    let dm=i.meaning; if(term) dm=dm.replace(new RegExp(`(${term})`,'gi'),'<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
+                    if(isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    let noteHTML = ''; if(hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
+
+                    c.innerHTML=`
+                    <div class="card-content">
+                        <div class="acronym-header"><span class="acronym-badge">${i.acronym}</span><div class="meta-tags"><span class="source-tag ${i.source}">${i.source}</span><span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>${isM?'<span class="mastered-dot"></span>':''}</div></div>
+                        <div class="meaning">${autoLink(dm)}</div>${noteHTML}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn star ${isFav?'active':''}">⭐</button>
+                        <button class="action-btn" onclick="shareAcronym('${i.acronym}')" title="Share">🔗</button>
+                        <button class="action-btn note ${hasNote?'active':''}" onclick="openNoteModal('${i.acronym}')">📝</button>
+                        <button class="action-btn speak">🔊</button>
+                        <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                        ${actionBtn}
+                    </div>`;
+                    if(!isUser) c.querySelector('.report').addEventListener('click',()=>openReportModal(i)); 
+                    c.querySelector('.star').addEventListener('click',()=>toggleFavorite(i)); 
+                    c.querySelector('.speak').addEventListener('click',()=>{speakText(i.meaning);addToHistory(i);});
+                    res.appendChild(c);
+                });
+            } else {
+                // NOT FOUND FALLBACK (NEW V41)
+                const googleLink = `https://www.google.com/search?q=aviation+definition+${encodeURIComponent(term)}`;
+                res.innerHTML = term ? `
+                    <div style="text-align:center; margin-top:40px; padding:20px;">
+                        <div style="opacity:0.6; font-size:1.2em; margin-bottom:20px;">No local results for "${term}"</div>
+                        <a href="${googleLink}" target="_blank" class="google-search-btn">
+                            🌐 Search Google
+                        </a>
+                    </div>
+                ` : '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+            }
+        }
+
+        // STANDARD FUNCTIONS
+        function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('theme',d?'light':'dark');} document.getElementById('themeBtn').addEventListener('click',toggleTheme);
+        const storedTheme=localStorage.getItem('theme'); if(storedTheme){document.documentElement.setAttribute('data-theme',storedTheme);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}
+        
+        document.getElementById('weatherToolBtn').addEventListener('click', () => { window.open('https://vincent6786.github.io/Notion_metar_advanced/metarv46.html', '_blank'); });
+        window.addEventListener('scroll', () => { const c=document.getElementById('controls'); if(window.scrollY>50)c.classList.add('compact'); else c.classList.remove('compact'); });
+        document.getElementById('categorySelect').addEventListener('change', (e) => { activeGroup=e.target.value; exactCategoryFilter=null; document.getElementById('groupDesc').innerText=GROUP_CONFIG[activeGroup]?GROUP_CONFIG[activeGroup].desc:""; searchStack=[]; document.getElementById('backBtn').style.display='none'; runSearch(); playSound('click'); });
+        document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
+        document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
+        document.getElementById('fabTrigger').addEventListener('click',(e)=>{e.stopPropagation();fabCont.classList.toggle('active');});
+        document.addEventListener('click',(e)=>{if(!fabCont.contains(e.target))fabCont.classList.remove('active');});
+        
+        function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','My Acronyms','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
+        function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
+        function updateRankHUD(){const t=Object.keys(mastery).length;let r="Student Pilot",p=Math.min(100,Math.round((t/allData.length)*100));if(t>200)r="👨‍✈️ Captain";else if(t>100)r="First Officer";else if(t>50)r="Commercial";else if(t>10)r="Private Pilot";document.getElementById('rankBadge').innerText=r;document.getElementById('rankProgress').style.width=`${p}%`;document.getElementById('rankPct').innerText=`${t} Mastered`;}
+        function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
+        function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
+        function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
+        function speakText(t){if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;window.speechSynthesis.speak(u);}}
+        function autoLink(t){return t.replace(/\b([A-Z0-9]{2,})\b/g,(m)=>{if(acronymSet.has(m))return `<span class="term-link" onclick="navigateFor('${m}')">${m}</span>`;return m;});}
+        window.filterByRawCategory=function(c){exactCategoryFilter=c;activeGroup='All';document.getElementById('searchBox').value='';document.getElementById('groupDesc').innerHTML=`Filtering: <b>${c}</b> <span class="reset-filter-link" onclick="clearRawCategory()">[Clear]</span>`;document.getElementById('categorySelect').value='All';runSearch();playSound('click');};
+        window.clearRawCategory=function(){exactCategoryFilter=null;document.getElementById('groupDesc').textContent="Searching entire database.";runSearch();playSound('click');};
+        function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
+        function clean(s){return s.replace(/^"|"$/g,'').trim();}
+        
+        // Modal Logic
+        const qrhOverlay = document.getElementById('qrhModalOverlay');
+        const qrhModal = document.getElementById('qrhModal');
+        window.showQRHTab = function(id) {
+            document.getElementById('qrh-light').style.display = id==='light'?'block':'none';
+            document.getElementById('qrh-xpdr').style.display = id==='xpdr'?'block':'none';
+            document.getElementById('qrh-vspeed').style.display = id==='vspeed'?'block':'none';
+            document.getElementById('qrh-airspace').style.display = id==='airspace'?'block':'none';
+        };
+        document.getElementById('openQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='block'; qrhModal.style.display='block'; renderAirspace(); });
+        document.getElementById('closeQRHBtn').addEventListener('click', () => { qrhOverlay.style.display='none'; qrhModal.style.display='none'; });
+        
+        const airspaceSelect = document.getElementById('airspaceSelect');
+        const airspaceVis = document.getElementById('airspaceVis');
+        const airspaceText = document.getElementById('airspaceText');
+        function renderAirspace() {
+            const val = airspaceSelect.value;
+            let html = '', text = '';
+            const plane = `<div class="plane-icon" style="top:50%; left:50%; transform:translate(-50%, -50%)">✈️</div>`;
+            const cloud = `<div class="cloud"></div>`;
+            if (val === 'B') { html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; text = "3 SM, Clear of Clouds"; } 
+            else if (['C','D','E'].includes(val)) {
+                html = `${plane}<div class="cloud" style="top:20%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%; transform:translateY(-100%);"></div><div class="dist-label" style="top:35%; left:52%;">1000' Above</div><div class="cloud" style="top:80%; left:50%;"></div><div class="dist-line" style="top:50%; left:50%; width:2px; height:30%;"></div><div class="dist-label" style="top:65%; left:52%;">500' Below</div><div class="cloud" style="top:50%; left:85%;"></div><div class="dist-line" style="top:50%; left:50%; width:35%; height:2px;"></div><div class="dist-label" style="top:42%; left:65%;">2000' Horiz</div>`;
+                text = "3 SM, 500 Below, 1000 Above, 2000 Horiz";
+            } else if (val === 'E10') {
+                html = `${plane}<div class="cloud" style="top:10%; left:50%;"></div><div class="dist-label" style="top:25%; left:52%;">1000' Above</div><div class="cloud" style="top:90%; left:50%;"></div><div class="dist-label" style="top:75%; left:52%;">1000' Below</div><div class="cloud" style="top:50%; left:90%;"></div><div class="dist-label" style="top:42%; left:70%;">1 SM Horiz</div>`;
+                text = "5 SM, 1000 Below, 1000 Above, 1 SM Horiz";
+            } else if (val === 'G') { text = "1 SM, Clear of Clouds (Day)"; html = `<div class="plane-icon" style="top:50%; left:40%;">✈️</div><div class="cloud" style="top:50%; left:60%;"></div>`; }
+            airspaceVis.innerHTML = html; airspaceText.innerText = text;
+        }
+        airspaceSelect.addEventListener('change', renderAirspace);
+
+        const noteOverlay = document.getElementById('noteModalOverlay');
+        const noteModal = document.getElementById('noteModal');
+        window.openNoteModal = function(acronym) {
+            currentNoteAcronym = acronym;
+            document.getElementById('noteTargetAcronym').innerText = acronym;
+            document.getElementById('noteContent').value = pilotNotes[acronym] || "";
+            noteOverlay.style.display = 'block'; noteModal.style.display = 'block';
+        };
+        document.getElementById('saveNoteBtn').addEventListener('click', () => {
+            const txt = document.getElementById('noteContent').value.trim();
+            if(txt) pilotNotes[currentNoteAcronym] = txt; else delete pilotNotes[currentNoteAcronym];
+            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+            noteOverlay.style.display='none'; noteModal.style.display='none';
+            runSearch(); showToast("Note Saved");
+        });
+        document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
+        document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
+
+        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
+        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
+        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
+            if(!acr || !mean) { showToast("Fill all fields"); return; }
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
+            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        });
+
+        function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
+        document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
+        document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
+        document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='block';document.getElementById('settingsModal').style.display='block';});
+        document.getElementById('closeSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='none';document.getElementById('settingsModal').style.display='none';});
+        document.getElementById('weatherSelect').addEventListener('change',(e)=>{settings.weather=e.target.value;localStorage.setItem('pilotSettings',JSON.stringify(settings));updateBackground();});
+        document.getElementById('toggleSfx').addEventListener('change',(e)=>{settings.sfx=e.target.checked;localStorage.setItem('pilotSettings',JSON.stringify(settings));});
+
+        const sd=document.getElementById('sideDrawer'), dor=document.getElementById('drawerOverlay');
+        function toggleDrawer(){if(sd.classList.contains('open')){sd.classList.remove('open');dor.style.display='none';}else{sd.classList.add('open');dor.style.display='block';}}
+        document.getElementById('openDrawerBtn').addEventListener('click',toggleDrawer); document.getElementById('closeDrawerBtn').addEventListener('click',toggleDrawer); dor.addEventListener('click',toggleDrawer);
+
+        document.getElementById('dbSource').addEventListener('change',(e)=>loadData(e.target.value));
+        document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
+        document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
+        document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
+        
+        document.getElementById('scratchpad').addEventListener('input',(e)=>localStorage.setItem('pilotScratchpad',e.target.value));
+        document.getElementById('natoInput').addEventListener('input',(e)=>{
+            const v=e.target.value.toUpperCase(); let r=[]; for(const c of v)r.push(NATO_MAP[c]||(c===' '?'[SPACE]':c));
+            document.getElementById('natoResult').innerText=r.join(' ');
+        });
+        document.getElementById('natoSpeakBtn').addEventListener('click',()=>speakText(document.getElementById('natoResult').innerText));
+        document.getElementById('metarInput').addEventListener('input', (e) => {
+            const raw = e.target.value.toUpperCase(); let decoded = [];
+            const wind = raw.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?KT/); if(wind) decoded.push(`💨 Wind: ${wind[1]}° at ${wind[2]} kts${wind[3]?' (Gusting)':''}`);
+            if(raw.includes('9999')) decoded.push("👀 Vis: >10 km (Good)"); else if(raw.match(/\s\d{4}\s/)) decoded.push(`👀 Vis: ${raw.match(/\s(\d{4})\s/)[1]} meters`);
+            if(raw.includes('CAVOK')) decoded.push("☁️ Ceiling: CAVOK (Clear)"); if(raw.includes('BKN')) decoded.push("☁️ Clouds: Broken (Ceiling)"); if(raw.includes('OVC')) decoded.push("☁️ Clouds: Overcast (Ceiling)");
+            const temp = raw.match(/\s(M?\d{2})\/(M?\d{2})\s/); if(temp) decoded.push(`🌡️ Temp: ${temp[1]}°C / Dew: ${temp[2]}°C`);
+            const qnh = raw.match(/Q(\d{4})/); if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
+            document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
+        });
+
+        document.getElementById('exportBtn').addEventListener('click',()=>{const d={history:historyLog,favorites:favorites,mastery:mastery,scratchpad:document.getElementById('scratchpad').value,custom:customData,notes:pilotNotes},b=new Blob([JSON.stringify(d)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`pilot_data.json`;document.body.appendChild(a);a.click();});
+        document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
+        document.getElementById('fileInput').addEventListener('change',(e)=>{const r=new FileReader();r.onload=(x)=>{try{const d=JSON.parse(x.target.result);if(d.history)historyLog=d.history;if(d.favorites)favorites=d.favorites;if(d.mastery)mastery=d.mastery;if(d.custom)customData=d.custom;if(d.notes)pilotNotes=d.notes;if(d.scratchpad)document.getElementById('scratchpad').value=d.scratchpad;localStorage.setItem('pilotHistory',JSON.stringify(historyLog));localStorage.setItem('pilotFavorites',JSON.stringify(favorites));localStorage.setItem('pilotMastery',JSON.stringify(mastery));localStorage.setItem('pilotCustomDB',JSON.stringify(customData));localStorage.setItem('pilotNotes',JSON.stringify(pilotNotes));localStorage.setItem('pilotScratchpad',d.scratchpad);loadData('sofema');showToast("Restored!");}catch(z){showToast("Error");}};r.readAsText(e.target.files[0]);});
+
+        function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
+        function clean(s){return s.replace(/^"|"$/g,'').trim();}
+    </script>
 </body>
 </html>
