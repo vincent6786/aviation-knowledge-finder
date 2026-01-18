@@ -275,6 +275,26 @@
         .quiz-opt.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
         .quiz-opt.wrong { background: var(--error) !important; color: white !important; opacity: 0.5; }
 
+        /* Back to Top Button */
+        #scrollTopBtn {
+            display: none; /* Hidden by default */
+            position: fixed;
+            bottom: 90px; /* Above the FAB */
+            right: 25px;
+            z-index: 99;
+            border: none;
+            outline: none;
+            background-color: var(--history-color);
+            color: white;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #scrollTopBtn:active { transform: scale(0.9); }
+        
         /* =========================================
            7. UTILITIES
            ========================================= */
@@ -901,6 +921,19 @@
         let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
         let editingItem = null; // Stores item being edited
 
+        // Back to Top Logic
+        const scrollBtn = document.getElementById("scrollTopBtn");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollBtn.style.display = "block";
+            } else {
+                scrollBtn.style.display = "none";
+            }
+        };
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+        
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -978,50 +1011,42 @@
         setInterval(updateBackground,60000); updateBackground();
 
         /* =========================================
-           3. DATA LOADING & SEARCH
+           3. DATA LOADING (UPDATED: LOADS EVERYTHING)
            ========================================= */
         function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
         
-        function loadData(m) {
+        function loadData() {
+            // We ignore the 'm' parameter now. We load EVERYTHING.
             document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
-            let p = [];
             
-            // Logic to pick which sheets to load
-            if (m === 'faa') { p.push(fetchSheet(LINKS.faa, 'FAA')); } 
-            else if (m === 'sofema') { p.push(fetchSheet(LINKS.sofema, 'SOFEMA')); } 
-            else if (m === 'eva') { p.push(fetchSheet(LINKS.eva, 'EVA')); } 
-            else if (m === 'building') { p.push(fetchSheet(LINKS.building, 'WIP')); } 
-            else if (m === 'both') {
-                p.push(fetchSheet(LINKS.faa, 'FAA'));
-                p.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
-                p.push(fetchSheet(LINKS.eva, 'EVA'));
-                p.push(fetchSheet(LINKS.building, 'WIP'));
-            }
-
+            let p = [
+                fetchSheet(LINKS.faa, 'FAA'),
+                fetchSheet(LINKS.sofema, 'SOFEMA'),
+                fetchSheet(LINKS.eva, 'EVA'),
+                fetchSheet(LINKS.building, 'WIP')
+            ];
+        
             Promise.all(p).then(r => {
-                    let csvData = r.flat();
-                    
-                    // Mark locally stored items so we can allow deletion/editing
-                    const taggedCustom = customData.map(i => ({...i, isLocal: true}));
-                    const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
-                    
-                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
-                    allData = [...taggedCustom, ...taggedPending, ...csvData];
-                    acronymSet = new Set(allData.map(i => i.acronym));
-                    
-                    // Reset filters
-                    activeGroup = 'All'; 
-                    document.getElementById('categorySelect').value = 'All';
-                    
-                    filteredData = [...allData];
-                    
-                    // --- UPDATE UI ELEMENTS ---
-                    updateRankHUD(); 
-                    updateSyncCounts(); 
-                    
-                    if (document.getElementById('searchBox').value.length > 0) runSearch();
-                    else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
-                }).catch(e => {
+                let csvData = r.flat();
+                
+                // Mark locally stored items
+                const taggedCustom = customData.map(i => ({...i, isLocal: true}));
+                const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
+                
+                // MERGE EVERYTHING INTO MEMORY
+                allData = [...taggedCustom, ...taggedPending, ...csvData];
+                acronymSet = new Set(allData.map(i => i.acronym));
+                
+                // Reset Category Filter
+                activeGroup = 'All'; 
+                document.getElementById('categorySelect').value = 'All';
+                
+                // Update UI
+                updateRankHUD(); 
+                updateSyncCounts(); 
+                runSearch(); // This will filter the view based on the dropdown
+                
+            }).catch(e => {
                 document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
                 console.error(e);
             });
@@ -1039,7 +1064,7 @@
         window.navigateFor=function(t){const v=document.getElementById('searchBox').value;if(v)searchStack.push(v);document.getElementById('backBtn').style.display='block';document.getElementById('searchBox').value=t;document.getElementById('clearBtn').style.display='block';runSearch();playSound('click');};
         document.getElementById('backBtn').addEventListener('click',()=>{if(searchStack.length>0){document.getElementById('searchBox').value=searchStack.pop();runSearch();playSound('click');}if(searchStack.length===0)document.getElementById('backBtn').style.display='none';});
 
-        // Search Engine
+        // Search Engine (Updated to Filter by Source)
         function runSearch() {
             const res = document.getElementById('results');
             const rawTerm = document.getElementById('searchBox').value.trim();
@@ -1047,18 +1072,30 @@
             const mode = document.getElementById('searchMode').value;
             const sort = document.getElementById('sortSelect').value;
             const searchDefs = document.getElementById('defSearchToggle')?.checked || false;
-
+            
+            // NEW: Get the selected Database from the dropdown
+            const dbSource = document.getElementById('dbSource').value;
+        
             res.innerHTML = '';
+            
+            // Start with ALL data
             let tf = allData;
-
-            // 1. Filter by Group/Category
+        
+            // 0. NEW: Filter by Database Source (Visual Only)
+            if (dbSource === 'faa') tf = tf.filter(i => i.source === 'FAA');
+            else if (dbSource === 'sofema') tf = tf.filter(i => i.source === 'SOFEMA');
+            else if (dbSource === 'eva') tf = tf.filter(i => i.source === 'EVA');
+            else if (dbSource === 'building') tf = tf.filter(i => i.source === 'WIP');
+            // if 'both', we keep everything
+        
+            // 1. Filter by Category
             if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
             else if (activeGroup === 'History') tf = historyLog;
             else if (activeGroup === 'My Acronyms') tf = customData;
             else if (activeGroup !== 'All') tf = tf.filter(i => i.group === activeGroup);
-
+        
             if (exactCategoryFilter) tf = tf.filter(i => i.category === exactCategoryFilter);
-
+        
             // 2. Filter by Search Term
             if (term) tf = tf.filter(i => {
                 const a = i.acronym.toLowerCase();
@@ -1068,34 +1105,34 @@
                 if (mode === 'exact') return a === term;
                 return a.includes(term) || m.includes(term);
             });
-
-            filteredData = [...tf];
-
+        
+            filteredData = [...tf]; // Store what is currently visible
+        
             // 3. Sort
             if (sort === 'az') tf.sort((a, b) => a.acronym.localeCompare(b.acronym));
             else if (sort === 'za') tf.sort((a, b) => b.acronym.localeCompare(a.acronym));
-
-            // 4. Render Results
+        
+            // 4. Render Results (Same as before...)
             if (tf.length > 0) {
                 tf.slice(0, 50).forEach((i, idx) => {
+                    // ... (Your existing render logic here remains the same) ...
+                    // Just copy the render loop from your previous code
+                    // ensuring you use the 'isLocalItem' check we added in V41
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
-                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
                     const isLocalItem = i.isLocal === true;
-                    
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
-
+        
                     const c = document.createElement('div');
                     c.className = `card ${isPriority ? 'priority-high' : ''}`;
                     c.style.animationDelay = `${idx * 0.05}s`;
                     
                     let dm = i.meaning;
                     if (term && (mode === 'contains' || searchDefs)) {
-                         dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                            dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
                     }
                     
-                    // See Also
                     let seeAlsoHTML = '';
                     const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
                     if (related.length > 0) {
@@ -1104,11 +1141,9 @@
                                 ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
                             </div>`;
                     }
-
-                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
+        
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
-                        // Pass parameters safely to edit function
                         actionBtn = `
                             <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
                             <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
@@ -1117,7 +1152,7 @@
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-
+        
                     c.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
@@ -1128,13 +1163,11 @@
                                 </div>
                             </div>
                             <div class="meaning">${autoLink(dm)}</div>
-                            
                             <div class="conf-bar">
                                 <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 1)" title="No Idea"></div>
                                 <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 2)" title="Vague"></div>
                                 <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 3)" title="Got it!"></div>
                             </div>
-
                             ${seeAlsoHTML}
                             ${noteHTML}
                         </div>
@@ -1153,14 +1186,9 @@
                     res.appendChild(c);
                 });
             } else {
-                if (rawTerm) {
-                    res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;"><a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send">🌐 Search Google</a></div>`;
-                } else {
-                    res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
-                }
+                res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
             }
         }
-
         /* =========================================
            MULTI-DATABASE SYNC FUNCTION
            ========================================= */
@@ -1371,7 +1399,11 @@
         window.filterByFamily = function(groupName) { activeGroup = groupName; document.getElementById('categorySelect').value = groupName; document.getElementById('searchBox').value = ''; runSearch(); showToast(`Showing ${groupName} Family`); };
 
         // Search Box Logic
-        document.getElementById('dbSource').addEventListener('change',(e)=>loadData(e.target.value));
+        // On dropdown change, just filter the existing data, don't re-fetch
+        document.getElementById('dbSource').addEventListener('change', () => {
+            runSearch();
+            updateRankHUD();
+        });
         document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
         document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
         document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
@@ -1786,7 +1818,7 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
-        
+        <button id="scrollTopBtn" title="Go to top">⬆️</button>
     </script>
 </body>
 </html>
