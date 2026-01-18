@@ -716,6 +716,37 @@
         </div>
     </div>
 
+    <div id="encycloModalOverlay" class="modal-overlay"></div>
+    <div id="encycloModal" class="modal" style="max-width: 500px; max-height: 85vh; overflow-y: auto;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+            <div>
+                <span id="encSource" class="source-tag" style="font-size:0.6em; margin-bottom:5px; display:inline-block;">FAA</span>
+                <h2 id="encAcronym" style="margin:0; color:var(--accent); font-size:2em;">PAPI</h2>
+                <div id="encCategory" style="font-size:0.8em; opacity:0.6; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">OPERATIONS</div>
+            </div>
+            <button id="closeEncyBtn" class="icon-btn" style="font-size:1.5em; padding:0;">✕</button>
+        </div>
+    
+        <div id="encMeaning" style="font-size:1.2em; font-weight:500; margin-bottom:20px; line-height:1.5; border-left:4px solid var(--accent); padding-left:15px;">
+            Precision Approach Path Indicator
+        </div>
+    
+        <div id="encImageContainer" style="margin-bottom:20px; display:none;">
+            <img id="encImage" src="" style="width:100%; border-radius:12px; border:1px solid rgba(150,150,150,0.2); box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+        </div>
+    
+        <div id="encContextContainer" style="display:none; background:rgba(150,150,150,0.1); padding:15px; border-radius:12px;">
+            <div style="font-weight:bold; font-size:0.8em; opacity:0.7; margin-bottom:5px; text-transform:uppercase;">💡 Did You Know?</div>
+            <div id="encContext" style="font-size:0.95em; line-height:1.6; opacity:0.9;">
+                </div>
+        </div>
+    
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button id="encGoogleBtn" class="modal-btn" style="flex:1; border:1px solid rgba(150,150,150,0.3);">🌐 Google It</button>
+        </div>
+    </div>
+    
     <div id="addModalOverlay" class="modal-overlay"></div>
     <div id="addModal" class="modal">
         <h3>Add New Acronym</h3>
@@ -1043,9 +1074,67 @@
             });
         }
 
-        // CSV Parser
-        function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
-        function clean(s){return s.replace(/^"|"$/g,'').trim();}
+        /* =========================================
+           ROBUST CSV PARSER (Fixes Empty Column Shift)
+           ========================================= */
+        function parseCSV(text) {
+            const result = [];
+            const lines = text.split(/\r?\n/);
+            
+            // Start at i=1 to skip the Header Row
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue; // Skip completely empty lines
+                
+                const row = [];
+                let currentVal = '';
+                let inQuote = false;
+                
+                // Character-by-character parsing to handle commas inside quotes AND empty fields
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    const nextChar = line[j + 1];
+                    
+                    if (char === '"') {
+                        if (inQuote && nextChar === '"') {
+                            currentVal += '"'; // Handle escaped quotes ("")
+                            j++; 
+                        } else {
+                            inQuote = !inQuote; // Toggle quote state
+                        }
+                    } else if (char === ',' && !inQuote) {
+                        row.push(currentVal.trim()); // End of cell, push to row
+                        currentVal = ''; // Reset for next cell
+                    } else {
+                        currentVal += char;
+                    }
+                }
+                row.push(currentVal.trim()); // Push the final cell
+                
+                // Map to your 5 columns (Safety check: ensure row has data)
+                if (row.length >= 2) {
+                    result.push({
+                        acronym: clean(row[0] || ""),         // Col A
+                        meaning: clean(row[1] || ""),         // Col B
+                        // If Col C is empty, default to "General" so it doesn't break
+                        category: clean(row[2]) || "General", // Col C
+                        image: clean(row[3] || ""),           // Col D
+                        context: clean(row[4] || "")          // Col E
+                    });
+                }
+            }
+            return result;
+        }
+        
+        // Helper to clean quotes from the final string
+        function clean(s) {
+            if (!s) return "";
+            // Remove wrapping quotes if they exist
+            if (s.startsWith('"') && s.endsWith('"')) {
+                return s.slice(1, -1).trim();
+            }
+            return s.trim();
+        }
         
         // Group Categorization
         function getGroup(r){if(!r)return"Other";const c=r.toString();for(const[n,g]of Object.entries(GROUP_CONFIG)){if(['All','Favorites','History','My Acronyms','Other'].includes(n))continue;for(const k of g.keywords)if(c.includes(k))return n;}return"Other";}
@@ -1106,35 +1195,53 @@
                 tf.slice(0, 50).forEach((i, idx) => {
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
-                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
                     const isLocalItem = i.isLocal === true;
-                    
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
-
+                
+                    // 1. CHECK FOR EXTRA INFO (Encyclopedia Data)
+                    // Ensure we don't treat a short accident string as a valid image URL
+                    const hasImage = i.image && i.image.length > 10 && (i.image.startsWith('http') || i.image.startsWith('www'));
+                    const hasContext = i.context && i.context.length > 2;
+                    const hasExtra = hasImage || hasContext;
+                
+                    // Create Badge HTML
+                    let infoBadge = '';
+                    if (hasImage) infoBadge += ' 📷'; // Camera icon if image exists
+                    if (hasContext) infoBadge += ' 📖'; // Book icon if notes exist
+                
                     const c = document.createElement('div');
                     c.className = `card ${isPriority ? 'priority-high' : ''}`;
                     c.style.animationDelay = `${idx * 0.05}s`;
                     
-                    let dm = i.meaning;
-                    if (term && (mode === 'contains' || searchDefs)) {
-                         dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    // Make the WHOLE card clickable to open details, but we handle button clicks separately
+                    if (hasExtra) {
+                        c.style.cursor = "pointer";
+                        c.onclick = (e) => {
+                            // Prevent opening if they clicked a button or the confidence dots
+                            if (e.target.closest('.action-btn') || e.target.closest('.conf-dot')) return;
+                            openEncyclopediaModal(i.acronym);
+                        };
                     }
                     
-                    // See Also
+                    let dm = i.meaning;
+                    if (term && (mode === 'contains' || searchDefs)) {
+                            dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    }
+                    
+                    // See Also Logic
                     let seeAlsoHTML = '';
                     const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
                     if (related.length > 0) {
                         seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
                                 <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
-                                ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
+                                ${related.map(r => `<span class="term-link" onclick="event.stopPropagation(); navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
                             </div>`;
                     }
-
-                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
+                
+                    // Action Buttons
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
-                        // Pass parameters safely to edit function
                         actionBtn = `
                             <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
                             <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
@@ -1143,39 +1250,52 @@
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-
+                
+                    // HTML Structure
                     c.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
                                 <span class="acronym-badge">${i.acronym}</span>
                                 <div class="meta-tags">
                                     <span class="source-tag ${i.source}">${i.source}</span>
-                                    <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                    <span class="category-tag" onclick="event.stopPropagation(); filterByRawCategory('${i.category}')">${i.category}</span>
                                 </div>
                             </div>
-                            <div class="meaning">${autoLink(dm)}</div>
+                            
+                            <div class="meaning">
+                                ${autoLink(dm)}
+                                ${hasExtra ? `<div style="margin-top:5px; font-size:0.75em; color:var(--accent); font-weight:bold; border:1px solid var(--accent); display:inline-block; padding:2px 6px; border-radius:10px;">Tap for Details ${infoBadge}</div>` : ''}
+                            </div>
                             
                             <div class="conf-bar">
-                                <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 1)" title="No Idea"></div>
-                                <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 2)" title="Vague"></div>
-                                <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 3)" title="Got it!"></div>
+                                <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 1)" title="No Idea"></div>
+                                <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 2)" title="Vague"></div>
+                                <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 3)" title="Got it!"></div>
                             </div>
-
+                
                             ${seeAlsoHTML}
                             ${noteHTML}
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn" onclick="togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
-                            <button class="action-btn star ${isFav ? 'active' : ''}">⭐</button>
-                            <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button>
-                            <button class="action-btn speak">🔊</button>
-                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                            <button class="action-btn" onclick="event.stopPropagation(); togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
+                            <button class="action-btn star ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${i.acronym}')">⭐</button>
+                            <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="event.stopPropagation(); openNoteModal('${i.acronym}')">📝</button>
+                            <button class="action-btn speak" onclick="event.stopPropagation(); speakText('${i.meaning.replace(/'/g, "\\'")}')">🔊</button>
+                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn" onclick="event.stopPropagation();">🌐</a>
                             ${actionBtn}
                         </div>`;
                     
-                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
-                    c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
-                    c.querySelector('.speak').addEventListener('click', () => { speakText(i.meaning); addToHistory(i); });
+                    // Attach Listeners
+                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', (e) => { e.stopPropagation(); openReportModal(i); });
+                    
+                    // Button listeners are already inline (onclick="...") but we used toggleFavorite('${i.acronym}') instead of passing the object 'i' 
+                    // to make the HTML string cleaner. 
+                    // IMPORTANT: Ensure toggleFavorite accepts a string now, OR switch back to adding listeners manually like below:
+                    
+                    // Manual listener approach (Safe for objects):
+                    const starBtn = c.querySelector('.star');
+                    starBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(i); }; // Uses the 'i' object from the loop directly
+                
                     res.appendChild(c);
                 });
             } else {
@@ -1385,6 +1505,69 @@
             }
         };
 
+        /* =========================================
+           ENCYCLOPEDIA MODAL LOGIC (Updated Search)
+           ========================================= */
+        function openEncyclopediaModal(acronymTarget) {
+            // 1. Get ALL matches for this acronym (Local AND Cloud)
+            const candidates = allData.filter(i => i.acronym === acronymTarget);
+            
+            if (candidates.length === 0) return;
+        
+            // 2. INTELLIGENT SELECTION:
+            // Look for the version that actually has an image or notes.
+            const item = candidates.find(i => (i.image && i.image.length > 5) || (i.context && i.context.length > 2)) || candidates[0];
+        
+            // 3. Populate Basic Text
+            document.getElementById('encAcronym').innerText = item.acronym;
+            document.getElementById('encMeaning').innerHTML = autoLink(item.meaning);
+            document.getElementById('encCategory').innerText = item.category;
+            document.getElementById('encSource').innerText = item.source;
+            document.getElementById('encSource').className = `source-tag ${item.source}`;
+        
+            // 4. Image Logic
+            const imgContainer = document.getElementById('encImageContainer');
+            const imgEl = document.getElementById('encImage');
+            
+            if (item.image && item.image.length > 5) {
+                imgEl.src = item.image;       
+                imgContainer.style.display = 'block'; 
+            } else {
+                imgContainer.style.display = 'none'; 
+            }
+        
+            // 5. Context/Notes Logic
+            const ctxContainer = document.getElementById('encContextContainer');
+            const ctxEl = document.getElementById('encContext');
+            
+            if (item.context && item.context.length > 2) {
+                ctxEl.innerHTML = autoLink(item.context);
+                ctxContainer.style.display = 'block';     
+            } else {
+                ctxContainer.style.display = 'none';      
+            }
+        
+            // 6. Setup Google Button (UPDATED HERE)
+            document.getElementById('encGoogleBtn').onclick = () => {
+                // Search query: aviation term "ACRONYM"
+                window.open(`https://www.google.com/search?q=aviation+term+"${encodeURIComponent(item.acronym)}"`, '_blank');
+            };
+        
+            // 7. Show Modal
+            document.getElementById('encycloModalOverlay').style.display = 'block';
+            document.getElementById('encycloModal').style.display = 'block';
+        }
+        
+        // Close Logic for Encyclopedia
+        document.getElementById('closeEncyBtn').addEventListener('click', () => {
+            document.getElementById('encycloModalOverlay').style.display = 'none';
+            document.getElementById('encycloModal').style.display = 'none';
+        });
+        document.getElementById('encycloModalOverlay').addEventListener('click', () => {
+            document.getElementById('encycloModalOverlay').style.display = 'none';
+            document.getElementById('encycloModal').style.display = 'none';
+        });
+        
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
@@ -1406,9 +1589,8 @@
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
-        
         /* =========================================
-           UPDATED RANK HUD
+           UPDATED RANK HUD (Fixes Count Issue)
            ========================================= */
         function updateRankHUD() {
             const source = document.getElementById('dbSource').value;
@@ -1417,22 +1599,41 @@
             const progressFill = document.getElementById('rankProgress');
             const rankPct = document.getElementById('rankPct');
         
-            // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
+            // 1. Map dropdown values to Data Tags
+            // Dropdown values: 'eva', 'building', 'faa', 'sofema', 'both'
+            // Data tags: 'EVA', 'WIP', 'FAA', 'SOFEMA'
+            let targetTag = null;
+            if (source === 'eva') targetTag = 'EVA';
+            else if (source === 'building') targetTag = 'WIP';
+            else if (source === 'faa') targetTag = 'FAA';
+            else if (source === 'sofema') targetTag = 'SOFEMA';
+        
+            // 2. DICTIONARY MODE (Hide stats for reference libraries)
             if (source === 'faa' || source === 'sofema' || source === 'both') {
                 rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
                 rankBadge.style.color = "var(--text)";
-                masteryContainer.style.display = 'none'; // Hide progress bar
+                masteryContainer.style.display = 'none'; 
                 return; 
             }
         
-            // 2. STUDY MODE (EVA, USER)
+            // 3. STUDY MODE (Calculate specific stats)
             masteryContainer.style.display = 'flex'; 
             rankBadge.style.color = "var(--accent)"; 
         
-            const totalInView = allData.length;
-            const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
+            // Filter data to count ONLY what is currently selected
+            let relevantData = allData;
+            if (targetTag) {
+                relevantData = allData.filter(i => i.source === targetTag);
+            }
+        
+            const totalInView = relevantData.length;
+            
+            // Count mastered items specifically within this subset
+            const masteredInView = relevantData.filter(i => (mastery[i.acronym] || 0) === 3).length;
+            
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
+            // Rank Logic
             let r = "Student Pilot";
             if (masteredInView > 200) r = "👨‍✈️ Captain";
             else if (masteredInView > 100) r = "First Officer";
