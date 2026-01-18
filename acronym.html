@@ -325,6 +325,45 @@
         .as-value { font-weight: 600; color: var(--text); }
         .as-req-table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 0.85em; }
         .as-req-table td { padding: 6px; border-bottom: 1px solid rgba(150,150,150,0.1); }
+        /* =========================================
+           SHARED QRH ITEM STYLES (Memory & V-Speeds)
+           ========================================= */
+        .qrh-section-title {
+            background: rgba(150,150,150,0.1);
+            padding: 8px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mem-item { 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid rgba(150,150,150,0.1); 
+            padding-bottom: 8px; 
+        }
+        .mem-title { 
+            color: var(--accent); 
+            font-weight: 800; 
+            font-size: 1.2em; 
+            margin-right: 8px;
+        }
+        .mem-ctx { 
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--text);
+        }
+        .mem-body { 
+            margin-top: 4px; 
+            font-size: 0.85em; 
+            line-height: 1.4; 
+            opacity: 0.8;
+        }
+        
     </style>
 </head>
 <body class="bg-day">
@@ -525,6 +564,7 @@
         <div class="fab-items">
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
             <button class="fab-mini" onclick="startExam()" data-label="Exam Mode">📝</button>
+            <button class="fab-mini" onclick="openLogbook()" data-label="Pilot Logbook">📊</button>
             <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
@@ -539,34 +579,48 @@
     <div id="helpModal" class="modal">
         <h3>Flight Manual 📘</h3>
         <div class="help-content">
-            <h4>🔍 Search & Study</h4>
+            
+            <div style="background:var(--note-bg); color:var(--note-text); padding:10px; border-radius:8px; margin-bottom:15px; border-left:4px solid var(--accent);">
+                <h4 style="margin-top:0; margin-bottom:5px;">👋 Captain's Welcome</h4>
+                <p style="margin:0; font-size:0.9em;">
+                    Hi, I'm <strong>Vincent</strong>! <br>
+                    I built this tool to help us study smarter for ground school. Whether you are finding acronyms, memorizing V-Speeds or decoding METARs, I hope this helps you ace your study & exams. 
+                    <br><br>
+                    <em>Fly safe and study hard! ✈️</em>
+                </p>
+            </div>
+    
+            <h4>📚 Smart Encyclopedia</h4>
             <ul>
-                <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
-                <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
-                <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
-                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
+                <li><strong>Tap for Details:</strong> Cards with a 📷 or 📖 badge have hidden info. <strong>Tap the card</strong> to open the full Encyclopedia view with images, mnemonics, and context notes.</li>
+                <li><strong>Global Search:</strong> The search bar checks <em>all</em> databases. Use the top dropdown to filter by source (e.g., EVA vs FAA).</li>
+                <li><strong>Confidence Rating:</strong> Rate items (🔴🟡🟢) to track your mastery.</li>
             </ul>
-
-            <h4>🎓 Exam Mode (New!)</h4>
+    
+            <h4>📊 Logbook & Stats</h4>
             <ul>
-                <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
-                <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
-                <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
-                <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
+                <li><strong>Track Progress:</strong> Tap the 📊 button in the menu to see your "Knowledge Status."</li>
+                <li><strong>Smart Filters:</strong> You can filter your stats to show only your "EVA" progress or your personal "User" collection.</li>
+                <li><strong>Weakness Detector:</strong> The logbook automatically identifies which Category (e.g., Weather) is your weakest link.</li>
             </ul>
-
+    
+            <h4>🎓 Exam Mode</h4>
+            <ul>
+                <li><strong>Independent Decks:</strong> You can now select <em>any</em> database inside the Exam menu, regardless of your home screen view.</li>
+                <li><strong>Scoring:</strong> Your exam history is saved locally. Aim for an 'S' Grade (90%+).</li>
+            </ul>
+    
             <h4>👜 Flight Bag Tools</h4>
             <ul>
-                <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
-                <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
-                <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
+                <li><strong>QRH:</strong> Updated V-Speeds (Performance/Limitations), Light Signals, and Airspace visualizers.</li>
+                <li><strong>Calculators:</strong> Fuel (Lbs/Gal), Temp (C/F), and Pressure (InHg/hPa).</li>
             </ul>
-
-            <h4>⚙️ Admin & Data Sync</h4>
+    
+            <h4>⚙️ Admin & Sync (5-Column)</h4>
             <ul>
-                <li><strong>Admin Mode:</strong> Unlock in Settings with password to add items to public databases.</li>
-                <li><strong>Sync Queue:</strong> Items added under Admin Mode are saved to a local queue. Use <strong>Copy for EVA/WIP</strong> in Settings to paste them into your Google Sheets.</li>
-                <li><strong>Edit/Delete:</strong> You can now edit/delete any local item (Private or Pending) using the ✏️ and 🗑️ buttons.</li>
+                <li><strong>New Structure:</strong> The system now supports 5 columns: <em>Acronym, Meaning, Category, Image Link, Context</em>.</li>
+                <li><strong>Sync Queue:</strong> Items added in Admin Mode go to the "Sync Queue." Click <strong>Copy for EVA</strong> to get the formatted text, then paste it directly into your Google Sheet.</li>
+                <li><strong>Editing:</strong> Tap the ✏️ button on any local item to fix typos or add images.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
@@ -679,24 +733,80 @@
             </table>
         </div>
 
-        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
-            <table class="qrh-table">
-                <tr><th>Speed</th><th>Description</th></tr>
-                <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
-                <tr><td>Vso</td><td>Stall Speed (Landing Config)</td></tr>
-                <tr><td>Vr</td><td>Rotation Speed</td></tr>
-                <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
-                <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
-                <tr><td>Va</td><td>Maneuvering Speed</td></tr>
-                <tr><td>Vno</td><td>Max Structural Cruise</td></tr>
-                <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
-                <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
-                <tr><td>Vlo</td><td>Max Landing Gear Ops</td></tr>
-                <tr><td>Vle</td><td>Max Landing Gear Ext</td></tr>
-                <tr><td>Vmc</td><td>Min Controllable (Multi)</td></tr>
-                <tr><td>Vyse</td><td>Best Rate Single Engine</td></tr>
-                <tr><td>Vref</td><td>Ref Landing Speed</td></tr>
-            </table>
+        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto; padding-right:5px;">
+            
+            <div class="qrh-section-title">🚀 Performance</div>
+            
+            <div class="mem-item">
+                <span class="mem-title">Vr</span><span class="mem-ctx">Rotation Speed</span>
+                <div class="mem-body">The speed to pull back on the stick. Must not be less than Vs1 to prevent stall.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vx</span><span class="mem-ctx">Best Angle of Climb</span>
+                <div class="mem-body">Greatest altitude in shortest <b>distance</b>. Use for short fields/obstacles.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vy</span><span class="mem-ctx">Best Rate of Climb</span>
+                <div class="mem-body">Greatest altitude in shortest <b>time</b>. Standard post-takeoff climb speed.</div>
+            </div>
+        
+            <div class="qrh-section-title">⚠️ Limitations</div>
+        
+            <div class="mem-item">
+                <span class="mem-title">Va</span><span class="mem-ctx">Maneuvering Speed</span>
+                <div class="mem-body">Max speed for full control deflection. Protects structure from breaking before stalling. Decreases as weight decreases.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vfe</span><span class="mem-ctx">Max Flaps Extended</span>
+                <div class="mem-body">Top of the <b>White Arc</b>. Exceeding may damage flaps.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vlo</span><span class="mem-ctx">Gear Operation</span>
+                <div class="mem-body">Max speed to cycle the gear (Extend/Retract).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vle</span><span class="mem-ctx">Gear Extended</span>
+                <div class="mem-body">Max speed to fly with gear already down.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:var(--error)">Vne</span><span class="mem-ctx">Never Exceed</span>
+                <div class="mem-body"><b>Red Line</b>. Structural failure probable beyond this point.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:#f1c40f">Vno</span><span class="mem-ctx">Max Structural Cruise</span>
+                <div class="mem-body">Top of <b>Green Arc</b>. Only fly above this in smooth air (Yellow Arc).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vs</span><span class="mem-ctx">Stall Speed</span>
+                <div class="mem-body">Bottom of Green Arc. Wing exceeds critical angle of attack.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vs0</span><span class="mem-ctx">Stall (Landing)</span>
+                <div class="mem-body">Bottom of <b>White Arc</b>. Stall speed in landing configuration (dirty).</div>
+            </div>
+        
+            <div class="qrh-section-title">👮 Regulatory / Multi</div>
+        
+            <div class="mem-item">
+                <span class="mem-title">V1</span><span class="mem-ctx">Decision Speed</span>
+                <div class="mem-body">Go/No-Go speed. Below V1 = Abort. Above V1 = Continue (even with failure).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">V2</span><span class="mem-ctx">Takeoff Safety Speed</span>
+                <div class="mem-body">Target speed to reach by 35ft AGL after engine failure.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:var(--error)">Vmc</span><span class="mem-ctx">Min Control Speed</span>
+                <div class="mem-body"><b>Red Radial Line</b>. Minimum speed to maintain directional control with critical engine out.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vref</span><span class="mem-ctx">Reference Landing</span>
+                <div class="mem-body">Target speed for final approach (usually 1.3 x Vs0).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vso</span><span class="mem-ctx">Stall (Landing Config)</span>
+                <div class="mem-body">Stalling speed or minimum steady flight speed in the landing configuration.</div>
+            </div>
         </div>
 
         <div class="modal-buttons" style="margin-top:15px;">
@@ -761,14 +871,21 @@
         </div>
     
         <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
-        <textarea id="newMeaning" placeholder="Definition..."></textarea>
-        <select id="newCategory">
+        
+        <textarea id="newMeaning" placeholder="Definition..." style="height:80px; margin-bottom:10px;"></textarea>
+        
+        <select id="newCategory" style="margin-bottom:10px;">
             <option value="General">General</option>
             <option value="Operations">Operations</option>
             <option value="Weather">Weather</option>
             <option value="Systems">Systems</option>
             <option value="Regulations">Regulations</option>
         </select>
+    
+        <input type="text" id="newImage" placeholder="Image URL (Optional)" autocomplete="off" style="font-size:0.9em; margin-bottom:10px;">
+    
+        <textarea id="newContext" placeholder="Context / Notes / Did you know? (Optional)" style="height:60px;"></textarea>
+    
         <div class="modal-buttons">
             <button id="cancelAddBtn" class="modal-btn cancel">Cancel</button>
             <button id="saveAcronymBtn" class="modal-btn send">Save</button>
@@ -837,6 +954,54 @@
         </div>
     </div>
 
+    <div id="statsModalOverlay" class="modal-overlay"></div>
+    <div id="statsModal" class="modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">👨‍✈️ Logbook</h3>
+            
+            <select id="logbookSource" style="width:auto; padding:4px 8px; font-size:0.85em; background:rgba(0,0,0,0.05); border:none; font-weight:bold; color:var(--accent);">
+                <option value="All">📊 All Study Data</option>
+                <option value="EVA">✈️ EVA Cadet</option>
+                <option value="WIP">🏗️ Still Building</option>
+                <option value="USER">👤 My Acronyms</option>
+            </select>
+        </div>
+        
+        <div style="background:rgba(0,0,0,0.05); padding:15px; border-radius:12px; margin-bottom:15px;">
+            <div style="font-size:0.8em; font-weight:bold; opacity:0.7; margin-bottom:10px; text-transform:uppercase;">Knowledge Status</div>
+            
+            <div style="display:flex; height:20px; border-radius:10px; overflow:hidden; margin-bottom:10px;">
+                <div id="statBarGreen" style="background:var(--success); width:0%"></div>
+                <div id="statBarYellow" style="background:#f1c40f; width:0%"></div>
+                <div id="statBarRed" style="background:var(--error); width:0%"></div>
+                <div id="statBarGray" style="background:rgba(150,150,150,0.3); width:100%"></div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:0.85em; font-weight:bold;">
+                <span style="color:var(--success)">🟢 <span id="valGreen">0</span> Mastered</span>
+                <span style="color:var(--error)">🔴 <span id="valRed">0</span> Weak</span>
+            </div>
+        </div>
+    
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                <div style="font-size:2em;">🔥</div>
+                <div style="font-size:0.7em; opacity:0.7; font-weight:bold;">WEAKEST LINK</div>
+                <div id="statWeakestCat" style="font-weight:800; color:var(--text); font-size:0.9em; margin-top:2px;">-</div>
+            </div>
+            <div style="flex:1; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                <div style="font-size:2em;">🎓</div>
+                <div style="font-size:0.7em; opacity:0.7; font-weight:bold;">EXAM AVG</div>
+                <div id="statAvgScore" style="font-weight:800; color:var(--text); font-size:0.9em; margin-top:2px;">-</div>
+            </div>
+        </div>
+    
+        <div style="font-size:0.8em; font-weight:bold; opacity:0.7; margin-bottom:5px; text-transform:uppercase;">Flight Record (Last 5 Exams)</div>
+        <div id="statHistoryList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;"></div>
+    
+        <button id="closeStatsBtn" class="modal-btn send full">Close Logbook</button>
+    </div>
+    
     <div id="debriefOverlay" class="modal-overlay"></div>
     <div id="debriefModal" class="modal" style="max-height:80vh; overflow-y:auto;">
             <h3>Flight Debriefing</h3>
@@ -1243,8 +1408,8 @@
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
                         actionBtn = `
-                            <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
-                            <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
+                            <button class="action-btn edit" onclick="event.stopPropagation(); startEdit('${i.acronym}')">✏️</button>
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
                         `;
                     }
                     
@@ -1308,25 +1473,24 @@
         }
 
         /* =========================================
-           MULTI-DATABASE SYNC FUNCTION
+           MULTI-DATABASE SYNC FUNCTION (Updated for 5 Cols)
            ========================================= */
         window.copyPendingBySource = function(sourceType) {
-            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
             const toSync = pendingData.filter(i => i.source === sourceType);
             
-            // 2. Safety Check: If no items exist for this database
             if (toSync.length === 0) {
                 showToast(`No pending items found for ${sourceType}`);
                 return;
             }
             
-            // 3. Format the data for Google Sheets
-            // We use '\t' (Tab) so that when you paste, it fills columns automatically
-            let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
+            // UPDATED: Now maps 5 columns separated by Tabs (\t)
+            // Acronym | Meaning | Category | Image | Context
+            let csvContent = toSync.map(i => 
+                `${i.acronym}\t${i.meaning}\t${i.category}\t${i.image || ''}\t${i.context || ''}`
+            ).join('\n');
             
-            // 4. Execute Clipboard Copy
             navigator.clipboard.writeText(csvContent).then(() => {
-                showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
+                showToast(`📋 Copied ${toSync.length} items (5-Column)`);
                 playSound('success');
             }).catch(err => {
                 console.error('Failed to copy: ', err);
@@ -1376,47 +1540,67 @@
         });
         document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
         document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
-
-        // Add/Delete/Report/Speak
-        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
-        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
-        document.getElementById('cancelAddBtn').addEventListener('click',()=>{
+        /* =========================================
+           UI HELPERS (Reset Form)
+           ========================================= */
+        function resetAddModal() {
+            // 1. Hide Modal
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
-            // Reset Edit State on Cancel
+            
+            // 2. Clear All 5 Fields
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+            document.getElementById('newImage').value = '';   // Clear Image
+            document.getElementById('newContext').value = ''; // Clear Context
+            
+            // 3. Reset Edit State
             editingItem = null;
             document.querySelector('#addModal h3').innerText = "Add New Acronym";
             document.getElementById('saveAcronymBtn').innerText = "Save";
-            document.getElementById('newAcronym').value = '';
-            document.getElementById('newMeaning').value = '';
-        });
+        }
+        // Add/Delete/Report/Speak
+        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
+        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        document.getElementById('cancelAddBtn').addEventListener('click', resetAddModal);
         
-        // 3. Updated Save Logic (Handles Edit + Add + Sync)
+        // 3. Updated Save Logic (5 Columns)
         document.getElementById('saveAcronymBtn').addEventListener('click', () => {
             const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             
-            // Check if dropdown is visible OR Admin Mode is ON
+            // NEW FIELDS
+            const img = document.getElementById('newImage').value.trim();
+            const ctx = document.getElementById('newContext').value.trim();
+            
+            // Admin Target Logic
             const targetDiv = document.getElementById('adminTargetSelect');
             const isDropdownVisible = targetDiv.style.display !== 'none';
-
             let target = 'USER';
             if (isAdminMode || isDropdownVisible) {
                 target = document.getElementById('newTarget').value; 
             }
-
-            if (!acr || !mean) { showToast("Fill all fields"); return; }
-
-            // --- EDIT MODE LOGIC START ---
+        
+            if (!acr || !mean) { showToast("Acronym & Meaning required"); return; }
+        
+            // Edit Mode: Remove old item
             if (editingItem) {
-                // If editing, remove old version first
                 removeItemFromDB(editingItem);
             }
-            // --- EDIT MODE LOGIC END ---
-
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat), isLocal: true };
-
+        
+            // Create New Object with 5 Properties
+            const newItem = { 
+                acronym: acr, 
+                meaning: mean, 
+                category: cat, 
+                image: img,     // New
+                context: ctx,   // New
+                source: target, 
+                group: getGroup(cat), 
+                isLocal: true 
+            };
+        
             if (target === 'USER') {
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
@@ -1424,32 +1608,21 @@
             } else {
                 pendingData.unshift(newItem); 
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(editingItem ? `Updated in Queue (${target})` : `Added to Queue (${target})`);
+                showToast(editingItem ? `Updated Queue (${target})` : `Added to Queue (${target})`);
             }
-
-            // Reload Data Cleanly
-            if (editingItem) {
-                // If edited, reload everything to purge old data
-                loadData();
-            } else {
-                // Fast path for new adds
+        
+            // Refresh UI
+            if (editingItem) { loadData(); } 
+            else {
                 allData.unshift(newItem); 
                 acronymSet.add(newItem.acronym);
                 runSearch(); 
                 updateRankHUD();
                 updateSyncCounts();
             }
-
-            // Close and Reset
-            document.getElementById('addModalOverlay').style.display = 'none';
-            document.getElementById('addModal').style.display = 'none';
-            document.getElementById('newAcronym').value = '';
-            document.getElementById('newMeaning').value = '';
-            
-            // Reset Edit State
-            editingItem = null;
-            document.querySelector('#addModal h3').innerText = "Add New Acronym";
-            document.getElementById('saveAcronymBtn').innerText = "Save";
+        
+            // Reset Form
+            resetAddModal();
         });
 
         // 4. Helper: Silently remove item (For Edit/Delete)
@@ -1476,27 +1649,39 @@
             showToast("Item Deleted");
         };
 
-        // 6. Edit Logic (Opens Modal with Pre-fill)
-        window.startEdit = function(acronym, meaning, category, source) {
-            editingItem = { acronym, meaning, category, source };
-
+        // 6. Updated Edit Logic (Supports 5 Columns)
+        window.startEdit = function(acronymTarget) {
+            // Find the local item we want to edit
+            // We check 'i.isLocal' to make sure we don't try to edit a cloud item directly
+            const item = allData.find(i => i.acronym === acronymTarget && i.isLocal);
+            
+            if (!item) { showToast("Error: Item not found"); return; }
+        
+            editingItem = item; // Save reference so we know we are editing
+        
+            // Show Modal
             document.getElementById('addModalOverlay').style.display = 'block';
             document.getElementById('addModal').style.display = 'block';
             
-            document.getElementById('newAcronym').value = acronym;
-            document.getElementById('newMeaning').value = meaning;
-            document.getElementById('newCategory').value = category;
+            // PRE-FILL ALL 5 FIELDS
+            document.getElementById('newAcronym').value = item.acronym;
+            document.getElementById('newMeaning').value = item.meaning;
+            document.getElementById('newCategory').value = item.category;
+            document.getElementById('newImage').value = item.image || '';     // Fill Image URL
+            document.getElementById('newContext').value = item.context || ''; // Fill Context
             
+            // Handle Source Selector (EVA vs WIP vs USER)
             const targetSelect = document.getElementById('newTarget');
             const targetDiv = document.getElementById('adminTargetSelect');
             
             document.querySelector('#addModal h3').innerText = "Edit Acronym";
             document.getElementById('saveAcronymBtn').innerText = "Update";
-
+        
+            // If Admin Mode is active, show the selector and set it to the item's current source
             if (isAdminMode) {
                 targetDiv.style.display = 'block';
-                if (['USER', 'EVA', 'WIP'].includes(source)) {
-                    targetSelect.value = source;
+                if (['USER', 'EVA', 'WIP'].includes(item.source)) {
+                    targetSelect.value = item.source;
                 } else {
                     targetSelect.value = 'EVA';
                 }
@@ -1504,7 +1689,6 @@
                 targetDiv.style.display = 'none';
             }
         };
-
         /* =========================================
            ENCYCLOPEDIA MODAL LOGIC (Updated Search)
            ========================================= */
@@ -1833,6 +2017,110 @@
             tfc.classList.toggle('flipped'); 
             playSound('click'); 
         });
+
+        /* =========================================
+           PILOT LOGBOOK (Filterable Stats)
+           ========================================= */
+        function openLogbook() {
+            // 1. Get Selected Source
+            const sourceFilter = document.getElementById('logbookSource').value;
+            
+            // 2. Determine which data to count
+            let targetData = [];
+            
+            if (sourceFilter === 'All') {
+                // Count everything EXCEPT the big reference dictionaries (FAA/SOFEMA)
+                targetData = allData.filter(i => ['EVA', 'WIP', 'USER'].includes(i.source));
+            } else {
+                // Count only the specific source selected
+                targetData = allData.filter(i => i.source === sourceFilter);
+            }
+        
+            // 3. Calculate Stats
+            let counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
+            let categoryWeakness = {}; 
+            
+            targetData.forEach(item => {
+                const level = mastery[item.acronym] || 0;
+                counts[level]++;
+                
+                // Track weakness (Level 1 = Red)
+                if (level === 1) {
+                    categoryWeakness[item.category] = (categoryWeakness[item.category] || 0) + 1;
+                }
+            });
+        
+            const total = targetData.length || 1; // Avoid divide by zero
+        
+            // 4. Update UI Bars
+            document.getElementById('statBarGreen').style.width = (counts[3] / total * 100) + "%";
+            document.getElementById('statBarYellow').style.width = (counts[2] / total * 100) + "%";
+            document.getElementById('statBarRed').style.width = (counts[1] / total * 100) + "%";
+            document.getElementById('statBarGray').style.width = (counts[0] / total * 100) + "%";
+            
+            // Update Text Counts
+            document.getElementById('valGreen').innerText = `${counts[3]}/${total}`;
+            document.getElementById('valRed').innerText = counts[1];
+        
+            // 5. Find Weakest Category
+            let weakestCat = "None";
+            let maxRed = 0;
+            for (const [cat, count] of Object.entries(categoryWeakness)) {
+                if (count > maxRed) {
+                    maxRed = count;
+                    weakestCat = cat;
+                }
+            }
+            document.getElementById('statWeakestCat').innerText = weakestCat;
+        
+            // 6. Exam History (Global)
+            const hist = JSON.parse(localStorage.getItem('examHistory') || '[]');
+            const listEl = document.getElementById('statHistoryList');
+            listEl.innerHTML = "";
+            
+            if (hist.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; opacity:0.5; font-size:0.9em;">No exams taken yet.</div>`;
+                document.getElementById('statAvgScore').innerText = "N/A";
+            } else {
+                let totalScore = 0;
+                hist.slice(0, 5).forEach(exam => {
+                    totalScore += exam.score;
+                    const date = new Date(exam.date).toLocaleDateString();
+                    let color = 'var(--text)';
+                    if (exam.grade === 'A') color = 'var(--success)';
+                    if (exam.grade === 'F') color = 'var(--error)';
+        
+                    listEl.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; align-items:center;">
+                            <div style="font-weight:bold; color:${color}; font-size:1.1em; width:30px;">${exam.grade}</div>
+                            <div style="flex:1; text-align:right; font-size:0.85em; opacity:0.7;">${date}</div>
+                            <div style="width:50px; text-align:right; font-weight:bold;">${exam.score}%</div>
+                        </div>`;
+                });
+                const avg = Math.round(totalScore / hist.length);
+                document.getElementById('statAvgScore').innerText = avg + "%";
+            }
+        
+            // 7. Show Modal (Only if not already open/re-rendering)
+            const modal = document.getElementById('statsModalOverlay');
+            if(modal.style.display !== 'block') {
+                modal.style.display = 'block';
+                document.getElementById('statsModal').style.display = 'block';
+            }
+        }
+        
+        // Event Listeners for Logbook
+        document.getElementById('logbookSource').addEventListener('change', openLogbook); // Re-calculate when dropdown changes
+        
+        document.getElementById('closeStatsBtn').addEventListener('click', () => {
+            document.getElementById('statsModalOverlay').style.display = 'none';
+            document.getElementById('statsModal').style.display = 'none';
+        });
+        document.getElementById('statsModalOverlay').addEventListener('click', () => {
+            document.getElementById('statsModalOverlay').style.display = 'none';
+            document.getElementById('statsModal').style.display = 'none';
+        });
+        
         /* --- ADVANCED QUIZ ENGINE --- */
         const quizOverlay = document.getElementById('quizOverlay');
         const quizSetup = document.getElementById('quizSetup');
