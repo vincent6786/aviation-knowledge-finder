@@ -777,9 +777,19 @@
         </div>
         
         <div id="adminControls" style="display:none; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
-            <p style="font-size:0.8em; margin:0 0 10px 0;">New entries waiting for Google Sheets:</p>
-            <button id="copyPendingBtn" class="modal-btn send full" style="background:var(--source-sof);">📋 Copy Pending CSV</button>
-            <button id="clearPendingBtn" class="modal-btn" style="width:100%; border:1px solid var(--error); color:var(--error); font-size:0.8em;">🗑️ Clear Pending Queue</button>
+            <p style="font-size:0.8em; font-weight:bold; margin-bottom:10px; color:var(--error);">📦 SYNC QUEUE</p>
+            
+            <button onclick="copyPendingBySource('EVA')" class="modal-btn send full" style="background:#00a86b; font-size:0.85em;">
+                📋 Copy for EVA CADET
+            </button>
+            
+            <button onclick="copyPendingBySource('WIP')" class="modal-btn send full" style="background:#7f8c8d; font-size:0.85em;">
+                📋 Copy for STILL BUILDING
+            </button>
+        
+            <button id="clearPendingBtn" class="modal-btn" style="width:100%; border:1px solid var(--error); color:var(--error); font-size:0.75em; margin-top:10px;">
+                🗑️ Clear All Pending
+            </button>
         </div>
     
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
@@ -1153,6 +1163,33 @@
             }
         }
 
+        /* =========================================
+           MULTI-DATABASE SYNC FUNCTION
+           ========================================= */
+        window.copyPendingBySource = function(sourceType) {
+            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
+            const toSync = pendingData.filter(i => i.source === sourceType);
+            
+            // 2. Safety Check: If no items exist for this database
+            if (toSync.length === 0) {
+                showToast(`No pending items found for ${sourceType}`);
+                return;
+            }
+            
+            // 3. Format the data for Google Sheets
+            // We use '\t' (Tab) so that when you paste, it fills columns automatically
+            let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
+            
+            // 4. Execute Clipboard Copy
+            navigator.clipboard.writeText(csvContent).then(() => {
+                showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
+                playSound('success');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast("Error: Could not access clipboard");
+            });
+        };
+        
         /* =========================================
            4. UI INTERACTIONS & TOOLS
            ========================================= */
@@ -1609,36 +1646,48 @@
             }
         });
         
-        // 3. Save Logic (Handles USER vs PENDING)
+        // 3. Save Logic (Handles USER vs MULTIPLE PENDING DATABASES)
         document.getElementById('saveAcronymBtn').addEventListener('click', () => {
             const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             
-            // Determine Target
+            // Default to USER, but check if Admin changed the target
             let target = 'USER';
             if (isAdminMode) {
-                target = document.getElementById('newTarget').value;
+                target = document.getElementById('newTarget').value; // EVA or WIP
             }
         
-            if (!acr || !mean) { showToast("Fill all fields"); return; }
+            if (!acr || !mean) { 
+                showToast("Fill all fields"); 
+                return; 
+            }
         
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat) };
+            // Create the data object with the correct source tag
+            const newItem = { 
+                acronym: acr, 
+                meaning: mean, 
+                category: cat, 
+                source: target, 
+                group: getGroup(cat) 
+            };
         
             if (target === 'USER') {
-                // Normal User Add
+                // Normal Private User Add
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                showToast("Saved to My Acronyms");
+                showToast("Saved to My Acronyms (Private)");
             } else {
-                // Admin Add (EVA or WIP)
+                // Admin Add: This keeps EVA and WIP separate in the pending queue
                 pendingData.unshift(newItem);
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(`Saved to Pending (${target})`);
+                showToast(`Stored in ${target} Sync Queue`);
             }
         
-            loadData(document.getElementById('dbSource').value); // Refresh View
+            // Refresh the data display immediately
+            loadData(document.getElementById('dbSource').value); 
             
+            // Close modal and reset fields
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
             document.getElementById('newAcronym').value = '';
@@ -1661,11 +1710,17 @@
         
         // 5. Clear Pending Queue
         document.getElementById('clearPendingBtn').addEventListener('click', () => {
-            if (confirm("Are you sure you pasted these into Google Sheets? This will clear them from the local device.")) {
+            if (pendingData.length === 0) {
+                showToast("Queue is already empty");
+                return;
+            }
+        
+            if (confirm("⚠️ Clear Sync Queue? Only do this after you have pasted your data into BOTH Google Sheets (EVA & Still Building).")) {
                 pendingData = [];
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                loadData(document.getElementById('dbSource').value);
-                showToast("Queue Cleared");
+                loadData(document.getElementById('dbSource').value); // Refresh results
+                showToast("Sync Queue Cleared");
+                playSound('click');
             }
         });
         
