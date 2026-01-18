@@ -456,7 +456,8 @@
     <div class="controls" id="controls">
         <div class="hud-container">
             <div class="rank-badge" id="rankBadge">👨‍✈️ Student Pilot</div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            
+            <div style="display:flex; align-items:center; gap:8px;" id="masteryContainer">
                 <span>Mastery:</span>
                 <div class="progress-bar"><div class="progress-fill" id="rankProgress"></div></div>
                 <span id="rankPct">0%</span>
@@ -1196,7 +1197,51 @@
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
-        function updateRankHUD(){const t=Object.keys(mastery).length;let r="Student Pilot",p=Math.min(100,Math.round((t/allData.length)*100));if(t>200)r="👨‍✈️ Captain";else if(t>100)r="First Officer";else if(t>50)r="Commercial";else if(t>10)r="Private Pilot";document.getElementById('rankBadge').innerText=r;document.getElementById('rankProgress').style.width=`${p}%`;document.getElementById('rankPct').innerText=`${t} Mastered`;}
+        /* =========================================
+           UPDATED RANK HUD (CONTEXT AWARE)
+           ========================================= */
+        function updateRankHUD() {
+            const source = document.getElementById('dbSource').value;
+            const rankBadge = document.getElementById('rankBadge');
+            const masteryContainer = document.getElementById('masteryContainer');
+            const progressFill = document.getElementById('rankProgress');
+            const rankPct = document.getElementById('rankPct');
+        
+            // 1. DICTIONARY MODE (FAA / SOFEMA)
+            // We hide the gamification elements here because these are just dictionaries.
+            if (source === 'faa' || source === 'sofema') {
+                rankBadge.innerText = "✈️ Aviation Acronym Dictionary";
+                rankBadge.style.color = "var(--text)"; // Neutral color
+                masteryContainer.style.display = 'none'; // Hide progress bar
+                return; 
+            }
+            // 2. STUDY MODE (EVA, BUILDING, BOTH, USER)
+            // We show mastery calculated SPECIFICALLY for the loaded dataset.
+            masteryContainer.style.display = 'flex'; // Show progress bar
+            rankBadge.style.color = "var(--accent)"; // Restore accent color
+        
+            // Calculate stats based on CURRENTLY LOADED data only
+            const totalInView = allData.length;
+            
+            // Count items in the current view that are fully mastered (Level 3 - Green)
+            // We check (mastery[i.acronym] === 3) to ensure we only count "Green" items
+            const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
+        
+            let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
+        
+            // Dynamic Rank Title
+            let r = "Student Pilot";
+            if (masteredInView > 200) r = "👨‍✈️ Captain";
+            else if (masteredInView > 100) r = "First Officer";
+            else if (masteredInView > 50) r = "Commercial";
+            else if (masteredInView > 10) r = "Private Pilot";
+        
+            rankBadge.innerText = r;
+            progressFill.style.width = `${p}%`;
+            
+            // Show count so you know how many you've mastered in THIS specific database
+            rankPct.innerText = `${p}% (${masteredInView}/${totalInView})`;
+        }
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
         function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
         
