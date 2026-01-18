@@ -892,9 +892,10 @@
 
     <script>
         // --- ADMIN CONFIG ---
-        const ADMIN_PASSWORD = "VincentEVA"; // <--- CHANGE THIS PASSWORD
+        const ADMIN_PASSWORD = "VincentEVA"; 
         let isAdminMode = false;
         let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
+        let editingOriginalAcronym = null; // <--- ADD THIS (Tracks the item being edited)
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -1093,9 +1094,18 @@
                             </div>`;
                     }
 
-                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
-                    if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    // Check if this specific item is in our Pending Queue
+                    const isPending = pendingData.some(p => p.acronym === i.acronym);
                     
+                    let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
+                    
+                    // If it is a PRIVATE User item OR a PENDING Admin item, show Edit/Delete controls
+                    if (isUser || isPending) {
+                        actionBtn = `
+                            <button class="action-btn edit" onclick="openEditModal('${i.acronym}')" style="font-size:1.1em;">✏️</button>
+                            <button class="action-btn delete" onclick="deleteItem('${i.acronym}')">🗑️</button>
+                        `;
+                    }
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
 
@@ -1214,59 +1224,86 @@
 
         // Add/Delete/Report/Speak
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
-        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        // 2. Open Add Modal (Ensuring Clean State)
+        document.getElementById('addAcronymBtn').addEventListener('click', () => {
+            // RESET STATE
+            editingOriginalAcronym = null; 
+            document.querySelector('#addModal h3').innerText = "Add New Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Save";
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+        
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+            
+            // Show/Hide Target Selector
+            const targetDiv = document.getElementById('adminTargetSelect');
+            if (isAdminMode) {
+                targetDiv.style.display = 'block';
+                document.getElementById('newTarget').value = 'EVA'; 
+            } else {
+                targetDiv.style.display = 'none';
+            }
+        });
         document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
-        // 3. Updated Save Logic (Robust Check)
+        // 3. Save Logic (Handles Add AND Edit)
         document.getElementById('saveAcronymBtn').addEventListener('click', () => {
             const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             
-            // --- FIX STARTS HERE ---
-            // Check if the dropdown is visible on screen
+            // --- DETERMINE TARGET ---
             const targetDiv = document.getElementById('adminTargetSelect');
             const isDropdownVisible = targetDiv.style.display !== 'none';
-        
             let target = 'USER';
             
-            // If Admin Mode is ON OR the dropdown is visible, use the selected value
             if (isAdminMode || isDropdownVisible) {
                 target = document.getElementById('newTarget').value; 
             }
-            // --- FIX ENDS HERE ---
         
-            if (!acr || !mean) { 
-                showToast("Fill all fields"); 
-                return; 
+            if (!acr || !mean) { showToast("Fill all fields"); return; }
+        
+            // --- HANDLE EDIT MODE (The Swap) ---
+            // If we are editing, first DELETE the original from everywhere
+            if (editingOriginalAcronym) {
+                customData = customData.filter(i => i.acronym !== editingOriginalAcronym);
+                pendingData = pendingData.filter(i => i.acronym !== editingOriginalAcronym);
+                // (We don't save to localStorage yet, we wait for the add step below)
             }
         
-            const newItem = { 
-                acronym: acr, 
-                meaning: mean, 
-                category: cat, 
-                source: target, 
-                group: getGroup(cat) 
-            };
+            // --- CREATE & SAVE NEW ITEM ---
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat) };
         
             if (target === 'USER') {
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                showToast("Saved to Private (User)");
+                showToast(editingOriginalAcronym ? "Updated (Private)" : "Saved (Private)");
             } else {
                 pendingData.unshift(newItem); 
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(`Saved to Sync Queue (${target})`);
+                showToast(editingOriginalAcronym ? `Moved to ${target} Queue` : `Added to ${target} Queue`);
             }
         
-            // Refresh Data
+            // --- CLEANUP ---
+            // Update live memory immediately
+            if (editingOriginalAcronym) {
+                // If editing, remove old from live view to prevent duplicates before reload
+                allData = allData.filter(i => i.acronym !== editingOriginalAcronym);
+            }
             allData.unshift(newItem); 
             acronymSet.add(newItem.acronym);
             
+            // Reset Edit Mode
+            editingOriginalAcronym = null;
+            document.querySelector('#addModal h3').innerText = "Add New Acronym"; // Reset Title
+            document.getElementById('saveAcronymBtn').innerText = "Save"; // Reset Button Text
+        
+            // Refresh UI
             runSearch(); 
             updateRankHUD();
-            updateSyncCounts(); // Update the settings badges immediately
+            updateSyncCounts();
         
-            // Close and Reset
+            // Close Modal
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
             document.getElementById('newAcronym').value = '';
@@ -1745,6 +1782,64 @@
             }
         });
 
+        /* =========================================
+           EDIT & DELETE LOGIC
+           ========================================= */
+        
+        // 1. Open the Modal in "Edit Mode"
+        window.openEditModal = function(acronym) {
+            // Find the item in either Custom or Pending lists
+            const item = customData.find(i => i.acronym === acronym) || pendingData.find(i => i.acronym === acronym);
+            
+            if (!item) return;
+        
+            // Fill the fields
+            document.getElementById('newAcronym').value = item.acronym;
+            document.getElementById('newMeaning').value = item.meaning;
+            document.getElementById('newCategory').value = item.category;
+            
+            // Handle the Target Database Dropdown
+            const targetDiv = document.getElementById('adminTargetSelect');
+            const targetSelect = document.getElementById('newTarget');
+            
+            // If Admin, OR if editing an item that already has a special target (EVA/WIP), show the dropdown
+            if (isAdminMode || item.source === 'EVA' || item.source === 'WIP') {
+                targetDiv.style.display = 'block';
+                targetSelect.value = item.source === 'USER' ? 'USER' : item.source;
+            } else {
+                targetDiv.style.display = 'none';
+                targetSelect.value = 'USER';
+            }
+        
+            // Set Global State tracking
+            editingOriginalAcronym = acronym; // We are now in "Edit Mode"
+            
+            // Visual cue (Change title to 'Edit')
+            document.querySelector('#addModal h3').innerText = `Edit: ${acronym}`;
+            document.getElementById('saveAcronymBtn').innerText = "Update & Save";
+        
+            // Show Modal
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+        };
+        
+        // 2. Smarter Delete (Checks both lists)
+        window.deleteItem = function(acronym) {
+            if(!confirm(`Delete '${acronym}' permanently?`)) return;
+        
+            // Remove from Private List
+            customData = customData.filter(i => i.acronym !== acronym);
+            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+        
+            // Remove from Pending Sync List
+            pendingData = pendingData.filter(i => i.acronym !== acronym);
+            localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+        
+            // Refresh
+            loadData(document.getElementById('dbSource').value);
+            showToast("Item Deleted");
+        };
+                
         /* =========================================
            UI UPDATE HELPERS
            ========================================= */
