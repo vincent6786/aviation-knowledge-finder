@@ -1485,9 +1485,8 @@
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
-        
         /* =========================================
-           UPDATED RANK HUD
+           UPDATED RANK HUD (Fixes Count Issue)
            ========================================= */
         function updateRankHUD() {
             const source = document.getElementById('dbSource').value;
@@ -1496,22 +1495,41 @@
             const progressFill = document.getElementById('rankProgress');
             const rankPct = document.getElementById('rankPct');
         
-            // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
+            // 1. Map dropdown values to Data Tags
+            // Dropdown values: 'eva', 'building', 'faa', 'sofema', 'both'
+            // Data tags: 'EVA', 'WIP', 'FAA', 'SOFEMA'
+            let targetTag = null;
+            if (source === 'eva') targetTag = 'EVA';
+            else if (source === 'building') targetTag = 'WIP';
+            else if (source === 'faa') targetTag = 'FAA';
+            else if (source === 'sofema') targetTag = 'SOFEMA';
+        
+            // 2. DICTIONARY MODE (Hide stats for reference libraries)
             if (source === 'faa' || source === 'sofema' || source === 'both') {
                 rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
                 rankBadge.style.color = "var(--text)";
-                masteryContainer.style.display = 'none'; // Hide progress bar
+                masteryContainer.style.display = 'none'; 
                 return; 
             }
         
-            // 2. STUDY MODE (EVA, USER)
+            // 3. STUDY MODE (Calculate specific stats)
             masteryContainer.style.display = 'flex'; 
             rankBadge.style.color = "var(--accent)"; 
         
-            const totalInView = allData.length;
-            const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
+            // Filter data to count ONLY what is currently selected
+            let relevantData = allData;
+            if (targetTag) {
+                relevantData = allData.filter(i => i.source === targetTag);
+            }
+        
+            const totalInView = relevantData.length;
+            
+            // Count mastered items specifically within this subset
+            const masteredInView = relevantData.filter(i => (mastery[i.acronym] || 0) === 3).length;
+            
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
+            // Rank Logic
             let r = "Student Pilot";
             if (masteredInView > 200) r = "👨‍✈️ Captain";
             else if (masteredInView > 100) r = "First Officer";
