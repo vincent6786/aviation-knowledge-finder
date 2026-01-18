@@ -206,23 +206,37 @@
 
         /* Back to Top Button */
         #scrollTopBtn {
-            display: none; 
+            /* Position */
             position: fixed;
-            bottom: 90px;
-            right: 25px;
-            z-index: 99;
-            border: none;
-            outline: none;
-            background-color: var(--history-color);
+            bottom: 30px; 
+            left: 20px; /* Left side as requested */
+            z-index: 3000;
+            
+            /* Appearance */
+            background-color: var(--accent);
             color: white;
-            cursor: pointer;
-            padding: 12px;
+            border: none;
             border-radius: 50%;
-            font-size: 1.2em;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: opacity 0.3s, transform 0.3s;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            
+            /* Animation State (Hidden by default) */
+            opacity: 0; 
+            visibility: hidden;
+            transition: opacity 0.3s ease, transform 0.2s ease;
         }
-        #scrollTopBtn:active { transform: scale(0.9); }
+        
+        #scrollTopBtn.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #scrollTopBtn:active {
+            transform: scale(0.9);
+        }
 
         /* =========================================
            5. MODALS
@@ -529,9 +543,11 @@
         </div>
     </div>
 
-    <button id="scrollTopBtn" title="Go to top">⬆️</button>
 
     <div id="toast">Message</div>
+    <button id="scrollTopBtn" title="Go to top">🔝</button>
+
+    <script>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
     <div id="helpModal" class="modal">
@@ -1735,17 +1751,30 @@
             showDebrief();
         }
 
-        // Back to Top Logic
+        /* =========================================
+           SMART BACK TO TOP (Show on Stop)
+           ========================================= */
         const scrollBtn = document.getElementById("scrollTopBtn");
-        window.onscroll = function() {
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                scrollBtn.style.display = "block";
-            } else {
-                scrollBtn.style.display = "none";
-            }
-        };
+        let isScrolling;
+        
+        window.addEventListener('scroll', () => {
+            // 1. Hide while scrolling
+            scrollBtn.classList.remove("visible");
+        
+            // 2. Clear the timeout so it doesn't trigger while you're still moving
+            window.clearTimeout(isScrolling);
+        
+            // 3. Set a timeout to run after scrolling stops
+            isScrolling = setTimeout(() => {
+                // Only show if we are more than 300px down the page
+                if (window.scrollY > 300) {
+                    scrollBtn.classList.add("visible");
+                }
+            }, 500); // 500ms delay (wait half a second after stopping)
+        });
+        
         scrollBtn.addEventListener('click', () => {
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         /* =========================================
@@ -1821,6 +1850,27 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
+
+        /* =========================================
+           BACK TO TOP LOGIC
+           ========================================= */
+        const scrollBtn = document.getElementById("scrollTopBtn");
+        
+        window.addEventListener('scroll', () => {
+            // Check vertical scroll amount
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                scrollBtn.style.display = "block";
+            } else {
+                scrollBtn.style.display = "none";
+            }
+        });
+        
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0, 
+                behavior: 'smooth' 
+            });
+        });
         
     </script>
 </body>
