@@ -325,6 +325,45 @@
         .as-value { font-weight: 600; color: var(--text); }
         .as-req-table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 0.85em; }
         .as-req-table td { padding: 6px; border-bottom: 1px solid rgba(150,150,150,0.1); }
+        /* =========================================
+           SHARED QRH ITEM STYLES (Memory & V-Speeds)
+           ========================================= */
+        .qrh-section-title {
+            background: rgba(150,150,150,0.1);
+            padding: 8px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mem-item { 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid rgba(150,150,150,0.1); 
+            padding-bottom: 8px; 
+        }
+        .mem-title { 
+            color: var(--accent); 
+            font-weight: 800; 
+            font-size: 1.2em; 
+            margin-right: 8px;
+        }
+        .mem-ctx { 
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--text);
+        }
+        .mem-body { 
+            margin-top: 4px; 
+            font-size: 0.85em; 
+            line-height: 1.4; 
+            opacity: 0.8;
+        }
+        
     </style>
 </head>
 <body class="bg-day">
@@ -679,24 +718,80 @@
             </table>
         </div>
 
-        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto;">
-            <table class="qrh-table">
-                <tr><th>Speed</th><th>Description</th></tr>
-                <tr><td>Vs</td><td>Stall Speed (Clean)</td></tr>
-                <tr><td>Vso</td><td>Stall Speed (Landing Config)</td></tr>
-                <tr><td>Vr</td><td>Rotation Speed</td></tr>
-                <tr><td>Vx</td><td>Best Angle of Climb</td></tr>
-                <tr><td>Vy</td><td>Best Rate of Climb</td></tr>
-                <tr><td>Va</td><td>Maneuvering Speed</td></tr>
-                <tr><td>Vno</td><td>Max Structural Cruise</td></tr>
-                <tr><td>Vne</td><td>Never Exceed Speed</td></tr>
-                <tr><td>Vfe</td><td>Max Flaps Extended</td></tr>
-                <tr><td>Vlo</td><td>Max Landing Gear Ops</td></tr>
-                <tr><td>Vle</td><td>Max Landing Gear Ext</td></tr>
-                <tr><td>Vmc</td><td>Min Controllable (Multi)</td></tr>
-                <tr><td>Vyse</td><td>Best Rate Single Engine</td></tr>
-                <tr><td>Vref</td><td>Ref Landing Speed</td></tr>
-            </table>
+        <div id="qrh-vspeed" style="display:none; max-height:300px; overflow-y:auto; padding-right:5px;">
+            
+            <div class="qrh-section-title">🚀 Performance</div>
+            
+            <div class="mem-item">
+                <span class="mem-title">Vr</span><span class="mem-ctx">Rotation Speed</span>
+                <div class="mem-body">The speed to pull back on the stick. Must not be less than Vs1 to prevent stall.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vx</span><span class="mem-ctx">Best Angle of Climb</span>
+                <div class="mem-body">Greatest altitude in shortest <b>distance</b>. Use for short fields/obstacles.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vy</span><span class="mem-ctx">Best Rate of Climb</span>
+                <div class="mem-body">Greatest altitude in shortest <b>time</b>. Standard post-takeoff climb speed.</div>
+            </div>
+        
+            <div class="qrh-section-title">⚠️ Limitations</div>
+        
+            <div class="mem-item">
+                <span class="mem-title">Va</span><span class="mem-ctx">Maneuvering Speed</span>
+                <div class="mem-body">Max speed for full control deflection. Protects structure from breaking before stalling. Decreases as weight decreases.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vfe</span><span class="mem-ctx">Max Flaps Extended</span>
+                <div class="mem-body">Top of the <b>White Arc</b>. Exceeding may damage flaps.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vlo</span><span class="mem-ctx">Gear Operation</span>
+                <div class="mem-body">Max speed to cycle the gear (Extend/Retract).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vle</span><span class="mem-ctx">Gear Extended</span>
+                <div class="mem-body">Max speed to fly with gear already down.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:var(--error)">Vne</span><span class="mem-ctx">Never Exceed</span>
+                <div class="mem-body"><b>Red Line</b>. Structural failure probable beyond this point.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:#f1c40f">Vno</span><span class="mem-ctx">Max Structural Cruise</span>
+                <div class="mem-body">Top of <b>Green Arc</b>. Only fly above this in smooth air (Yellow Arc).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vs</span><span class="mem-ctx">Stall Speed</span>
+                <div class="mem-body">Bottom of Green Arc. Wing exceeds critical angle of attack.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vs0</span><span class="mem-ctx">Stall (Landing)</span>
+                <div class="mem-body">Bottom of <b>White Arc</b>. Stall speed in landing configuration (dirty).</div>
+            </div>
+        
+            <div class="qrh-section-title">👮 Regulatory / Multi</div>
+        
+            <div class="mem-item">
+                <span class="mem-title">V1</span><span class="mem-ctx">Decision Speed</span>
+                <div class="mem-body">Go/No-Go speed. Below V1 = Abort. Above V1 = Continue (even with failure).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">V2</span><span class="mem-ctx">Takeoff Safety Speed</span>
+                <div class="mem-body">Target speed to reach by 35ft AGL after engine failure.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title" style="color:var(--error)">Vmc</span><span class="mem-ctx">Min Control Speed</span>
+                <div class="mem-body"><b>Red Radial Line</b>. Minimum speed to maintain directional control with critical engine out.</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vref</span><span class="mem-ctx">Reference Landing</span>
+                <div class="mem-body">Target speed for final approach (usually 1.3 x Vs0).</div>
+            </div>
+            <div class="mem-item">
+                <span class="mem-title">Vso</span><span class="mem-ctx">Stall (Landing Config)</span>
+                <div class="mem-body">Stalling speed or minimum steady flight speed in the landing configuration.</div>
+            </div>
         </div>
 
         <div class="modal-buttons" style="margin-top:15px;">
