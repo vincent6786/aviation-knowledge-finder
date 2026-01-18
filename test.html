@@ -717,6 +717,16 @@
     <div id="addModalOverlay" class="modal-overlay"></div>
     <div id="addModal" class="modal">
         <h3>Add New Acronym</h3>
+        
+        <div id="adminTargetSelect" style="display:none; margin-bottom:10px;">
+            <label style="font-size:0.75em; font-weight:bold; color:var(--error);">TARGET DATABASE:</label>
+            <select id="newTarget" style="margin-bottom:5px; border-color:var(--error);">
+                <option value="USER">👤 Local User (Private)</option>
+                <option value="EVA">✈️ EVA Cadet (Public)</option>
+                <option value="WIP">🏗️ Building (Public)</option>
+            </select>
+        </div>
+    
         <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
         <textarea id="newMeaning" placeholder="Definition..."></textarea>
         <select id="newCategory">
@@ -745,6 +755,7 @@
     <div id="settingsOverlay" class="modal-overlay"></div>
     <div id="settingsModal" class="modal">
         <h3>System Settings</h3>
+        
         <div class="toggle-row">
             <span>Weather Background</span>
             <select id="weatherSelect" style="width:auto; padding:4px;">
@@ -759,10 +770,23 @@
             <span>Sound Effects (SFX)</span>
             <label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label>
         </div>
+    
+        <div class="toggle-row" style="border-top:1px solid rgba(150,150,150,0.2); padding-top:15px; margin-top:15px;">
+            <span style="font-weight:bold; color:var(--error);">👨‍💻 Admin Mode</span>
+            <label class="switch"><input type="checkbox" id="toggleAdmin"><span class="slider"></span></label>
+        </div>
+        
+        <div id="adminControls" style="display:none; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
+            <p style="font-size:0.8em; margin:0 0 10px 0;">New entries waiting for Google Sheets:</p>
+            <button id="copyPendingBtn" class="modal-btn send full" style="background:var(--source-sof);">📋 Copy Pending CSV</button>
+            <button id="clearPendingBtn" class="modal-btn" style="width:100%; border:1px solid var(--error); color:var(--error); font-size:0.8em;">🗑️ Clear Pending Queue</button>
+        </div>
+    
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
+        
         <div style="margin-top:15px; text-align:right;">
             <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
@@ -881,6 +905,10 @@
         </div>
 
     <script>
+        // --- ADMIN CONFIG ---
+        const ADMIN_PASSWORD = "VincentEVA"; // <--- CHANGE THIS PASSWORD
+        let isAdminMode = false;
+        let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -979,20 +1007,21 @@
             }
 
             Promise.all(p).then(r => {
-                let csvData = r.flat();
-                allData = [...customData, ...csvData];
-                acronymSet = new Set(allData.map(i => i.acronym));
-                
-                // Reset filters
-                activeGroup = 'All'; 
-                document.getElementById('categorySelect').value = 'All';
-                
-                filteredData = [...allData];
-                updateRankHUD();
-                
-                if (document.getElementById('searchBox').value.length > 0) runSearch();
-                else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
-            }).catch(e => {
+                    let csvData = r.flat();
+                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
+                    allData = [...customData, ...pendingData, ...csvData];
+                    acronymSet = new Set(allData.map(i => i.acronym));
+                    
+                    // Reset filters
+                    activeGroup = 'All'; 
+                    document.getElementById('categorySelect').value = 'All';
+                    
+                    filteredData = [...allData];
+                    updateRankHUD(); // Your new HUD logic handles this automatically
+                    
+                    if (document.getElementById('searchBox').value.length > 0) runSearch();
+                    else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+                }).catch(e => {
                 document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
                 console.error(e);
             });
@@ -1537,6 +1566,109 @@
             sessionStats = { total: quizSession.limit, correct: quizSession.score, missedItems: quizSession.missed }; // Reuse debrief logic
             showDebrief();
         }
+
+        /* =========================================
+           ADMIN & SYNC LOGIC
+           ========================================= */
+        
+        // 1. Admin Toggle Logic
+        document.getElementById('toggleAdmin').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                // User is trying to turn ON
+                const input = prompt("Enter Admin Password:");
+                if (input === ADMIN_PASSWORD) {
+                    isAdminMode = true;
+                    document.getElementById('adminControls').style.display = 'block';
+                    showToast("🔓 Admin Mode Unlocked");
+                } else {
+                    e.target.checked = false; // Reset switch
+                    isAdminMode = false;
+                    document.getElementById('adminControls').style.display = 'none';
+                    alert("Access Denied");
+                }
+            } else {
+                // User turning OFF
+                isAdminMode = false;
+                document.getElementById('adminControls').style.display = 'none';
+                showToast("🔒 Admin Mode Locked");
+            }
+        });
+        
+        // 2. Open Add Modal (Check for Admin)
+        document.getElementById('addAcronymBtn').addEventListener('click', () => {
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+            
+            // Show/Hide Target Selector based on Admin Status
+            const targetDiv = document.getElementById('adminTargetSelect');
+            if (isAdminMode) {
+                targetDiv.style.display = 'block';
+                document.getElementById('newTarget').value = 'EVA'; // Default to EVA for efficiency
+            } else {
+                targetDiv.style.display = 'none';
+            }
+        });
+        
+        // 3. Save Logic (Handles USER vs PENDING)
+        document.getElementById('saveAcronymBtn').addEventListener('click', () => {
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
+            const mean = document.getElementById('newMeaning').value.trim();
+            const cat = document.getElementById('newCategory').value;
+            
+            // Determine Target
+            let target = 'USER';
+            if (isAdminMode) {
+                target = document.getElementById('newTarget').value;
+            }
+        
+            if (!acr || !mean) { showToast("Fill all fields"); return; }
+        
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat) };
+        
+            if (target === 'USER') {
+                // Normal User Add
+                customData.unshift(newItem);
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                showToast("Saved to My Acronyms");
+            } else {
+                // Admin Add (EVA or WIP)
+                pendingData.unshift(newItem);
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                showToast(`Saved to Pending (${target})`);
+            }
+        
+            loadData(document.getElementById('dbSource').value); // Refresh View
+            
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+        });
+        
+        // 4. Copy Pending to Clipboard (Format for Google Sheets)
+        document.getElementById('copyPendingBtn').addEventListener('click', () => {
+            if (pendingData.length === 0) { showToast("No pending items"); return; }
+            
+            // Create CSV Format: Acronym, Meaning, Category
+            let csvContent = pendingData.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
+            
+            navigator.clipboard.writeText(csvContent).then(() => {
+                showToast("📋 Copied! Paste into Google Sheets");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        });
+        
+        // 5. Clear Pending Queue
+        document.getElementById('clearPendingBtn').addEventListener('click', () => {
+            if (confirm("Are you sure you pasted these into Google Sheets? This will clear them from the local device.")) {
+                pendingData = [];
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                loadData(document.getElementById('dbSource').value);
+                showToast("Queue Cleared");
+            }
+        });
+        
     </script>
 </body>
 </html>
