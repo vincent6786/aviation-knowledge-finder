@@ -1074,9 +1074,9 @@
             });
         }
 
-        // ---------------------------------------------------------
-        // IMPROVED CSV PARSER (Handles empty columns & commas inside quotes)
-        // ---------------------------------------------------------
+        /* =========================================
+           ROBUST CSV PARSER (Fixes Empty Column Shift)
+           ========================================= */
         function parseCSV(text) {
             const result = [];
             const lines = text.split(/\r?\n/);
@@ -1084,50 +1084,52 @@
             // Start at i=1 to skip the Header Row
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i];
-                if (!line.trim()) continue; // Skip empty lines
+                if (!line.trim()) continue; // Skip completely empty lines
                 
                 const row = [];
                 let currentVal = '';
                 let inQuote = false;
                 
-                // Character-by-character parsing to handle commas safely
+                // Character-by-character parsing to handle commas inside quotes AND empty fields
                 for (let j = 0; j < line.length; j++) {
                     const char = line[j];
                     const nextChar = line[j + 1];
                     
                     if (char === '"') {
                         if (inQuote && nextChar === '"') {
-                            currentVal += '"'; // Handle escaped quotes
+                            currentVal += '"'; // Handle escaped quotes ("")
                             j++; 
                         } else {
                             inQuote = !inQuote; // Toggle quote state
                         }
                     } else if (char === ',' && !inQuote) {
-                        row.push(currentVal.trim()); // End of cell
-                        currentVal = '';
+                        row.push(currentVal.trim()); // End of cell, push to row
+                        currentVal = ''; // Reset for next cell
                     } else {
                         currentVal += char;
                     }
                 }
                 row.push(currentVal.trim()); // Push the final cell
                 
-                // Map to your 5 columns
+                // Map to your 5 columns (Safety check: ensure row has data)
                 if (row.length >= 2) {
                     result.push({
-                        acronym: clean(row[0] || ""),      // Col A
-                        meaning: clean(row[1] || ""),      // Col B
-                        category: clean(row[2] || "General"), // Col C (Default to General if empty)
-                        image: clean(row[3] || ""),        // Col D
-                        context: clean(row[4] || "")       // Col E
+                        acronym: clean(row[0] || ""),         // Col A
+                        meaning: clean(row[1] || ""),         // Col B
+                        // If Col C is empty, default to "General" so it doesn't break
+                        category: clean(row[2]) || "General", // Col C
+                        image: clean(row[3] || ""),           // Col D
+                        context: clean(row[4] || "")          // Col E
                     });
                 }
             }
             return result;
         }
         
-        // Helper to remove surrounding quotes if they exist
+        // Helper to clean quotes from the final string
         function clean(s) {
             if (!s) return "";
+            // Remove wrapping quotes if they exist
             if (s.startsWith('"') && s.endsWith('"')) {
                 return s.slice(1, -1).trim();
             }
