@@ -204,6 +204,26 @@
         #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
         #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
 
+        /* Back to Top Button */
+        #scrollTopBtn {
+            display: none; 
+            position: fixed;
+            bottom: 90px;
+            right: 25px;
+            z-index: 99;
+            border: none;
+            outline: none;
+            background-color: var(--history-color);
+            color: white;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #scrollTopBtn:active { transform: scale(0.9); }
+
         /* =========================================
            5. MODALS
            ========================================= */
@@ -275,26 +295,6 @@
         .quiz-opt.correct { background: var(--success) !important; color: white !important; border-color: var(--success); }
         .quiz-opt.wrong { background: var(--error) !important; color: white !important; opacity: 0.5; }
 
-        /* Back to Top Button */
-        #scrollTopBtn {
-            display: none; /* Hidden by default */
-            position: fixed;
-            bottom: 90px; /* Above the FAB */
-            right: 25px;
-            z-index: 99;
-            border: none;
-            outline: none;
-            background-color: var(--history-color);
-            color: white;
-            cursor: pointer;
-            padding: 12px;
-            border-radius: 50%;
-            font-size: 1.2em;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        #scrollTopBtn:active { transform: scale(0.9); }
-        
         /* =========================================
            7. UTILITIES
            ========================================= */
@@ -528,6 +528,8 @@
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
     </div>
+
+    <button id="scrollTopBtn" title="Go to top">⬆️</button>
 
     <div id="toast">Message</div>
 
@@ -921,19 +923,6 @@
         let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
         let editingItem = null; // Stores item being edited
 
-        // Back to Top Logic
-        const scrollBtn = document.getElementById("scrollTopBtn");
-        window.onscroll = function() {
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                scrollBtn.style.display = "block";
-            } else {
-                scrollBtn.style.display = "none";
-            }
-        };
-        scrollBtn.addEventListener('click', () => {
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        });
-        
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -996,7 +985,7 @@
         document.getElementById('scratchpad').value=scratchpadText;
         document.getElementById('weatherSelect').value=settings.weather||'auto';
         document.getElementById('toggleSfx').checked=settings.sfx;
-        loadData('sofema');
+        loadData(); // Load all data immediately
 
         // Weather Background Logic
         function updateBackground() { 
@@ -1016,37 +1005,37 @@
         function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
         
         function loadData() {
-            // We ignore the 'm' parameter now. We load EVERYTHING.
             document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
             
+            // WE LOAD ALL SOURCES INTO MEMORY AT STARTUP
             let p = [
                 fetchSheet(LINKS.faa, 'FAA'),
                 fetchSheet(LINKS.sofema, 'SOFEMA'),
                 fetchSheet(LINKS.eva, 'EVA'),
                 fetchSheet(LINKS.building, 'WIP')
             ];
-        
+
             Promise.all(p).then(r => {
-                let csvData = r.flat();
-                
-                // Mark locally stored items
-                const taggedCustom = customData.map(i => ({...i, isLocal: true}));
-                const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
-                
-                // MERGE EVERYTHING INTO MEMORY
-                allData = [...taggedCustom, ...taggedPending, ...csvData];
-                acronymSet = new Set(allData.map(i => i.acronym));
-                
-                // Reset Category Filter
-                activeGroup = 'All'; 
-                document.getElementById('categorySelect').value = 'All';
-                
-                // Update UI
-                updateRankHUD(); 
-                updateSyncCounts(); 
-                runSearch(); // This will filter the view based on the dropdown
-                
-            }).catch(e => {
+                    let csvData = r.flat();
+                    
+                    // Mark locally stored items so we can allow deletion/editing
+                    const taggedCustom = customData.map(i => ({...i, isLocal: true}));
+                    const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
+                    
+                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
+                    allData = [...taggedCustom, ...taggedPending, ...csvData];
+                    acronymSet = new Set(allData.map(i => i.acronym));
+                    
+                    // Reset filters
+                    activeGroup = 'All'; 
+                    document.getElementById('categorySelect').value = 'All';
+                    
+                    // --- UPDATE UI ELEMENTS ---
+                    updateRankHUD(); 
+                    updateSyncCounts(); 
+                    runSearch(); // Filters based on current dropdown selection
+                    
+                }).catch(e => {
                 document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
                 console.error(e);
             });
@@ -1064,7 +1053,7 @@
         window.navigateFor=function(t){const v=document.getElementById('searchBox').value;if(v)searchStack.push(v);document.getElementById('backBtn').style.display='block';document.getElementById('searchBox').value=t;document.getElementById('clearBtn').style.display='block';runSearch();playSound('click');};
         document.getElementById('backBtn').addEventListener('click',()=>{if(searchStack.length>0){document.getElementById('searchBox').value=searchStack.pop();runSearch();playSound('click');}if(searchStack.length===0)document.getElementById('backBtn').style.display='none';});
 
-        // Search Engine (Updated to Filter by Source)
+        // Search Engine (UPDATED: Filters by Dropdown)
         function runSearch() {
             const res = document.getElementById('results');
             const rawTerm = document.getElementById('searchBox').value.trim();
@@ -1073,29 +1062,27 @@
             const sort = document.getElementById('sortSelect').value;
             const searchDefs = document.getElementById('defSearchToggle')?.checked || false;
             
-            // NEW: Get the selected Database from the dropdown
+            // Get selected DB Source
             const dbSource = document.getElementById('dbSource').value;
-        
+
             res.innerHTML = '';
-            
-            // Start with ALL data
             let tf = allData;
-        
-            // 0. NEW: Filter by Database Source (Visual Only)
+
+            // 0. Filter by Database (Visual Only)
             if (dbSource === 'faa') tf = tf.filter(i => i.source === 'FAA');
             else if (dbSource === 'sofema') tf = tf.filter(i => i.source === 'SOFEMA');
             else if (dbSource === 'eva') tf = tf.filter(i => i.source === 'EVA');
             else if (dbSource === 'building') tf = tf.filter(i => i.source === 'WIP');
-            // if 'both', we keep everything
-        
+            // 'both' keeps everything
+
             // 1. Filter by Category
             if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
             else if (activeGroup === 'History') tf = historyLog;
             else if (activeGroup === 'My Acronyms') tf = customData;
             else if (activeGroup !== 'All') tf = tf.filter(i => i.group === activeGroup);
-        
+
             if (exactCategoryFilter) tf = tf.filter(i => i.category === exactCategoryFilter);
-        
+
             // 2. Filter by Search Term
             if (term) tf = tf.filter(i => {
                 const a = i.acronym.toLowerCase();
@@ -1105,34 +1092,34 @@
                 if (mode === 'exact') return a === term;
                 return a.includes(term) || m.includes(term);
             });
-        
-            filteredData = [...tf]; // Store what is currently visible
-        
+
+            filteredData = [...tf];
+
             // 3. Sort
             if (sort === 'az') tf.sort((a, b) => a.acronym.localeCompare(b.acronym));
             else if (sort === 'za') tf.sort((a, b) => b.acronym.localeCompare(a.acronym));
-        
-            // 4. Render Results (Same as before...)
+
+            // 4. Render Results
             if (tf.length > 0) {
                 tf.slice(0, 50).forEach((i, idx) => {
-                    // ... (Your existing render logic here remains the same) ...
-                    // Just copy the render loop from your previous code
-                    // ensuring you use the 'isLocalItem' check we added in V41
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
+                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
                     const isLocalItem = i.isLocal === true;
+                    
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
-        
+
                     const c = document.createElement('div');
                     c.className = `card ${isPriority ? 'priority-high' : ''}`;
                     c.style.animationDelay = `${idx * 0.05}s`;
                     
                     let dm = i.meaning;
                     if (term && (mode === 'contains' || searchDefs)) {
-                            dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                         dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
                     }
                     
+                    // See Also
                     let seeAlsoHTML = '';
                     const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
                     if (related.length > 0) {
@@ -1141,9 +1128,11 @@
                                 ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
                             </div>`;
                     }
-        
+
+                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
+                        // Pass parameters safely to edit function
                         actionBtn = `
                             <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
                             <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
@@ -1152,7 +1141,7 @@
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-        
+
                     c.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
@@ -1163,11 +1152,13 @@
                                 </div>
                             </div>
                             <div class="meaning">${autoLink(dm)}</div>
+                            
                             <div class="conf-bar">
                                 <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 1)" title="No Idea"></div>
                                 <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 2)" title="Vague"></div>
                                 <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 3)" title="Got it!"></div>
                             </div>
+
                             ${seeAlsoHTML}
                             ${noteHTML}
                         </div>
@@ -1186,27 +1177,27 @@
                     res.appendChild(c);
                 });
             } else {
-                res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
+                if (rawTerm) {
+                    res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;"><a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send">🌐 Search Google</a></div>`;
+                } else {
+                    res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
+                }
             }
         }
+
         /* =========================================
            MULTI-DATABASE SYNC FUNCTION
            ========================================= */
         window.copyPendingBySource = function(sourceType) {
-            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
             const toSync = pendingData.filter(i => i.source === sourceType);
             
-            // 2. Safety Check: If no items exist for this database
             if (toSync.length === 0) {
                 showToast(`No pending items found for ${sourceType}`);
                 return;
             }
             
-            // 3. Format the data for Google Sheets
-            // We use '\t' (Tab) so that when you paste, it fills columns automatically
             let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
             
-            // 4. Execute Clipboard Copy
             navigator.clipboard.writeText(csvContent).then(() => {
                 showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
                 playSound('success');
@@ -1292,7 +1283,6 @@
 
             // --- EDIT MODE LOGIC START ---
             if (editingItem) {
-                // If editing, remove old version first
                 removeItemFromDB(editingItem);
             }
             // --- EDIT MODE LOGIC END ---
@@ -1311,8 +1301,10 @@
 
             // Reload Data Cleanly
             if (editingItem) {
-                loadData(document.getElementById('dbSource').value);
+                // If edited, reload everything to purge old data
+                loadData();
             } else {
+                // Fast path for new adds
                 allData.unshift(newItem); 
                 acronymSet.add(newItem.acronym);
                 runSearch(); 
@@ -1352,7 +1344,7 @@
         window.deleteItem = function(acronym, meaning) {
             if(!confirm(`Delete '${acronym}'? This will remove it from your device.`)) return;
             removeItemFromDB({ acronym, meaning });
-            loadData(document.getElementById('dbSource').value);
+            loadData();
             showToast("Item Deleted");
         };
 
@@ -1399,11 +1391,7 @@
         window.filterByFamily = function(groupName) { activeGroup = groupName; document.getElementById('categorySelect').value = groupName; document.getElementById('searchBox').value = ''; runSearch(); showToast(`Showing ${groupName} Family`); };
 
         // Search Box Logic
-        // On dropdown change, just filter the existing data, don't re-fetch
-        document.getElementById('dbSource').addEventListener('change', () => {
-            runSearch();
-            updateRankHUD();
-        });
+        document.getElementById('dbSource').addEventListener('change', () => { runSearch(); updateRankHUD(); });
         document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
         document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
         document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
@@ -1565,7 +1553,7 @@
                     localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
                     localStorage.setItem('pilotPriority', JSON.stringify(priorityList)); 
                     localStorage.setItem('pilotScratchpad', d.scratchpad || "");
-                    loadData(document.getElementById('dbSource').value);
+                    loadData();
                     showToast("Restored Successfully!");
                 } catch (z) { console.error(z); showToast("Error: Invalid Backup File"); }
             };
@@ -1747,6 +1735,19 @@
             showDebrief();
         }
 
+        // Back to Top Logic
+        const scrollBtn = document.getElementById("scrollTopBtn");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollBtn.style.display = "block";
+            } else {
+                scrollBtn.style.display = "none";
+            }
+        };
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+
         /* =========================================
            ADMIN & SYNC LOGIC
            ========================================= */
@@ -1754,18 +1755,20 @@
         // 1. Admin Toggle Logic
         document.getElementById('toggleAdmin').addEventListener('change', (e) => {
             if (e.target.checked) {
+                // User is trying to turn ON
                 const input = prompt("Enter Admin Password:");
                 if (input === ADMIN_PASSWORD) {
                     isAdminMode = true;
                     document.getElementById('adminControls').style.display = 'block';
                     showToast("🔓 Admin Mode Unlocked");
                 } else {
-                    e.target.checked = false; 
+                    e.target.checked = false; // Reset switch
                     isAdminMode = false;
                     document.getElementById('adminControls').style.display = 'none';
                     alert("Access Denied");
                 }
             } else {
+                // User turning OFF
                 isAdminMode = false;
                 document.getElementById('adminControls').style.display = 'none';
                 showToast("🔒 Admin Mode Locked");
@@ -1800,7 +1803,7 @@
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
                 
                 // Reload data to clear "Pending" items from view
-                loadData(document.getElementById('dbSource').value); 
+                loadData(); 
                 
                 showToast("Sync Queue Cleared");
                 playSound('click');
@@ -1818,7 +1821,7 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
-        <button id="scrollTopBtn" title="Go to top">⬆️</button>
+        
     </script>
 </body>
 </html>
