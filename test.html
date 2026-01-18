@@ -1993,15 +1993,20 @@
         });
 
         /* =========================================
-           PILOT LOGBOOK (STATISTICS ENGINE)
+           PILOT LOGBOOK (Smart Stats - Study Only)
            ========================================= */
         function openLogbook() {
-            // 1. Calculate Mastery Counts
-            let counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
-            let categoryWeakness = {}; // To track red items per category
+            // 1. Define "Study Sources" (Ignore big dictionaries like FAA/SOFEMA)
+            const studySources = ['EVA', 'WIP', 'USER'];
             
-            // Scan entire database
-            allData.forEach(item => {
+            // 2. Filter Data: Only calculate stats for your study decks
+            const studyData = allData.filter(i => studySources.includes(i.source));
+        
+            // 3. Calculate Mastery Counts
+            let counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
+            let categoryWeakness = {}; 
+            
+            studyData.forEach(item => {
                 const level = mastery[item.acronym] || 0;
                 counts[level]++;
                 
@@ -2011,18 +2016,19 @@
                 }
             });
         
-            const total = allData.length || 1; // Avoid divide by zero
+            const total = studyData.length || 1; // Avoid divide by zero
         
-            // 2. Update Visual Bar Chart
+            // 4. Update Visual Bar Chart
             document.getElementById('statBarGreen').style.width = (counts[3] / total * 100) + "%";
             document.getElementById('statBarYellow').style.width = (counts[2] / total * 100) + "%";
             document.getElementById('statBarRed').style.width = (counts[1] / total * 100) + "%";
             document.getElementById('statBarGray').style.width = (counts[0] / total * 100) + "%";
             
-            document.getElementById('valGreen').innerText = counts[3];
+            // Show counts vs Total Study Items (not 14,000!)
+            document.getElementById('valGreen').innerText = `${counts[3]}/${total}`;
             document.getElementById('valRed').innerText = counts[1];
         
-            // 3. Find Weakest Category
+            // 5. Find Weakest Category
             let weakestCat = "None";
             let maxRed = 0;
             for (const [cat, count] of Object.entries(categoryWeakness)) {
@@ -2033,7 +2039,7 @@
             }
             document.getElementById('statWeakestCat').innerText = weakestCat;
         
-            // 4. Exam History & Average
+            // 6. Exam History & Average (Same as before)
             const hist = JSON.parse(localStorage.getItem('examHistory') || '[]');
             const listEl = document.getElementById('statHistoryList');
             listEl.innerHTML = "";
@@ -2046,8 +2052,6 @@
                 hist.slice(0, 5).forEach(exam => {
                     totalScore += exam.score;
                     const date = new Date(exam.date).toLocaleDateString();
-                    
-                    // Color code the grade
                     let color = 'var(--text)';
                     if (exam.grade === 'A') color = 'var(--success)';
                     if (exam.grade === 'F') color = 'var(--error)';
@@ -2059,13 +2063,11 @@
                             <div style="width:50px; text-align:right; font-weight:bold;">${exam.score}%</div>
                         </div>`;
                 });
-                
-                // Calculate Average
                 const avg = Math.round(totalScore / hist.length);
                 document.getElementById('statAvgScore').innerText = avg + "%";
             }
         
-            // 5. Open Modal
+            // 7. Open Modal
             document.getElementById('statsModalOverlay').style.display = 'block';
             document.getElementById('statsModal').style.display = 'block';
         }
