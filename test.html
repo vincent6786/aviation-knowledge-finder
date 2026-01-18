@@ -761,14 +761,21 @@
         </div>
     
         <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
-        <textarea id="newMeaning" placeholder="Definition..."></textarea>
-        <select id="newCategory">
+        
+        <textarea id="newMeaning" placeholder="Definition..." style="height:80px; margin-bottom:10px;"></textarea>
+        
+        <select id="newCategory" style="margin-bottom:10px;">
             <option value="General">General</option>
             <option value="Operations">Operations</option>
             <option value="Weather">Weather</option>
             <option value="Systems">Systems</option>
             <option value="Regulations">Regulations</option>
         </select>
+    
+        <input type="text" id="newImage" placeholder="Image URL (Optional)" autocomplete="off" style="font-size:0.9em; margin-bottom:10px;">
+    
+        <textarea id="newContext" placeholder="Context / Notes / Did you know? (Optional)" style="height:60px;"></textarea>
+    
         <div class="modal-buttons">
             <button id="cancelAddBtn" class="modal-btn cancel">Cancel</button>
             <button id="saveAcronymBtn" class="modal-btn send">Save</button>
@@ -1243,8 +1250,8 @@
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
                         actionBtn = `
-                            <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
-                            <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
+                            <button class="action-btn edit" onclick="event.stopPropagation(); startEdit('${i.acronym}')">✏️</button>
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
                         `;
                     }
                     
@@ -1308,25 +1315,24 @@
         }
 
         /* =========================================
-           MULTI-DATABASE SYNC FUNCTION
+           MULTI-DATABASE SYNC FUNCTION (Updated for 5 Cols)
            ========================================= */
         window.copyPendingBySource = function(sourceType) {
-            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
             const toSync = pendingData.filter(i => i.source === sourceType);
             
-            // 2. Safety Check: If no items exist for this database
             if (toSync.length === 0) {
                 showToast(`No pending items found for ${sourceType}`);
                 return;
             }
             
-            // 3. Format the data for Google Sheets
-            // We use '\t' (Tab) so that when you paste, it fills columns automatically
-            let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
+            // UPDATED: Now maps 5 columns separated by Tabs (\t)
+            // Acronym | Meaning | Category | Image | Context
+            let csvContent = toSync.map(i => 
+                `${i.acronym}\t${i.meaning}\t${i.category}\t${i.image || ''}\t${i.context || ''}`
+            ).join('\n');
             
-            // 4. Execute Clipboard Copy
             navigator.clipboard.writeText(csvContent).then(() => {
-                showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
+                showToast(`📋 Copied ${toSync.length} items (5-Column)`);
                 playSound('success');
             }).catch(err => {
                 console.error('Failed to copy: ', err);
@@ -1376,47 +1382,67 @@
         });
         document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
         document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
-
-        // Add/Delete/Report/Speak
-        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
-        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
-        document.getElementById('cancelAddBtn').addEventListener('click',()=>{
+        /* =========================================
+           UI HELPERS (Reset Form)
+           ========================================= */
+        function resetAddModal() {
+            // 1. Hide Modal
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
-            // Reset Edit State on Cancel
+            
+            // 2. Clear All 5 Fields
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+            document.getElementById('newImage').value = '';   // Clear Image
+            document.getElementById('newContext').value = ''; // Clear Context
+            
+            // 3. Reset Edit State
             editingItem = null;
             document.querySelector('#addModal h3').innerText = "Add New Acronym";
             document.getElementById('saveAcronymBtn').innerText = "Save";
-            document.getElementById('newAcronym').value = '';
-            document.getElementById('newMeaning').value = '';
-        });
+        }
+        // Add/Delete/Report/Speak
+        const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
+        document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
+        document.getElementById('cancelAddBtn').addEventListener('click', resetAddModal);
         
-        // 3. Updated Save Logic (Handles Edit + Add + Sync)
+        // 3. Updated Save Logic (5 Columns)
         document.getElementById('saveAcronymBtn').addEventListener('click', () => {
             const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             
-            // Check if dropdown is visible OR Admin Mode is ON
+            // NEW FIELDS
+            const img = document.getElementById('newImage').value.trim();
+            const ctx = document.getElementById('newContext').value.trim();
+            
+            // Admin Target Logic
             const targetDiv = document.getElementById('adminTargetSelect');
             const isDropdownVisible = targetDiv.style.display !== 'none';
-
             let target = 'USER';
             if (isAdminMode || isDropdownVisible) {
                 target = document.getElementById('newTarget').value; 
             }
-
-            if (!acr || !mean) { showToast("Fill all fields"); return; }
-
-            // --- EDIT MODE LOGIC START ---
+        
+            if (!acr || !mean) { showToast("Acronym & Meaning required"); return; }
+        
+            // Edit Mode: Remove old item
             if (editingItem) {
-                // If editing, remove old version first
                 removeItemFromDB(editingItem);
             }
-            // --- EDIT MODE LOGIC END ---
-
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat), isLocal: true };
-
+        
+            // Create New Object with 5 Properties
+            const newItem = { 
+                acronym: acr, 
+                meaning: mean, 
+                category: cat, 
+                image: img,     // New
+                context: ctx,   // New
+                source: target, 
+                group: getGroup(cat), 
+                isLocal: true 
+            };
+        
             if (target === 'USER') {
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
@@ -1424,32 +1450,21 @@
             } else {
                 pendingData.unshift(newItem); 
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(editingItem ? `Updated in Queue (${target})` : `Added to Queue (${target})`);
+                showToast(editingItem ? `Updated Queue (${target})` : `Added to Queue (${target})`);
             }
-
-            // Reload Data Cleanly
-            if (editingItem) {
-                // If edited, reload everything to purge old data
-                loadData();
-            } else {
-                // Fast path for new adds
+        
+            // Refresh UI
+            if (editingItem) { loadData(); } 
+            else {
                 allData.unshift(newItem); 
                 acronymSet.add(newItem.acronym);
                 runSearch(); 
                 updateRankHUD();
                 updateSyncCounts();
             }
-
-            // Close and Reset
-            document.getElementById('addModalOverlay').style.display = 'none';
-            document.getElementById('addModal').style.display = 'none';
-            document.getElementById('newAcronym').value = '';
-            document.getElementById('newMeaning').value = '';
-            
-            // Reset Edit State
-            editingItem = null;
-            document.querySelector('#addModal h3').innerText = "Add New Acronym";
-            document.getElementById('saveAcronymBtn').innerText = "Save";
+        
+            // Reset Form
+            resetAddModal();
         });
 
         // 4. Helper: Silently remove item (For Edit/Delete)
@@ -1476,27 +1491,39 @@
             showToast("Item Deleted");
         };
 
-        // 6. Edit Logic (Opens Modal with Pre-fill)
-        window.startEdit = function(acronym, meaning, category, source) {
-            editingItem = { acronym, meaning, category, source };
-
+        // 6. Updated Edit Logic (Supports 5 Columns)
+        window.startEdit = function(acronymTarget) {
+            // Find the local item we want to edit
+            // We check 'i.isLocal' to make sure we don't try to edit a cloud item directly
+            const item = allData.find(i => i.acronym === acronymTarget && i.isLocal);
+            
+            if (!item) { showToast("Error: Item not found"); return; }
+        
+            editingItem = item; // Save reference so we know we are editing
+        
+            // Show Modal
             document.getElementById('addModalOverlay').style.display = 'block';
             document.getElementById('addModal').style.display = 'block';
             
-            document.getElementById('newAcronym').value = acronym;
-            document.getElementById('newMeaning').value = meaning;
-            document.getElementById('newCategory').value = category;
+            // PRE-FILL ALL 5 FIELDS
+            document.getElementById('newAcronym').value = item.acronym;
+            document.getElementById('newMeaning').value = item.meaning;
+            document.getElementById('newCategory').value = item.category;
+            document.getElementById('newImage').value = item.image || '';     // Fill Image URL
+            document.getElementById('newContext').value = item.context || ''; // Fill Context
             
+            // Handle Source Selector (EVA vs WIP vs USER)
             const targetSelect = document.getElementById('newTarget');
             const targetDiv = document.getElementById('adminTargetSelect');
             
             document.querySelector('#addModal h3').innerText = "Edit Acronym";
             document.getElementById('saveAcronymBtn').innerText = "Update";
-
+        
+            // If Admin Mode is active, show the selector and set it to the item's current source
             if (isAdminMode) {
                 targetDiv.style.display = 'block';
-                if (['USER', 'EVA', 'WIP'].includes(source)) {
-                    targetSelect.value = source;
+                if (['USER', 'EVA', 'WIP'].includes(item.source)) {
+                    targetSelect.value = item.source;
                 } else {
                     targetSelect.value = 'EVA';
                 }
@@ -1504,7 +1531,6 @@
                 targetDiv.style.display = 'none';
             }
         };
-
         /* =========================================
            ENCYCLOPEDIA MODAL LOGIC (Updated Search)
            ========================================= */
