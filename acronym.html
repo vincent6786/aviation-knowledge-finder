@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V40</title>
+    <title>Aviation Acronym V41</title>
     
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
@@ -57,7 +57,6 @@
             --cloud-color: #bdc3c7;
         }
 
-        /* Background Gradients */
         body.bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
         body.bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
         body.bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
@@ -68,14 +67,10 @@
             padding: 20px; 
             padding-top: calc(20px + var(--safe-top)); 
             padding-bottom: calc(80px + var(--safe-bottom)); 
-            margin: 0; 
-            color: var(--text);
-            background-attachment: fixed; 
-            background-size: cover;
-            min-height: 100vh; 
-            transition: background 1s ease, color 0.3s;
-            overflow-x: hidden; 
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; color: var(--text);
+            background-attachment: fixed; background-size: cover;
+            min-height: 100vh; transition: background 1s ease, color 0.3s;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
         /* =========================================
@@ -89,8 +84,6 @@
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        /* Compact Mode (Scroll) */
         .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
         .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
 
@@ -103,16 +96,10 @@
         }
         select option { background: var(--modal-bg); color: var(--text); }
 
-        .icon-btn { 
-            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; 
-            border-radius: 50%; transition: transform 0.2s; color: var(--text); 
-        }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
-        .search-wrapper { 
-            display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); 
-            border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; 
-        }
+        .search-wrapper { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; }
         .search-wrapper:focus-within { background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
         [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
         
@@ -124,7 +111,6 @@
         .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
 
-        /* HUD */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
         .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
         .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
@@ -153,7 +139,6 @@
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
         
-        /* Source Tags */
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
@@ -161,14 +146,10 @@
         .source-tag.EVA { background: #00a86b; } 
         .source-tag.WIP { background: #7f8c8d; } 
         
-        .meaning { 
-            line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; 
-            transition: color 0.2s; position: relative; word-wrap: break-word; 
-        }
+        .meaning { line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; word-wrap: break-word; }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
         
-        /* Actions Bar */
         .card-actions { 
             display: flex; flex-direction: row; width: 100%; box-sizing: border-box;
             padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1);
@@ -181,12 +162,13 @@
         .action-btn.star.active { opacity: 1; color: var(--star-color); filter: drop-shadow(0 0 2px var(--star-color)); }
         .action-btn.delete { color: var(--error); opacity: 0.6; }
         .action-btn.delete:active { opacity: 1; }
+        .action-btn.edit { color: var(--link-color); opacity: 0.6; }
+        .action-btn.edit:active { opacity: 1; }
         .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
 
         .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
         .note-icon-small { font-size: 1.1em; opacity: 0.6; }
 
-        /* Confidence & Priority Styles */
         .card.priority-high { border: 2px solid #ff4757; box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
         .card.priority-high::before { content: '🔥 HIGH PRIORITY'; position: absolute; top: -10px; right: 10px; background: #ff4757; color: white; font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
@@ -199,7 +181,6 @@
         /* =========================================
            4. NAVIGATION & TOOLS (DRAWER & FAB)
            ========================================= */
-        /* FAB */
         .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
         .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
@@ -210,7 +191,6 @@
         .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .fab-container.active .fab-mini:hover::after { opacity: 1; }
 
-        /* Drawer */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.open { transform: translateY(0); }
@@ -220,7 +200,6 @@
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
         
-        /* Inputs in Drawer */
         #scratchpad { width: 100%; height: 100px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
         #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
         #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
@@ -240,7 +219,6 @@
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
         
-        /* Settings Toggle */
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -249,7 +227,6 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* QRH & Visuals */
         .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
         .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
         .qrh-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
@@ -535,42 +512,43 @@
     <div id="toast">Message</div>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
-        <div id="helpModal" class="modal">
-            <h3>Flight Manual 📘</h3>
-            <div class="help-content">
-                <h4>🔍 Search & Study</h4>
-                <ul>
-                    <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
-                    <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
-                    <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
-                    <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
-                </ul>
-    
-                <h4>🎓 Exam Mode (New!)</h4>
-                <ul>
-                    <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
-                    <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
-                    <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
-                    <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
-                </ul>
-    
-                <h4>👜 Flight Bag Tools</h4>
-                <ul>
-                    <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
-                    <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
-                    <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
-                </ul>
-    
-                <h4>⚙️ Settings & Data</h4>
-                <ul>
-                    <li><strong>Databases:</strong> Switch between FAA, SOFEMA, or EVA Airlines data sources.</li>
-                    <li><strong>Backup:</strong> Use <strong>Export</strong> to save your notes/progress to a file.</li>
-                </ul>
-            </div>
-            <div class="modal-buttons" style="margin-top:15px;">
-                <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
-            </div>
+    <div id="helpModal" class="modal">
+        <h3>Flight Manual 📘</h3>
+        <div class="help-content">
+            <h4>🔍 Search & Study</h4>
+            <ul>
+                <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
+                <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
+                <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
+                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
+            </ul>
+
+            <h4>🎓 Exam Mode (New!)</h4>
+            <ul>
+                <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
+                <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
+                <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
+                <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
+            </ul>
+
+            <h4>👜 Flight Bag Tools</h4>
+            <ul>
+                <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
+                <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
+                <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
+            </ul>
+
+            <h4>⚙️ Admin & Data Sync</h4>
+            <ul>
+                <li><strong>Admin Mode:</strong> Unlock in Settings with password to add items to public databases.</li>
+                <li><strong>Sync Queue:</strong> Items added under Admin Mode are saved to a local queue. Use <strong>Copy for EVA/WIP</strong> in Settings to paste them into your Google Sheets.</li>
+                <li><strong>Edit/Delete:</strong> You can now edit/delete any local item (Private or Pending) using the ✏️ and 🗑️ buttons.</li>
+            </ul>
         </div>
+        <div class="modal-buttons" style="margin-top:15px;">
+            <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+        </div>
+    </div>
     
     <div id="qrhModalOverlay" class="modal-overlay"></div>
     <div id="qrhModal" class="modal">
@@ -717,6 +695,16 @@
     <div id="addModalOverlay" class="modal-overlay"></div>
     <div id="addModal" class="modal">
         <h3>Add New Acronym</h3>
+        
+        <div id="adminTargetSelect" style="display:none; margin-bottom:10px;">
+            <label style="font-size:0.75em; font-weight:bold; color:var(--error);">TARGET DATABASE:</label>
+            <select id="newTarget" style="margin-bottom:5px; border-color:var(--error);">
+                <option value="USER">👤 Local User (Private)</option>
+                <option value="EVA">✈️ EVA Cadet (Public)</option>
+                <option value="WIP">🏗️ Still Building (Public)</option>
+            </select>
+        </div>
+    
         <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
         <textarea id="newMeaning" placeholder="Definition..."></textarea>
         <select id="newCategory">
@@ -745,6 +733,7 @@
     <div id="settingsOverlay" class="modal-overlay"></div>
     <div id="settingsModal" class="modal">
         <h3>System Settings</h3>
+        
         <div class="toggle-row">
             <span>Weather Background</span>
             <select id="weatherSelect" style="width:auto; padding:4px;">
@@ -759,10 +748,35 @@
             <span>Sound Effects (SFX)</span>
             <label class="switch"><input type="checkbox" id="toggleSfx"><span class="slider"></span></label>
         </div>
+    
+        <div class="toggle-row" style="border-top:1px solid rgba(150,150,150,0.2); padding-top:15px; margin-top:15px;">
+            <span style="font-weight:bold; color:var(--error);">👨‍💻 Admin Mode</span>
+            <label class="switch"><input type="checkbox" id="toggleAdmin"><span class="slider"></span></label>
+        </div>
+        
+        <div id="adminControls" style="display:none; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
+            <p style="font-size:0.8em; font-weight:bold; margin-bottom:10px; color:var(--error);">📦 SYNC QUEUE</p>
+            
+            <button onclick="copyPendingBySource('EVA')" class="modal-btn send full" style="background:#00a86b; font-size:0.85em; display:flex; justify-content:space-between;">
+                <span>📋 Copy for EVA CADET</span>
+                <span id="evaQueueCount" style="background:rgba(0,0,0,0.2); padding:0 6px; border-radius:4px;">0</span>
+            </button>
+            
+            <button onclick="copyPendingBySource('WIP')" class="modal-btn send full" style="background:#7f8c8d; font-size:0.85em; display:flex; justify-content:space-between;">
+                <span>📋 Copy for STILL BUILDING</span>
+                <span id="wipQueueCount" style="background:rgba(0,0,0,0.2); padding:0 6px; border-radius:4px;">0</span>
+            </button>
+        
+            <button id="clearPendingBtn" class="modal-btn" style="width:100%; border:1px solid var(--error); color:var(--error); font-size:0.75em; margin-top:10px;">
+                🗑️ Clear All Pending
+            </button>
+        </div>
+    
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
+        
         <div style="margin-top:15px; text-align:right;">
             <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
         </div>
@@ -881,6 +895,12 @@
         </div>
 
     <script>
+        // --- ADMIN CONFIG ---
+        const ADMIN_PASSWORD = "VincentEVA"; // <--- CHANGE THIS PASSWORD
+        let isAdminMode = false;
+        let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
+        let editingItem = null; // Stores item being edited
+
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -979,20 +999,29 @@
             }
 
             Promise.all(p).then(r => {
-                let csvData = r.flat();
-                allData = [...customData, ...csvData];
-                acronymSet = new Set(allData.map(i => i.acronym));
-                
-                // Reset filters
-                activeGroup = 'All'; 
-                document.getElementById('categorySelect').value = 'All';
-                
-                filteredData = [...allData];
-                updateRankHUD();
-                
-                if (document.getElementById('searchBox').value.length > 0) runSearch();
-                else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
-            }).catch(e => {
+                    let csvData = r.flat();
+                    
+                    // Mark locally stored items so we can allow deletion/editing
+                    const taggedCustom = customData.map(i => ({...i, isLocal: true}));
+                    const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
+                    
+                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
+                    allData = [...taggedCustom, ...taggedPending, ...csvData];
+                    acronymSet = new Set(allData.map(i => i.acronym));
+                    
+                    // Reset filters
+                    activeGroup = 'All'; 
+                    document.getElementById('categorySelect').value = 'All';
+                    
+                    filteredData = [...allData];
+                    
+                    // --- UPDATE UI ELEMENTS ---
+                    updateRankHUD(); 
+                    updateSyncCounts(); 
+                    
+                    if (document.getElementById('searchBox').value.length > 0) runSearch();
+                    else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+                }).catch(e => {
                 document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
                 console.error(e);
             });
@@ -1051,7 +1080,8 @@
                 tf.slice(0, 50).forEach((i, idx) => {
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
-                    const isUser = i.source === 'USER';
+                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
+                    const isLocalItem = i.isLocal === true;
                     
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
@@ -1075,8 +1105,15 @@
                             </div>`;
                     }
 
+                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
-                    if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    if (isLocalItem) {
+                        // Pass parameters safely to edit function
+                        actionBtn = `
+                            <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
+                            <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
+                        `;
+                    }
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
@@ -1110,7 +1147,7 @@
                             ${actionBtn}
                         </div>`;
                     
-                    if (!isUser) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
+                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
                     c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
                     c.querySelector('.speak').addEventListener('click', () => { speakText(i.meaning); addToHistory(i); });
                     res.appendChild(c);
@@ -1124,6 +1161,33 @@
             }
         }
 
+        /* =========================================
+           MULTI-DATABASE SYNC FUNCTION
+           ========================================= */
+        window.copyPendingBySource = function(sourceType) {
+            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
+            const toSync = pendingData.filter(i => i.source === sourceType);
+            
+            // 2. Safety Check: If no items exist for this database
+            if (toSync.length === 0) {
+                showToast(`No pending items found for ${sourceType}`);
+                return;
+            }
+            
+            // 3. Format the data for Google Sheets
+            // We use '\t' (Tab) so that when you paste, it fills columns automatically
+            let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
+            
+            // 4. Execute Clipboard Copy
+            navigator.clipboard.writeText(csvContent).then(() => {
+                showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
+                playSound('success');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast("Error: Could not access clipboard");
+            });
+        };
+        
         /* =========================================
            4. UI INTERACTIONS & TOOLS
            ========================================= */
@@ -1170,14 +1234,129 @@
         // Add/Delete/Report/Speak
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
-        document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
-        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
-            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
-            if(!acr || !mean) { showToast("Fill all fields"); return; }
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
-            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        document.getElementById('cancelAddBtn').addEventListener('click',()=>{
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            // Reset Edit State on Cancel
+            editingItem = null;
+            document.querySelector('#addModal h3').innerText = "Add New Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Save";
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
         });
-        function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
+        
+        // 3. Updated Save Logic (Handles Edit + Add + Sync)
+        document.getElementById('saveAcronymBtn').addEventListener('click', () => {
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
+            const mean = document.getElementById('newMeaning').value.trim();
+            const cat = document.getElementById('newCategory').value;
+            
+            // Check if dropdown is visible OR Admin Mode is ON
+            const targetDiv = document.getElementById('adminTargetSelect');
+            const isDropdownVisible = targetDiv.style.display !== 'none';
+
+            let target = 'USER';
+            if (isAdminMode || isDropdownVisible) {
+                target = document.getElementById('newTarget').value; 
+            }
+
+            if (!acr || !mean) { showToast("Fill all fields"); return; }
+
+            // --- EDIT MODE LOGIC START ---
+            if (editingItem) {
+                // If editing, remove old version first
+                removeItemFromDB(editingItem);
+            }
+            // --- EDIT MODE LOGIC END ---
+
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat), isLocal: true };
+
+            if (target === 'USER') {
+                customData.unshift(newItem);
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                showToast(editingItem ? "Updated (Private)" : "Saved to Private");
+            } else {
+                pendingData.unshift(newItem); 
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                showToast(editingItem ? `Updated in Queue (${target})` : `Added to Queue (${target})`);
+            }
+
+            // Reload Data Cleanly
+            if (editingItem) {
+                loadData(document.getElementById('dbSource').value);
+            } else {
+                allData.unshift(newItem); 
+                acronymSet.add(newItem.acronym);
+                runSearch(); 
+                updateRankHUD();
+                updateSyncCounts();
+            }
+
+            // Close and Reset
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+            
+            // Reset Edit State
+            editingItem = null;
+            document.querySelector('#addModal h3').innerText = "Add New Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Save";
+        });
+
+        // 4. Helper: Silently remove item (For Edit/Delete)
+        function removeItemFromDB(item) {
+            const initialCustom = customData.length;
+            customData = customData.filter(i => !(i.acronym === item.acronym && i.meaning === item.meaning));
+            if (customData.length < initialCustom) {
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+            }
+
+            const initialPending = pendingData.length;
+            pendingData = pendingData.filter(i => !(i.acronym === item.acronym && i.meaning === item.meaning));
+            if (pendingData.length < initialPending) {
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                updateSyncCounts();
+            }
+        }
+
+        // 5. Delete Logic
+        window.deleteItem = function(acronym, meaning) {
+            if(!confirm(`Delete '${acronym}'? This will remove it from your device.`)) return;
+            removeItemFromDB({ acronym, meaning });
+            loadData(document.getElementById('dbSource').value);
+            showToast("Item Deleted");
+        };
+
+        // 6. Edit Logic (Opens Modal with Pre-fill)
+        window.startEdit = function(acronym, meaning, category, source) {
+            editingItem = { acronym, meaning, category, source };
+
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+            
+            document.getElementById('newAcronym').value = acronym;
+            document.getElementById('newMeaning').value = meaning;
+            document.getElementById('newCategory').value = category;
+            
+            const targetSelect = document.getElementById('newTarget');
+            const targetDiv = document.getElementById('adminTargetSelect');
+            
+            document.querySelector('#addModal h3').innerText = "Edit Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Update";
+
+            if (isAdminMode) {
+                targetDiv.style.display = 'block';
+                if (['USER', 'EVA', 'WIP'].includes(source)) {
+                    targetSelect.value = source;
+                } else {
+                    targetSelect.value = 'EVA';
+                }
+            } else {
+                targetDiv.style.display = 'none';
+            }
+        };
+
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
@@ -1199,6 +1378,7 @@
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
+        
         /* =========================================
            UPDATED RANK HUD
            ========================================= */
@@ -1210,7 +1390,6 @@
             const rankPct = document.getElementById('rankPct');
         
             // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
-            // We hide mastery for these because they are too big or just reference.
             if (source === 'faa' || source === 'sofema' || source === 'both') {
                 rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
                 rankBadge.style.color = "var(--text)";
@@ -1219,12 +1398,10 @@
             }
         
             // 2. STUDY MODE (EVA, USER)
-            // Show mastery progress for specific study decks.
             masteryContainer.style.display = 'flex'; 
             rankBadge.style.color = "var(--accent)"; 
         
             const totalInView = allData.length;
-            // Count items marked as Level 3 (Green/Mastered)
             const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
@@ -1537,6 +1714,79 @@
             sessionStats = { total: quizSession.limit, correct: quizSession.score, missedItems: quizSession.missed }; // Reuse debrief logic
             showDebrief();
         }
+
+        /* =========================================
+           ADMIN & SYNC LOGIC
+           ========================================= */
+        
+        // 1. Admin Toggle Logic
+        document.getElementById('toggleAdmin').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                const input = prompt("Enter Admin Password:");
+                if (input === ADMIN_PASSWORD) {
+                    isAdminMode = true;
+                    document.getElementById('adminControls').style.display = 'block';
+                    showToast("🔓 Admin Mode Unlocked");
+                } else {
+                    e.target.checked = false; 
+                    isAdminMode = false;
+                    document.getElementById('adminControls').style.display = 'none';
+                    alert("Access Denied");
+                }
+            } else {
+                isAdminMode = false;
+                document.getElementById('adminControls').style.display = 'none';
+                showToast("🔒 Admin Mode Locked");
+            }
+        });
+        
+        // 2. Open Add Modal (Check for Admin)
+        document.getElementById('addAcronymBtn').addEventListener('click', () => {
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+            
+            // Show/Hide Target Selector based on Admin Status
+            const targetDiv = document.getElementById('adminTargetSelect');
+            if (isAdminMode) {
+                targetDiv.style.display = 'block';
+                // Force Default to EVA if Admin is on
+                document.getElementById('newTarget').value = 'EVA'; 
+            } else {
+                targetDiv.style.display = 'none';
+            }
+        });
+        
+        // 5. Clear Pending Queue
+        document.getElementById('clearPendingBtn').addEventListener('click', () => {
+            if (pendingData.length === 0) {
+                showToast("Queue is already empty");
+                return;
+            }
+        
+            if (confirm("⚠️ Clear Sync Queue? Only do this after you have pasted your data into BOTH Google Sheets (EVA & Still Building).")) {
+                pendingData = [];
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                
+                // Reload data to clear "Pending" items from view
+                loadData(document.getElementById('dbSource').value); 
+                
+                showToast("Sync Queue Cleared");
+                playSound('click');
+            }
+        });
+
+        // 6. Update Queue Badges
+        function updateSyncCounts() {
+            const evaCount = pendingData.filter(i => i.source === 'EVA').length;
+            const wipCount = pendingData.filter(i => i.source === 'WIP').length;
+            
+            const evaBadge = document.getElementById('evaQueueCount');
+            const wipBadge = document.getElementById('wipQueueCount');
+            
+            if(evaBadge) evaBadge.innerText = evaCount;
+            if(wipBadge) wipBadge.innerText = wipCount;
+        }
+        
     </script>
 </body>
 </html>
