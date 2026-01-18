@@ -938,7 +938,16 @@
 
     <div id="statsModalOverlay" class="modal-overlay"></div>
     <div id="statsModal" class="modal">
-        <h3>👨‍✈️ Pilot Logbook</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">👨‍✈️ Logbook</h3>
+            
+            <select id="logbookSource" style="width:auto; padding:4px 8px; font-size:0.85em; background:rgba(0,0,0,0.05); border:none; font-weight:bold; color:var(--accent);">
+                <option value="All">📊 All Study Data</option>
+                <option value="EVA">✈️ EVA Cadet</option>
+                <option value="WIP">🏗️ Still Building</option>
+                <option value="USER">👤 My Acronyms</option>
+            </select>
+        </div>
         
         <div style="background:rgba(0,0,0,0.05); padding:15px; border-radius:12px; margin-bottom:15px;">
             <div style="font-size:0.8em; font-weight:bold; opacity:0.7; margin-bottom:10px; text-transform:uppercase;">Knowledge Status</div>
@@ -970,8 +979,7 @@
         </div>
     
         <div style="font-size:0.8em; font-weight:bold; opacity:0.7; margin-bottom:5px; text-transform:uppercase;">Flight Record (Last 5 Exams)</div>
-        <div id="statHistoryList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-            </div>
+        <div id="statHistoryList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;"></div>
     
         <button id="closeStatsBtn" class="modal-btn send full">Close Logbook</button>
     </div>
@@ -1993,20 +2001,28 @@
         });
 
         /* =========================================
-           PILOT LOGBOOK (Smart Stats - Study Only)
+           PILOT LOGBOOK (Filterable Stats)
            ========================================= */
         function openLogbook() {
-            // 1. Define "Study Sources" (Ignore big dictionaries like FAA/SOFEMA)
-            const studySources = ['EVA', 'WIP', 'USER'];
+            // 1. Get Selected Source
+            const sourceFilter = document.getElementById('logbookSource').value;
             
-            // 2. Filter Data: Only calculate stats for your study decks
-            const studyData = allData.filter(i => studySources.includes(i.source));
+            // 2. Determine which data to count
+            let targetData = [];
+            
+            if (sourceFilter === 'All') {
+                // Count everything EXCEPT the big reference dictionaries (FAA/SOFEMA)
+                targetData = allData.filter(i => ['EVA', 'WIP', 'USER'].includes(i.source));
+            } else {
+                // Count only the specific source selected
+                targetData = allData.filter(i => i.source === sourceFilter);
+            }
         
-            // 3. Calculate Mastery Counts
+            // 3. Calculate Stats
             let counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
             let categoryWeakness = {}; 
             
-            studyData.forEach(item => {
+            targetData.forEach(item => {
                 const level = mastery[item.acronym] || 0;
                 counts[level]++;
                 
@@ -2016,15 +2032,15 @@
                 }
             });
         
-            const total = studyData.length || 1; // Avoid divide by zero
+            const total = targetData.length || 1; // Avoid divide by zero
         
-            // 4. Update Visual Bar Chart
+            // 4. Update UI Bars
             document.getElementById('statBarGreen').style.width = (counts[3] / total * 100) + "%";
             document.getElementById('statBarYellow').style.width = (counts[2] / total * 100) + "%";
             document.getElementById('statBarRed').style.width = (counts[1] / total * 100) + "%";
             document.getElementById('statBarGray').style.width = (counts[0] / total * 100) + "%";
             
-            // Show counts vs Total Study Items (not 14,000!)
+            // Update Text Counts
             document.getElementById('valGreen').innerText = `${counts[3]}/${total}`;
             document.getElementById('valRed').innerText = counts[1];
         
@@ -2039,7 +2055,7 @@
             }
             document.getElementById('statWeakestCat').innerText = weakestCat;
         
-            // 6. Exam History & Average (Same as before)
+            // 6. Exam History (Global)
             const hist = JSON.parse(localStorage.getItem('examHistory') || '[]');
             const listEl = document.getElementById('statHistoryList');
             listEl.innerHTML = "";
@@ -2067,12 +2083,17 @@
                 document.getElementById('statAvgScore').innerText = avg + "%";
             }
         
-            // 7. Open Modal
-            document.getElementById('statsModalOverlay').style.display = 'block';
-            document.getElementById('statsModal').style.display = 'block';
+            // 7. Show Modal (Only if not already open/re-rendering)
+            const modal = document.getElementById('statsModalOverlay');
+            if(modal.style.display !== 'block') {
+                modal.style.display = 'block';
+                document.getElementById('statsModal').style.display = 'block';
+            }
         }
         
-        // Close Logic
+        // Event Listeners for Logbook
+        document.getElementById('logbookSource').addEventListener('change', openLogbook); // Re-calculate when dropdown changes
+        
         document.getElementById('closeStatsBtn').addEventListener('click', () => {
             document.getElementById('statsModalOverlay').style.display = 'none';
             document.getElementById('statsModal').style.display = 'none';
