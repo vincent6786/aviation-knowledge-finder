@@ -1506,23 +1506,26 @@
         };
 
         /* =========================================
-           ENCYCLOPEDIA MODAL LOGIC (The Missing Part)
+           ENCYCLOPEDIA MODAL LOGIC (Updated Search)
            ========================================= */
         function openEncyclopediaModal(acronymTarget) {
-            // 1. Find the exact item in memory
-            const item = allData.find(i => i.acronym === acronymTarget);
-            if (!item) return;
+            // 1. Get ALL matches for this acronym (Local AND Cloud)
+            const candidates = allData.filter(i => i.acronym === acronymTarget);
+            
+            if (candidates.length === 0) return;
         
-            // 2. Populate Basic Text
+            // 2. INTELLIGENT SELECTION:
+            // Look for the version that actually has an image or notes.
+            const item = candidates.find(i => (i.image && i.image.length > 5) || (i.context && i.context.length > 2)) || candidates[0];
+        
+            // 3. Populate Basic Text
             document.getElementById('encAcronym').innerText = item.acronym;
             document.getElementById('encMeaning').innerHTML = autoLink(item.meaning);
             document.getElementById('encCategory').innerText = item.category;
             document.getElementById('encSource').innerText = item.source;
-            
-            // Set the color tag dynamically
             document.getElementById('encSource').className = `source-tag ${item.source}`;
         
-            // 3. Image Logic (Column D)
+            // 4. Image Logic
             const imgContainer = document.getElementById('encImageContainer');
             const imgEl = document.getElementById('encImage');
             
@@ -1533,23 +1536,24 @@
                 imgContainer.style.display = 'none'; 
             }
         
-            // 4. Context/Notes Logic (Column E)
+            // 5. Context/Notes Logic
             const ctxContainer = document.getElementById('encContextContainer');
             const ctxEl = document.getElementById('encContext');
             
             if (item.context && item.context.length > 2) {
-                ctxEl.innerHTML = autoLink(item.context); // Apply smart links to notes too
+                ctxEl.innerHTML = autoLink(item.context);
                 ctxContainer.style.display = 'block';     
             } else {
                 ctxContainer.style.display = 'none';      
             }
         
-            // 5. Setup the "Google It" button
+            // 6. Setup Google Button (UPDATED HERE)
             document.getElementById('encGoogleBtn').onclick = () => {
-                window.open(`https://www.google.com/search?q=aviation+${encodeURIComponent(item.acronym)}+${encodeURIComponent(item.meaning)}`, '_blank');
+                // Search query: aviation term "ACRONYM"
+                window.open(`https://www.google.com/search?q=aviation+term+"${encodeURIComponent(item.acronym)}"`, '_blank');
             };
         
-            // 6. Reveal the Modal
+            // 7. Show Modal
             document.getElementById('encycloModalOverlay').style.display = 'block';
             document.getElementById('encycloModal').style.display = 'block';
         }
