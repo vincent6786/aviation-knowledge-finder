@@ -1200,7 +1200,7 @@
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
         /* =========================================
-           UPDATED RANK HUD (CONTEXT AWARE)
+           UPDATED RANK HUD
            ========================================= */
         function updateRankHUD() {
             const source = document.getElementById('dbSource').value;
@@ -1209,30 +1209,25 @@
             const progressFill = document.getElementById('rankProgress');
             const rankPct = document.getElementById('rankPct');
         
-            // 1. DICTIONARY MODE (FAA / SOFEMA)
-            // We hide the gamification elements here because these are just dictionaries.
-            if (source === 'faa' || source === 'sofema') {
-                rankBadge.innerText = "📚 Acronym Finder";
-                rankBadge.style.color = "var(--text)"; // Neutral color
+            // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
+            // We hide mastery for these because they are too big or just reference.
+            if (source === 'faa' || source === 'sofema' || source === 'both') {
+                rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
+                rankBadge.style.color = "var(--text)";
                 masteryContainer.style.display = 'none'; // Hide progress bar
                 return; 
             }
         
-            // 2. STUDY MODE (EVA, BUILDING, BOTH, USER)
-            // We show mastery calculated SPECIFICALLY for the loaded dataset.
-            masteryContainer.style.display = 'flex'; // Show progress bar
-            rankBadge.style.color = "var(--accent)"; // Restore accent color
+            // 2. STUDY MODE (EVA, USER)
+            // Show mastery progress for specific study decks.
+            masteryContainer.style.display = 'flex'; 
+            rankBadge.style.color = "var(--accent)"; 
         
-            // Calculate stats based on CURRENTLY LOADED data only
             const totalInView = allData.length;
-            
-            // Count items in the current view that are fully mastered (Level 3 - Green)
-            // We check (mastery[i.acronym] === 3) to ensure we only count "Green" items
+            // Count items marked as Level 3 (Green/Mastered)
             const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
-        
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
-            // Dynamic Rank Title
             let r = "Student Pilot";
             if (masteredInView > 200) r = "👨‍✈️ Captain";
             else if (masteredInView > 100) r = "First Officer";
@@ -1241,8 +1236,6 @@
         
             rankBadge.innerText = r;
             progressFill.style.width = `${p}%`;
-            
-            // Show count so you know how many you've mastered in THIS specific database
             rankPct.innerText = `${p}% (${masteredInView}/${totalInView})`;
         }
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
