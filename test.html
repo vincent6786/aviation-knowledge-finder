@@ -755,12 +755,14 @@
         <div id="adminControls" style="display:none; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
             <p style="font-size:0.8em; font-weight:bold; margin-bottom:10px; color:var(--error);">📦 SYNC QUEUE</p>
             
-            <button onclick="copyPendingBySource('EVA')" class="modal-btn send full" style="background:#00a86b; font-size:0.85em;">
-                📋 Copy for EVA CADET
+            <button onclick="copyPendingBySource('EVA')" class="modal-btn send full" style="background:#00a86b; font-size:0.85em; display:flex; justify-content:space-between;">
+                <span>📋 Copy for EVA CADET</span>
+                <span id="evaQueueCount" style="background:rgba(0,0,0,0.2); padding:0 6px; border-radius:4px;">0</span>
             </button>
             
-            <button onclick="copyPendingBySource('WIP')" class="modal-btn send full" style="background:#7f8c8d; font-size:0.85em;">
-                📋 Copy for STILL BUILDING
+            <button onclick="copyPendingBySource('WIP')" class="modal-btn send full" style="background:#7f8c8d; font-size:0.85em; display:flex; justify-content:space-between;">
+                <span>📋 Copy for STILL BUILDING</span>
+                <span id="wipQueueCount" style="background:rgba(0,0,0,0.2); padding:0 6px; border-radius:4px;">0</span>
             </button>
         
             <button id="clearPendingBtn" class="modal-btn" style="width:100%; border:1px solid var(--error); color:var(--error); font-size:0.75em; margin-top:10px;">
@@ -977,41 +979,44 @@
         function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
         
         function loadData(m) {
-            document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
-            let p = [];
-            
-            // Logic to pick which sheets to load
-            if (m === 'faa') { p.push(fetchSheet(LINKS.faa, 'FAA')); } 
-            else if (m === 'sofema') { p.push(fetchSheet(LINKS.sofema, 'SOFEMA')); } 
-            else if (m === 'eva') { p.push(fetchSheet(LINKS.eva, 'EVA')); } 
-            else if (m === 'building') { p.push(fetchSheet(LINKS.building, 'WIP')); } 
-            else if (m === 'both') {
-                p.push(fetchSheet(LINKS.faa, 'FAA'));
-                p.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
-                p.push(fetchSheet(LINKS.eva, 'EVA'));
-                p.push(fetchSheet(LINKS.building, 'WIP'));
-            }
-
-            Promise.all(p).then(r => {
-                    let csvData = r.flat();
-                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
-                    allData = [...customData, ...pendingData, ...csvData];
-                    acronymSet = new Set(allData.map(i => i.acronym));
+                    document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
+                    let p = [];
                     
-                    // Reset filters
-                    activeGroup = 'All'; 
-                    document.getElementById('categorySelect').value = 'All';
-                    
-                    filteredData = [...allData];
-                    updateRankHUD(); // Your new HUD logic handles this automatically
-                    
-                    if (document.getElementById('searchBox').value.length > 0) runSearch();
-                    else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
-                }).catch(e => {
-                document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
-                console.error(e);
-            });
-        }
+                    // Logic to pick which sheets to load
+                    if (m === 'faa') { p.push(fetchSheet(LINKS.faa, 'FAA')); } 
+                    else if (m === 'sofema') { p.push(fetchSheet(LINKS.sofema, 'SOFEMA')); } 
+                    else if (m === 'eva') { p.push(fetchSheet(LINKS.eva, 'EVA')); } 
+                    else if (m === 'building') { p.push(fetchSheet(LINKS.building, 'WIP')); } 
+                    else if (m === 'both') {
+                        p.push(fetchSheet(LINKS.faa, 'FAA'));
+                        p.push(fetchSheet(LINKS.sofema, 'SOFEMA'));
+                        p.push(fetchSheet(LINKS.eva, 'EVA'));
+                        p.push(fetchSheet(LINKS.building, 'WIP'));
+                    }
+        
+                    Promise.all(p).then(r => {
+                            let csvData = r.flat();
+                            // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
+                            allData = [...customData, ...pendingData, ...csvData];
+                            acronymSet = new Set(allData.map(i => i.acronym));
+                            
+                            // Reset filters
+                            activeGroup = 'All'; 
+                            document.getElementById('categorySelect').value = 'All';
+                            
+                            filteredData = [...allData];
+                            
+                            // --- UPDATE UI ELEMENTS ---
+                            updateRankHUD(); 
+                            updateSyncCounts(); // <--- NEW: Updates the queue numbers in Settings
+                            
+                            if (document.getElementById('searchBox').value.length > 0) runSearch();
+                            else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
+                        }).catch(e => {
+                        document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
+                        console.error(e);
+                    });
+                }
 
         // CSV Parser
         function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
@@ -1691,6 +1696,25 @@
                 playSound('click');
             }
         });
+
+        /* =========================================
+           UI UPDATE HELPERS
+           ========================================= */
+        function updateSyncCounts() {
+            // 1. Count items waiting for EVA
+            const evaCount = pendingData.filter(i => i.source === 'EVA').length;
+            
+            // 2. Count items waiting for Still Building (WIP)
+            const wipCount = pendingData.filter(i => i.source === 'WIP').length;
+            
+            // 3. Find the badge elements (We added these spans in the HTML step)
+            const evaBadge = document.getElementById('evaQueueCount');
+            const wipBadge = document.getElementById('wipQueueCount');
+            
+            // 4. Update the text if the elements exist
+            if (evaBadge) evaBadge.innerText = evaCount;
+            if (wipBadge) wipBadge.innerText = wipCount;
+        }
         
     </script>
 </body>
