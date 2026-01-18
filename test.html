@@ -698,9 +698,7 @@
             <label style="font-size:0.75em; font-weight:bold; color:var(--error);">TARGET DATABASE:</label>
             <select id="newTarget" style="margin-bottom:5px; border-color:var(--error);">
                 <option value="USER">👤 Local User (Private)</option>
-                <option value="EVA">✈️ EVA Cadet (Public)</option>
-                <option value="WIP">🏗️ Still Building (Public)</option>
-            </select>
+                <option value="EVA">✈️ EVA Cadet (Public)</option> <option value="WIP">🏗️ Building (Public)</option> </select>
         </div>
     
         <input type="text" id="newAcronym" placeholder="Acronym (e.g. V1)" autocomplete="off">
@@ -1218,11 +1216,61 @@
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
         document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
-        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
-            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
-            if(!acr || !mean) { showToast("Fill all fields"); return; }
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
-            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        // 3. Updated Save Logic (Robust Check)
+        document.getElementById('saveAcronymBtn').addEventListener('click', () => {
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
+            const mean = document.getElementById('newMeaning').value.trim();
+            const cat = document.getElementById('newCategory').value;
+            
+            // --- FIX STARTS HERE ---
+            // Check if the dropdown is visible on screen
+            const targetDiv = document.getElementById('adminTargetSelect');
+            const isDropdownVisible = targetDiv.style.display !== 'none';
+        
+            let target = 'USER';
+            
+            // If Admin Mode is ON OR the dropdown is visible, use the selected value
+            if (isAdminMode || isDropdownVisible) {
+                target = document.getElementById('newTarget').value; 
+            }
+            // --- FIX ENDS HERE ---
+        
+            if (!acr || !mean) { 
+                showToast("Fill all fields"); 
+                return; 
+            }
+        
+            const newItem = { 
+                acronym: acr, 
+                meaning: mean, 
+                category: cat, 
+                source: target, 
+                group: getGroup(cat) 
+            };
+        
+            if (target === 'USER') {
+                customData.unshift(newItem);
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                showToast("Saved to Private (User)");
+            } else {
+                pendingData.unshift(newItem); 
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                showToast(`Saved to Sync Queue (${target})`);
+            }
+        
+            // Refresh Data
+            allData.unshift(newItem); 
+            acronymSet.add(newItem.acronym);
+            
+            runSearch(); 
+            updateRankHUD();
+            updateSyncCounts(); // Update the settings badges immediately
+        
+            // Close and Reset
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
         });
         function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
