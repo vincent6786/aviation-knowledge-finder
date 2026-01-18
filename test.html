@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V40</title>
+    <title>Aviation Acronym V41</title>
     
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Gemini_Generated_Image_k5koy0k5koy0k5ko.png">
@@ -57,7 +57,6 @@
             --cloud-color: #bdc3c7;
         }
 
-        /* Background Gradients */
         body.bg-day { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); }
         body.bg-sunrise { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
         body.bg-sunset { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
@@ -68,14 +67,10 @@
             padding: 20px; 
             padding-top: calc(20px + var(--safe-top)); 
             padding-bottom: calc(80px + var(--safe-bottom)); 
-            margin: 0; 
-            color: var(--text);
-            background-attachment: fixed; 
-            background-size: cover;
-            min-height: 100vh; 
-            transition: background 1s ease, color 0.3s;
-            overflow-x: hidden; 
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; color: var(--text);
+            background-attachment: fixed; background-size: cover;
+            min-height: 100vh; transition: background 1s ease, color 0.3s;
+            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
         }
 
         /* =========================================
@@ -89,8 +84,6 @@
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        /* Compact Mode (Scroll) */
         .controls.compact { padding: 10px; border-radius: 0 0 16px 16px; gap: 5px; }
         .controls.compact .hud-container, .controls.compact .top-row, .controls.compact #groupDesc { display: none; }
 
@@ -103,16 +96,10 @@
         }
         select option { background: var(--modal-bg); color: var(--text); }
 
-        .icon-btn { 
-            background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; 
-            border-radius: 50%; transition: transform 0.2s; color: var(--text); 
-        }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.4rem; padding: 8px; border-radius: 50%; transition: transform 0.2s; color: var(--text); }
         .icon-btn:active { transform: scale(0.9); background: rgba(150,150,150,0.2); }
 
-        .search-wrapper { 
-            display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); 
-            border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; 
-        }
+        .search-wrapper { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border: 1px solid rgba(150,150,150,0.2); border-radius: 50px; padding: 6px; transition: all 0.3s; }
         .search-wrapper:focus-within { background: rgba(255,255,255,0.8); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
         [data-theme="dark"] .search-wrapper:focus-within { background: rgba(0,0,0,0.5); }
         
@@ -124,7 +111,6 @@
         .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 400px) { .filter-row select { font-size: 0.85em; padding: 6px 8px; } }
 
-        /* HUD */
         .hud-container { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 0.8em; opacity: 0.9; }
         .rank-badge { font-weight: bold; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 5px; }
         .progress-bar { width: 80px; height: 6px; background: rgba(150,150,150,0.2); border-radius: 3px; overflow: hidden; }
@@ -153,7 +139,6 @@
         .category-tag { font-size: 0.7em; opacity: 0.7; border: 1px solid var(--text); padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
         .category-tag:active { background: var(--text); color: var(--glass-bg); opacity: 1; }
         
-        /* Source Tags */
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
@@ -161,14 +146,10 @@
         .source-tag.EVA { background: #00a86b; } 
         .source-tag.WIP { background: #7f8c8d; } 
         
-        .meaning { 
-            line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; 
-            transition: color 0.2s; position: relative; word-wrap: break-word; 
-        }
+        .meaning { line-height: 1.6; font-size: 1.05em; opacity: 0.9; cursor: pointer; transition: color 0.2s; position: relative; word-wrap: break-word; }
         .meaning:active { color: var(--accent); }
         .term-link { color: var(--link-color); text-decoration: underline; text-decoration-style: dotted; font-weight: 600; cursor: pointer; }
         
-        /* Actions Bar */
         .card-actions { 
             display: flex; flex-direction: row; width: 100%; box-sizing: border-box;
             padding-top: 10px; border-top: 1px solid rgba(150,150,150,0.1);
@@ -186,7 +167,6 @@
         .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
         .note-icon-small { font-size: 1.1em; opacity: 0.6; }
 
-        /* Confidence & Priority Styles */
         .card.priority-high { border: 2px solid #ff4757; box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
         .card.priority-high::before { content: '🔥 HIGH PRIORITY'; position: absolute; top: -10px; right: 10px; background: #ff4757; color: white; font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
@@ -199,7 +179,6 @@
         /* =========================================
            4. NAVIGATION & TOOLS (DRAWER & FAB)
            ========================================= */
-        /* FAB */
         .fab-container { position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px; z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
         .fab-main { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .fab-container.active .fab-main { transform: rotate(45deg); background: var(--error); }
@@ -210,7 +189,6 @@
         .fab-mini::after { content: attr(data-label); position: absolute; right: 60px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .fab-container.active .fab-mini:hover::after { opacity: 1; }
 
-        /* Drawer */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--drawer-bg); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 2000; padding: 20px; box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.open { transform: translateY(0); }
@@ -220,7 +198,6 @@
         .tool-section { display: flex; flex-direction: column; gap: 10px; }
         .tool-label { font-size: 0.8em; opacity: 0.7; font-weight: bold; }
         
-        /* Inputs in Drawer */
         #scratchpad { width: 100%; height: 100px; border-radius: 12px; padding: 15px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: monospace; resize: none; box-sizing: border-box; outline: none; font-size: 16px; }
         #natoInput, #metarInput { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); box-sizing: border-box; outline: none; font-size: 16px; }
         #natoResult, #metarResult { font-family: monospace; font-size: 1.1em; line-height: 1.4; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; min-height: 50px; color: var(--accent); font-weight: bold; white-space: pre-wrap; }
@@ -240,7 +217,6 @@
         .modal-btn.send { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3); }
         .modal-btn.full { width: 100%; margin-bottom: 10px; }
         
-        /* Settings Toggle */
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(150,150,150,0.2); }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -249,7 +225,6 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* QRH & Visuals */
         .help-content { max-height: 300px; overflow-y: auto; font-size: 0.9em; line-height: 1.6; }
         .help-content h4 { color: var(--accent); margin-top: 15px; margin-bottom: 5px; }
         .qrh-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
@@ -535,42 +510,43 @@
     <div id="toast">Message</div>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
-        <div id="helpModal" class="modal">
-            <h3>Flight Manual 📘</h3>
-            <div class="help-content">
-                <h4>🔍 Search & Study</h4>
-                <ul>
-                    <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
-                    <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
-                    <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
-                    <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
-                </ul>
-    
-                <h4>🎓 Exam Mode (New!)</h4>
-                <ul>
-                    <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
-                    <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
-                    <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
-                    <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
-                </ul>
-    
-                <h4>👜 Flight Bag Tools</h4>
-                <ul>
-                    <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
-                    <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
-                    <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
-                </ul>
-    
-                <h4>⚙️ Settings & Data</h4>
-                <ul>
-                    <li><strong>Databases:</strong> Switch between FAA, SOFEMA, or EVA Airlines data sources.</li>
-                    <li><strong>Backup:</strong> Use <strong>Export</strong> to save your notes/progress to a file.</li>
-                </ul>
-            </div>
-            <div class="modal-buttons" style="margin-top:15px;">
-                <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
-            </div>
+    <div id="helpModal" class="modal">
+        <h3>Flight Manual 📘</h3>
+        <div class="help-content">
+            <h4>🔍 Search & Study</h4>
+            <ul>
+                <li><strong>Search:</strong> Type definitions or acronyms. Use the dropdown to filter by category.</li>
+                <li><strong>Confidence (🔴🟡🟢):</strong> Tap the dots on any card to rate your knowledge (Red=Unknown, Green=Mastered).</li>
+                <li><strong>Priority (🔥):</strong> Tap the candle/flame icon to mark items as "High Priority" for focused study.</li>
+                <li><strong>Smart Links:</strong> Click highlighted terms (e.g. <u>IFR</u>) to jump to them.</li>
+            </ul>
+
+            <h4>🎓 Exam Mode (New!)</h4>
+            <ul>
+                <li><strong>Launch:</strong> Tap <strong>📝 Exam Mode</strong> in the menu (+).</li>
+                <li><strong>Modes:</strong> Choose between <em>Multiple Choice</em> or <em>Written</em> (type the answer).</li>
+                <li><strong>Decks:</strong> You can quiz yourself on "Weak Spots" (Red/Yellow items), "Priority Items" (🔥), or specific categories.</li>
+                <li><strong>Grading:</strong> Get an S, A, C, or F grade at the end.</li>
+            </ul>
+
+            <h4>👜 Flight Bag Tools</h4>
+            <ul>
+                <li><strong>Calculators:</strong> Convert Fuel (Lbs/Gal), Distance (NM/SM), and Temp (C/F).</li>
+                <li><strong>QRH:</strong> Quick Reference for V-Speeds, Airspace Cloud Clearances, and Light Signals.</li>
+                <li><strong>Notion METAR:</strong> Link to your advanced weather dashboard.</li>
+            </ul>
+
+            <h4>⚙️ Admin & Data Sync</h4>
+            <ul>
+                <li><strong>Admin Mode:</strong> Unlock in Settings with password to add items to public databases.</li>
+                <li><strong>Sync Queue:</strong> Items added under Admin Mode are saved to a local queue. Use <strong>Copy for EVA/WIP</strong> in Settings to paste them into your Google Sheets.</li>
+                <li><strong>Backup:</strong> Use <strong>Export</strong> to save your notes/progress to a file.</li>
+            </ul>
         </div>
+        <div class="modal-buttons" style="margin-top:15px;">
+            <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+        </div>
+    </div>
     
     <div id="qrhModalOverlay" class="modal-overlay"></div>
     <div id="qrhModal" class="modal">
@@ -723,7 +699,7 @@
             <select id="newTarget" style="margin-bottom:5px; border-color:var(--error);">
                 <option value="USER">👤 Local User (Private)</option>
                 <option value="EVA">✈️ EVA Cadet (Public)</option>
-                <option value="WIP">🏗️ Building (Public)</option>
+                <option value="WIP">🏗️ Still Building (Public)</option>
             </select>
         </div>
     
@@ -1657,12 +1633,12 @@
             if (isAdminMode) {
                 target = document.getElementById('newTarget').value; // Should be 'EVA' or 'WIP'
             }
-        
+
             if (!acr || !mean) { 
                 showToast("Fill all fields"); 
                 return; 
             }
-        
+
             // Create the object
             const newItem = { 
                 acronym: acr, 
@@ -1671,7 +1647,7 @@
                 source: target, 
                 group: getGroup(cat) 
             };
-        
+
             if (target === 'USER') {
                 // Normal Private User Add
                 customData.unshift(newItem);
@@ -1684,7 +1660,7 @@
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
                 showToast(`Added to ${target} Sync Queue`);
             }
-        
+
             // IMPORTANT: Refresh allData so the new item shows up in the list immediately
             allData.unshift(newItem); 
             acronymSet.add(newItem.acronym);
@@ -1692,26 +1668,12 @@
             // Refresh the view
             runSearch(); 
             updateRankHUD();
-        
+
             // Close modal and reset
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
             document.getElementById('newAcronym').value = '';
             document.getElementById('newMeaning').value = '';
-        });
-        
-        // 4. Copy Pending to Clipboard (Format for Google Sheets)
-        document.getElementById('copyPendingBtn').addEventListener('click', () => {
-            if (pendingData.length === 0) { showToast("No pending items"); return; }
-            
-            // Create CSV Format: Acronym, Meaning, Category
-            let csvContent = pendingData.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
-            
-            navigator.clipboard.writeText(csvContent).then(() => {
-                showToast("📋 Copied! Paste into Google Sheets");
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
         });
         
         // 5. Clear Pending Queue
