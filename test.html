@@ -162,6 +162,8 @@
         .action-btn.star.active { opacity: 1; color: var(--star-color); filter: drop-shadow(0 0 2px var(--star-color)); }
         .action-btn.delete { color: var(--error); opacity: 0.6; }
         .action-btn.delete:active { opacity: 1; }
+        .action-btn.edit { color: var(--link-color); opacity: 0.6; }
+        .action-btn.edit:active { opacity: 1; }
         .action-btn.note.active { opacity: 1; color: #f1c40f; text-shadow: 0 0 5px rgba(241, 196, 15, 0.3); }
 
         .sticky-note-box { background: var(--note-bg); color: var(--note-text); padding: 8px; border-radius: 6px; font-size: 0.9em; margin-top: 5px; border-left: 4px solid #f1c40f; display: flex; align-items: flex-start; gap: 8px; }
@@ -540,7 +542,7 @@
             <ul>
                 <li><strong>Admin Mode:</strong> Unlock in Settings with password to add items to public databases.</li>
                 <li><strong>Sync Queue:</strong> Items added under Admin Mode are saved to a local queue. Use <strong>Copy for EVA/WIP</strong> in Settings to paste them into your Google Sheets.</li>
-                <li><strong>Backup:</strong> Use <strong>Export</strong> to save your notes/progress to a file.</li>
+                <li><strong>Edit/Delete:</strong> You can now edit/delete any local item (Private or Pending) using the ✏️ and 🗑️ buttons.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
@@ -897,6 +899,8 @@
         const ADMIN_PASSWORD = "VincentEVA"; // <--- CHANGE THIS PASSWORD
         let isAdminMode = false;
         let pendingData = JSON.parse(localStorage.getItem('pilotPendingDB')) || [];
+        let editingItem = null; // Stores item being edited
+
         /* =========================================
            1. CONFIGURATION
            ========================================= */
@@ -997,7 +1001,7 @@
             Promise.all(p).then(r => {
                     let csvData = r.flat();
                     
-                    // Mark locally stored items so we can allow deletion
+                    // Mark locally stored items so we can allow deletion/editing
                     const taggedCustom = customData.map(i => ({...i, isLocal: true}));
                     const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
                     
@@ -1101,11 +1105,14 @@
                             </div>`;
                     }
 
-                    // DELETE BUTTON LOGIC: Show trash can for ALL local items (Private + Pending Sync)
+                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
-                        // Pass acronym AND source to delete function safely
-                        actionBtn = `<button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning}')">🗑️</button>`;
+                        // Pass parameters safely to edit function
+                        actionBtn = `
+                            <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
+                            <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
+                        `;
                     }
                     
                     let noteHTML = '';
@@ -1227,76 +1234,127 @@
         // Add/Delete/Report/Speak
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
-        document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
+        document.getElementById('cancelAddBtn').addEventListener('click',()=>{
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            // Reset Edit State on Cancel
+            editingItem = null;
+            document.querySelector('#addModal h3').innerText = "Add New Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Save";
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
+        });
         
-        // 3. Updated Save Logic (Robust Check for Admin Dropdown)
+        // 3. Updated Save Logic (Handles Edit + Add + Sync)
         document.getElementById('saveAcronymBtn').addEventListener('click', () => {
             const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
             const mean = document.getElementById('newMeaning').value.trim();
             const cat = document.getElementById('newCategory').value;
             
-            // Check if the dropdown is visible on screen
+            // Check if dropdown is visible OR Admin Mode is ON
             const targetDiv = document.getElementById('adminTargetSelect');
             const isDropdownVisible = targetDiv.style.display !== 'none';
 
             let target = 'USER';
-            
-            // If Admin Mode is ON OR the dropdown is visible, use the selected value
             if (isAdminMode || isDropdownVisible) {
                 target = document.getElementById('newTarget').value; 
             }
 
             if (!acr || !mean) { showToast("Fill all fields"); return; }
 
+            // --- EDIT MODE LOGIC START ---
+            if (editingItem) {
+                // If editing, remove old version first
+                removeItemFromDB(editingItem);
+            }
+            // --- EDIT MODE LOGIC END ---
+
             const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat), isLocal: true };
 
             if (target === 'USER') {
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                showToast("Saved to Private (User)");
+                showToast(editingItem ? "Updated (Private)" : "Saved to Private");
             } else {
                 pendingData.unshift(newItem); 
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(`Saved to Sync Queue (${target})`);
+                showToast(editingItem ? `Updated in Queue (${target})` : `Added to Queue (${target})`);
             }
 
-            // Refresh Data
-            allData.unshift(newItem); 
-            acronymSet.add(newItem.acronym);
-            
-            runSearch(); 
-            updateRankHUD();
-            updateSyncCounts(); // Update the settings badges immediately
+            // Reload Data Cleanly
+            if (editingItem) {
+                loadData(document.getElementById('dbSource').value);
+            } else {
+                allData.unshift(newItem); 
+                acronymSet.add(newItem.acronym);
+                runSearch(); 
+                updateRankHUD();
+                updateSyncCounts();
+            }
 
             // Close and Reset
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
             document.getElementById('newAcronym').value = '';
             document.getElementById('newMeaning').value = '';
+            
+            // Reset Edit State
+            editingItem = null;
+            document.querySelector('#addModal h3').innerText = "Add New Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Save";
         });
 
-        // 4. Updated Delete Logic (Handles both Private and Pending Sync items)
-        window.deleteItem = function(acronym, meaning) {
-            if(!confirm(`Delete '${acronym}'? This will remove it from your device.`)) return;
-
-            // Try removing from Private Custom Data
+        // 4. Helper: Silently remove item (For Edit/Delete)
+        function removeItemFromDB(item) {
             const initialCustom = customData.length;
-            customData = customData.filter(i => !(i.acronym === acronym && i.meaning === meaning));
-            if(customData.length < initialCustom) {
+            customData = customData.filter(i => !(i.acronym === item.acronym && i.meaning === item.meaning));
+            if (customData.length < initialCustom) {
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
             }
 
-            // Try removing from Pending Sync Data
             const initialPending = pendingData.length;
-            pendingData = pendingData.filter(i => !(i.acronym === acronym && i.meaning === meaning));
-            if(pendingData.length < initialPending) {
+            pendingData = pendingData.filter(i => !(i.acronym === item.acronym && i.meaning === item.meaning));
+            if (pendingData.length < initialPending) {
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                updateSyncCounts(); // Update badge
+                updateSyncCounts();
             }
+        }
 
-            // Refresh UI
+        // 5. Delete Logic
+        window.deleteItem = function(acronym, meaning) {
+            if(!confirm(`Delete '${acronym}'? This will remove it from your device.`)) return;
+            removeItemFromDB({ acronym, meaning });
             loadData(document.getElementById('dbSource').value);
             showToast("Item Deleted");
+        };
+
+        // 6. Edit Logic (Opens Modal with Pre-fill)
+        window.startEdit = function(acronym, meaning, category, source) {
+            editingItem = { acronym, meaning, category, source };
+
+            document.getElementById('addModalOverlay').style.display = 'block';
+            document.getElementById('addModal').style.display = 'block';
+            
+            document.getElementById('newAcronym').value = acronym;
+            document.getElementById('newMeaning').value = meaning;
+            document.getElementById('newCategory').value = category;
+            
+            const targetSelect = document.getElementById('newTarget');
+            const targetDiv = document.getElementById('adminTargetSelect');
+            
+            document.querySelector('#addModal h3').innerText = "Edit Acronym";
+            document.getElementById('saveAcronymBtn').innerText = "Update";
+
+            if (isAdminMode) {
+                targetDiv.style.display = 'block';
+                if (['USER', 'EVA', 'WIP'].includes(source)) {
+                    targetSelect.value = source;
+                } else {
+                    targetSelect.value = 'EVA';
+                }
+            } else {
+                targetDiv.style.display = 'none';
+            }
         };
 
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
@@ -1664,20 +1722,18 @@
         // 1. Admin Toggle Logic
         document.getElementById('toggleAdmin').addEventListener('change', (e) => {
             if (e.target.checked) {
-                // User is trying to turn ON
                 const input = prompt("Enter Admin Password:");
                 if (input === ADMIN_PASSWORD) {
                     isAdminMode = true;
                     document.getElementById('adminControls').style.display = 'block';
                     showToast("🔓 Admin Mode Unlocked");
                 } else {
-                    e.target.checked = false; // Reset switch
+                    e.target.checked = false; 
                     isAdminMode = false;
                     document.getElementById('adminControls').style.display = 'none';
                     alert("Access Denied");
                 }
             } else {
-                // User turning OFF
                 isAdminMode = false;
                 document.getElementById('adminControls').style.display = 'none';
                 showToast("🔒 Admin Mode Locked");
