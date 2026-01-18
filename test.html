@@ -1655,7 +1655,7 @@
             // Default to USER, but check if Admin changed the target
             let target = 'USER';
             if (isAdminMode) {
-                target = document.getElementById('newTarget').value; // EVA or WIP
+                target = document.getElementById('newTarget').value; // Should be 'EVA' or 'WIP'
             }
         
             if (!acr || !mean) { 
@@ -1663,7 +1663,7 @@
                 return; 
             }
         
-            // Create the data object with the correct source tag
+            // Create the object
             const newItem = { 
                 acronym: acr, 
                 meaning: mean, 
@@ -1676,18 +1676,24 @@
                 // Normal Private User Add
                 customData.unshift(newItem);
                 localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                showToast("Saved to My Acronyms (Private)");
+                showToast("Saved to My Acronyms");
             } else {
-                // Admin Add: This keeps EVA and WIP separate in the pending queue
-                pendingData.unshift(newItem);
+                // ADMIN ADD: This is the part that was likely missing!
+                // We must push to 'pendingData' so the Sync function can see it.
+                pendingData.unshift(newItem); 
                 localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(`Stored in ${target} Sync Queue`);
+                showToast(`Added to ${target} Sync Queue`);
             }
         
-            // Refresh the data display immediately
-            loadData(document.getElementById('dbSource').value); 
+            // IMPORTANT: Refresh allData so the new item shows up in the list immediately
+            allData.unshift(newItem); 
+            acronymSet.add(newItem.acronym);
             
-            // Close modal and reset fields
+            // Refresh the view
+            runSearch(); 
+            updateRankHUD();
+        
+            // Close modal and reset
             document.getElementById('addModalOverlay').style.display = 'none';
             document.getElementById('addModal').style.display = 'none';
             document.getElementById('newAcronym').value = '';
