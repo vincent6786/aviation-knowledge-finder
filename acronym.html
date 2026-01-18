@@ -788,7 +788,8 @@
 
     <div id="flashcardOverlay" class="modal-overlay">
         <div class="flashcard-wrapper">
-            <div class="score-display" id="sessionScore">Session Accuracy: 0%</div>
+            <button id="closeFcTopBtn" style="position:absolute; top:-50px; right:0; background:none; border:none; color:white; font-size:2em; cursor:pointer;">✕</button>
+    
             <div class="flashcard" id="theFlashcard">
                 <div class="card-face front">
                     <span class="source-tag" id="fcSource">FAA</span>
@@ -799,10 +800,11 @@
                     <div class="fc-meaning" id="fcMeaning">Visual Approach Slope Indicator</div>
                 </div>
             </div>
-            <div class="fc-controls">
-                <button id="missBtn" class="game-btn miss">⬅️ Missed</button>
-                <button id="closeFcBtn" class="modal-btn cancel" style="background:white; color:black; font-size:0.8em;">Exit</button>
-                <button id="gotBtn" class="game-btn got">Got it ➡️</button>
+    
+            <div class="fc-controls" style="justify-content:center; gap:15px;">
+                <button onclick="rateFlashcard(1)" class="game-btn" style="background:#ff4757; flex:1;">🔴 <br><span style="font-size:0.7em">Hard</span></button>
+                <button onclick="rateFlashcard(2)" class="game-btn" style="background:#ffa502; flex:1;">🟡 <br><span style="font-size:0.7em">Vague</span></button>
+                <button onclick="rateFlashcard(3)" class="game-btn" style="background:#2ed573; flex:1;">🟢 <br><span style="font-size:0.7em">Easy</span></button>
             </div>
         </div>
     </div>
@@ -1198,7 +1200,7 @@
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
         /* =========================================
-           UPDATED RANK HUD (CONTEXT AWARE)
+           UPDATED RANK HUD
            ========================================= */
         function updateRankHUD() {
             const source = document.getElementById('dbSource').value;
@@ -1207,29 +1209,25 @@
             const progressFill = document.getElementById('rankProgress');
             const rankPct = document.getElementById('rankPct');
         
-            // 1. DICTIONARY MODE (FAA / SOFEMA)
-            // We hide the gamification elements here because these are just dictionaries.
-            if (source === 'faa' || source === 'sofema') {
-                rankBadge.innerText = "✈️ Aviation Acronym Dictionary";
-                rankBadge.style.color = "var(--text)"; // Neutral color
+            // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
+            // We hide mastery for these because they are too big or just reference.
+            if (source === 'faa' || source === 'sofema' || source === 'both') {
+                rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
+                rankBadge.style.color = "var(--text)";
                 masteryContainer.style.display = 'none'; // Hide progress bar
                 return; 
             }
-            // 2. STUDY MODE (EVA, BUILDING, BOTH, USER)
-            // We show mastery calculated SPECIFICALLY for the loaded dataset.
-            masteryContainer.style.display = 'flex'; // Show progress bar
-            rankBadge.style.color = "var(--accent)"; // Restore accent color
         
-            // Calculate stats based on CURRENTLY LOADED data only
+            // 2. STUDY MODE (EVA, USER)
+            // Show mastery progress for specific study decks.
+            masteryContainer.style.display = 'flex'; 
+            rankBadge.style.color = "var(--accent)"; 
+        
             const totalInView = allData.length;
-            
-            // Count items in the current view that are fully mastered (Level 3 - Green)
-            // We check (mastery[i.acronym] === 3) to ensure we only count "Green" items
+            // Count items marked as Level 3 (Green/Mastered)
             const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
-        
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
-            // Dynamic Rank Title
             let r = "Student Pilot";
             if (masteredInView > 200) r = "👨‍✈️ Captain";
             else if (masteredInView > 100) r = "First Officer";
@@ -1238,8 +1236,6 @@
         
             rankBadge.innerText = r;
             progressFill.style.width = `${p}%`;
-            
-            // Show count so you know how many you've mastered in THIS specific database
             rankPct.innerText = `${p}% (${masteredInView}/${totalInView})`;
         }
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
@@ -1369,40 +1365,68 @@
 
         /* =========================================
            7. EXAM ENGINE & FLASHCARDS
+           UPDATED FLASHCARD LOGIC (Confidence Based)
            ========================================= */
-        const fo=document.getElementById('flashcardOverlay'), tfc=document.getElementById('theFlashcard'), dbo=document.getElementById('debriefOverlay'), dbm=document.getElementById('debriefModal');
+        const fo = document.getElementById('flashcardOverlay');
+        const tfc = document.getElementById('theFlashcard');
+        function startFlashcardSession() {
+            if (filteredData.length === 0) { showToast("No cards in current filter"); return; }
+            // Shuffle the current list so it's random every time
+            // We prioritize items that are NOT green (Level 3) if they exist
+            let weakItems = filteredData.filter(i => (mastery[i.acronym] || 0) < 3);
+            // 70% chance to show a weak item, 30% chance to show random review
+            if (weakItems.length > 0 && Math.random() > 0.3) {
+                currentFlashcardItem = weakItems[Math.floor(Math.random() * weakItems.length)];
+            } else {
+                currentFlashcardItem = filteredData[Math.floor(Math.random() * filteredData.length)];
+            }
+            updateFlashcardUI();
+            fo.style.display = 'block';
+            playSound('click');
+        }
         
-        function startFlashcardSession(){if(filteredData.length===0){showToast("No cards");return;}sessionStats={total:0,correct:0,missedItems:[]};updateScoreUI();showNextCard();fo.style.display='block';playSound('click');}
-        function endFlashcardSession(){fo.style.display='none';runSearch();showDebrief();}
-        function showDebrief(){
-            if(sessionStats.total===0)return; const p=Math.round((sessionStats.correct/sessionStats.total)*100);
-            document.getElementById('debriefGrade').innerText=p===100?'S':(p>=90?'A':(p>=70?'C':'F'));
-            document.getElementById('debriefScore').innerText=`${p}% Accuracy`;
-            const l=document.getElementById('debriefReviewList'); l.innerHTML='';
-            if(sessionStats.missedItems.length===0)l.innerHTML='<div>Perfect!</div>';else sessionStats.missedItems.forEach(i=>{l.innerHTML+=`<div class="report-item missed"><span>${i.acronym}</span><span>Missed</span></div>`;});
-            dbo.style.display='block';dbm.style.display='block';playSound('success');
+        function updateFlashcardUI() {
+            document.getElementById('fcAcronym').innerText = currentFlashcardItem.acronym;
+            document.getElementById('fcMeaning').innerText = currentFlashcardItem.meaning;
+            document.getElementById('fcSource').innerText = currentFlashcardItem.source;
+            document.getElementById('fcSource').className = `source-tag ${currentFlashcardItem.source}`; // Correct color
+            // Reset card state
+            tfc.classList.remove('flipped');
         }
-        function showNextCard(){
-            let p=filteredData, u=filteredData.filter(i=>!mastery[i.acronym]); if(u.length>0&&Math.random()>0.3)p=u;
-            currentFlashcardItem=p[Math.floor(Math.random()*p.length)]; addToHistory(currentFlashcardItem);
-            document.getElementById('fcAcronym').innerText=currentFlashcardItem.acronym; document.getElementById('fcMeaning').innerText=currentFlashcardItem.meaning;
-            tfc.classList.remove('flipped','shake','pulse-green');
-        }
-        function updateScoreUI(){const p=sessionStats.total===0?0:Math.round((sessionStats.correct/sessionStats.total)*100);document.getElementById('sessionScore').innerText=`${p}% (${sessionStats.correct}/${sessionStats.total})`;}
-        function handleGameResult(c){
-            sessionStats.total++;
-            if(c){sessionStats.correct++;tfc.classList.add('pulse-green');playSound('success');mastery[currentFlashcardItem.acronym]=true;}
-            else{tfc.classList.add('shake');playSound('error');sessionStats.missedItems.push(currentFlashcardItem);delete mastery[currentFlashcardItem.acronym];}
-            localStorage.setItem('pilotMastery',JSON.stringify(mastery));updateScoreUI();updateRankHUD();setTimeout(showNextCard,600);
-        }
-        document.getElementById('randomBtn').addEventListener('click',startFlashcardSession);
-        document.getElementById('closeFcBtn').addEventListener('click',endFlashcardSession);
-        document.getElementById('missBtn').addEventListener('click',(e)=>{e.stopPropagation();handleGameResult(false);});
-        document.getElementById('gotBtn').addEventListener('click',(e)=>{e.stopPropagation();handleGameResult(true);});
-        tfc.addEventListener('click',()=>{tfc.classList.toggle('flipped');playSound('click');});
-        document.getElementById('closeDebriefBtn').addEventListener('click',()=>{dbo.style.display='none';dbm.style.display='none';});
-        window.toggleReviewDetails = function() { const list = document.getElementById('debriefReviewList'); list.style.display = list.style.display === 'none' ? 'block' : 'none'; };
-
+        // Called when user clicks Red(1), Yellow(2), or Green(3)
+        window.rateFlashcard = function(level) {
+            // 1. Save Confidence Level
+            mastery[currentFlashcardItem.acronym] = level;
+            localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+        
+            // 2. Audio Feedback
+            if (level === 3) playSound('success'); 
+            else playSound('click');
+        
+            // 3. Visual Feedback (optional tiny delay or animation could go here)
+            
+            // 4. Next Card (Pick a new random one from the list)
+            setTimeout(() => {
+                let nextItem = filteredData[Math.floor(Math.random() * filteredData.length)];
+                // Small logic to ensure we don't pick the exact same card twice in a row if possible
+                if(filteredData.length > 1 && nextItem === currentFlashcardItem) {
+                    nextItem = filteredData.find(i => i !== currentFlashcardItem) || nextItem;
+                }
+                currentFlashcardItem = nextItem;
+                updateFlashcardUI();
+            }, 200); // 200ms delay for smoothness
+        };
+        
+        // Controls
+        document.getElementById('randomBtn').addEventListener('click', startFlashcardSession);
+        document.getElementById('closeFcTopBtn').addEventListener('click', () => { 
+            fo.style.display = 'none'; 
+            runSearch(); // Refresh list to show new colored dots
+        });
+        tfc.addEventListener('click', () => { 
+            tfc.classList.toggle('flipped'); 
+            playSound('click'); 
+        });
         /* --- ADVANCED QUIZ ENGINE --- */
         const quizOverlay = document.getElementById('quizOverlay');
         const quizSetup = document.getElementById('quizSetup');
