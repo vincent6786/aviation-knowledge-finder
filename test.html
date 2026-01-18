@@ -716,6 +716,37 @@
         </div>
     </div>
 
+    <div id="encycloModalOverlay" class="modal-overlay"></div>
+    <div id="encycloModal" class="modal" style="max-width: 500px; max-height: 85vh; overflow-y: auto;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+            <div>
+                <span id="encSource" class="source-tag" style="font-size:0.6em; margin-bottom:5px; display:inline-block;">FAA</span>
+                <h2 id="encAcronym" style="margin:0; color:var(--accent); font-size:2em;">PAPI</h2>
+                <div id="encCategory" style="font-size:0.8em; opacity:0.6; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">OPERATIONS</div>
+            </div>
+            <button id="closeEncyBtn" class="icon-btn" style="font-size:1.5em; padding:0;">✕</button>
+        </div>
+    
+        <div id="encMeaning" style="font-size:1.2em; font-weight:500; margin-bottom:20px; line-height:1.5; border-left:4px solid var(--accent); padding-left:15px;">
+            Precision Approach Path Indicator
+        </div>
+    
+        <div id="encImageContainer" style="margin-bottom:20px; display:none;">
+            <img id="encImage" src="" style="width:100%; border-radius:12px; border:1px solid rgba(150,150,150,0.2); box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+        </div>
+    
+        <div id="encContextContainer" style="display:none; background:rgba(150,150,150,0.1); padding:15px; border-radius:12px;">
+            <div style="font-weight:bold; font-size:0.8em; opacity:0.7; margin-bottom:5px; text-transform:uppercase;">💡 Did You Know?</div>
+            <div id="encContext" style="font-size:0.95em; line-height:1.6; opacity:0.9;">
+                </div>
+        </div>
+    
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button id="encGoogleBtn" class="modal-btn" style="flex:1; border:1px solid rgba(150,150,150,0.3);">🌐 Google It</button>
+        </div>
+    </div>
+    
     <div id="addModalOverlay" class="modal-overlay"></div>
     <div id="addModal" class="modal">
         <h3>Add New Acronym</h3>
@@ -1043,8 +1074,26 @@
             });
         }
 
-        // CSV Parser
-        function parseCSV(t){const r=[],l=t.split('\n');for(let i=1;i<l.length;i++){const ln=l[i],m=ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);if(m&&m.length>=2)r.push({acronym:clean(m[0]),meaning:clean(m[1]),category:m[2]?clean(m[2]):"General"});}return r;}
+        // CSV Parser (Updated for 5 Columns)
+        function parseCSV(t) {
+            const r = [], l = t.split('\n');
+            for (let i = 1; i < l.length; i++) {
+                // Regex handles commas inside quotes correctly
+                const ln = l[i], m = ln.match(/(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g);
+                
+                if (m && m.length >= 2) {
+                    r.push({
+                        acronym: clean(m[0]),  // Col A
+                        meaning: clean(m[1]),  // Col B
+                        category: m[2] ? clean(m[2]) : "General", // Col C
+                        // NEW COLUMNS
+                        image: m[3] ? clean(m[3]) : null,   // Col D: Image URL
+                        context: m[4] ? clean(m[4]) : null  // Col E: Notes/Context
+                    });
+                }
+            }
+            return r;
+        }
         function clean(s){return s.replace(/^"|"$/g,'').trim();}
         
         // Group Categorization
@@ -1106,35 +1155,52 @@
                 tf.slice(0, 50).forEach((i, idx) => {
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
-                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
                     const isLocalItem = i.isLocal === true;
-                    
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
-
+                
+                    // 1. CHECK FOR EXTRA INFO (Encyclopedia Data)
+                    const hasImage = i.image && i.image.length > 4; // Basic check for URL
+                    const hasContext = i.context && i.context.length > 2;
+                    const hasExtra = hasImage || hasContext;
+                
+                    // Create Badge HTML
+                    let infoBadge = '';
+                    if (hasImage) infoBadge += ' 📷'; // Camera icon if image exists
+                    if (hasContext) infoBadge += ' 📖'; // Book icon if notes exist
+                
                     const c = document.createElement('div');
                     c.className = `card ${isPriority ? 'priority-high' : ''}`;
                     c.style.animationDelay = `${idx * 0.05}s`;
                     
-                    let dm = i.meaning;
-                    if (term && (mode === 'contains' || searchDefs)) {
-                         dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    // Make the WHOLE card clickable to open details, but we handle button clicks separately
+                    if (hasExtra) {
+                        c.style.cursor = "pointer";
+                        c.onclick = (e) => {
+                            // Prevent opening if they clicked a button or the confidence dots
+                            if (e.target.closest('.action-btn') || e.target.closest('.conf-dot')) return;
+                            openEncyclopediaModal(i.acronym);
+                        };
                     }
                     
-                    // See Also
+                    let dm = i.meaning;
+                    if (term && (mode === 'contains' || searchDefs)) {
+                            dm = dm.replace(new RegExp(`(${term})`, 'gi'), '<span style="background:rgba(0,168,255,0.3)">$1</span>');
+                    }
+                    
+                    // See Also Logic
                     let seeAlsoHTML = '';
                     const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
                     if (related.length > 0) {
                         seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
                                 <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
-                                ${related.map(r => `<span class="term-link" onclick="navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
+                                ${related.map(r => `<span class="term-link" onclick="event.stopPropagation(); navigateFor('${r.acronym}')" style="margin-right:8px;">${r.acronym}</span>`).join('')}
                             </div>`;
                     }
-
-                    // DELETE & EDIT LOGIC: Show buttons for ALL local items (Private + Pending Sync)
+                
+                    // Action Buttons
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
                     if (isLocalItem) {
-                        // Pass parameters safely to edit function
                         actionBtn = `
                             <button class="action-btn edit" onclick="startEdit('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}', '${i.category}', '${i.source}')">✏️</button>
                             <button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning.replace(/'/g, "\\'")}')">🗑️</button>
@@ -1143,39 +1209,52 @@
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
-
+                
+                    // HTML Structure
                     c.innerHTML = `
                         <div class="card-content">
                             <div class="acronym-header">
                                 <span class="acronym-badge">${i.acronym}</span>
                                 <div class="meta-tags">
                                     <span class="source-tag ${i.source}">${i.source}</span>
-                                    <span class="category-tag" onclick="filterByRawCategory('${i.category}')">${i.category}</span>
+                                    <span class="category-tag" onclick="event.stopPropagation(); filterByRawCategory('${i.category}')">${i.category}</span>
                                 </div>
                             </div>
-                            <div class="meaning">${autoLink(dm)}</div>
+                            
+                            <div class="meaning">
+                                ${autoLink(dm)}
+                                ${hasExtra ? `<div style="margin-top:5px; font-size:0.75em; color:var(--accent); font-weight:bold; border:1px solid var(--accent); display:inline-block; padding:2px 6px; border-radius:10px;">Tap for Details ${infoBadge}</div>` : ''}
+                            </div>
                             
                             <div class="conf-bar">
-                                <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 1)" title="No Idea"></div>
-                                <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 2)" title="Vague"></div>
-                                <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="setConfidence('${i.acronym}', 3)" title="Got it!"></div>
+                                <div class="conf-dot red ${confidence >= 1 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 1)" title="No Idea"></div>
+                                <div class="conf-dot yellow ${confidence >= 2 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 2)" title="Vague"></div>
+                                <div class="conf-dot green ${confidence >= 3 ? 'active' : ''}" onclick="event.stopPropagation(); setConfidence('${i.acronym}', 3)" title="Got it!"></div>
                             </div>
-
+                
                             ${seeAlsoHTML}
                             ${noteHTML}
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn" onclick="togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
-                            <button class="action-btn star ${isFav ? 'active' : ''}">⭐</button>
-                            <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="openNoteModal('${i.acronym}')">📝</button>
-                            <button class="action-btn speak">🔊</button>
-                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn">🌐</a>
+                            <button class="action-btn" onclick="event.stopPropagation(); togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
+                            <button class="action-btn star ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${i.acronym}')">⭐</button>
+                            <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="event.stopPropagation(); openNoteModal('${i.acronym}')">📝</button>
+                            <button class="action-btn speak" onclick="event.stopPropagation(); speakText('${i.meaning.replace(/'/g, "\\'")}')">🔊</button>
+                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn" onclick="event.stopPropagation();">🌐</a>
                             ${actionBtn}
                         </div>`;
                     
-                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
-                    c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
-                    c.querySelector('.speak').addEventListener('click', () => { speakText(i.meaning); addToHistory(i); });
+                    // Attach Listeners
+                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', (e) => { e.stopPropagation(); openReportModal(i); });
+                    
+                    // Button listeners are already inline (onclick="...") but we used toggleFavorite('${i.acronym}') instead of passing the object 'i' 
+                    // to make the HTML string cleaner. 
+                    // IMPORTANT: Ensure toggleFavorite accepts a string now, OR switch back to adding listeners manually like below:
+                    
+                    // Manual listener approach (Safe for objects):
+                    const starBtn = c.querySelector('.star');
+                    starBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(i); }; // Uses the 'i' object from the loop directly
+                
                     res.appendChild(c);
                 });
             } else {
