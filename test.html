@@ -699,7 +699,7 @@
             <select id="newTarget" style="margin-bottom:5px; border-color:var(--error);">
                 <option value="USER">👤 Local User (Private)</option>
                 <option value="EVA">✈️ EVA Cadet (Public)</option>
-                <option value="WIP">🏗️ Building (Public)</option>
+                <option value="WIP">🏗️ Still Building (Public)</option>
             </select>
         </div>
     
@@ -996,8 +996,13 @@
 
             Promise.all(p).then(r => {
                     let csvData = r.flat();
+                    
+                    // Mark locally stored items so we can allow deletion
+                    const taggedCustom = customData.map(i => ({...i, isLocal: true}));
+                    const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
+                    
                     // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
-                    allData = [...customData, ...pendingData, ...csvData];
+                    allData = [...taggedCustom, ...taggedPending, ...csvData];
                     acronymSet = new Set(allData.map(i => i.acronym));
                     
                     // Reset filters
@@ -1008,7 +1013,7 @@
                     
                     // --- UPDATE UI ELEMENTS ---
                     updateRankHUD(); 
-                    updateSyncCounts(); // <--- NEW: Updates the queue numbers in Settings
+                    updateSyncCounts(); 
                     
                     if (document.getElementById('searchBox').value.length > 0) runSearch();
                     else document.getElementById('results').innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">SYSTEM READY</div>';
@@ -1071,7 +1076,8 @@
                 tf.slice(0, 50).forEach((i, idx) => {
                     const isFav = favorites.includes(i.acronym);
                     const hasNote = pilotNotes[i.acronym];
-                    const isUser = i.source === 'USER';
+                    // IMPORTANT: We check isLocal (Added in loadData) instead of just 'USER'
+                    const isLocalItem = i.isLocal === true;
                     
                     const confidence = mastery[i.acronym] || 0; 
                     const isPriority = priorityList.includes(i.acronym);
@@ -1095,8 +1101,12 @@
                             </div>`;
                     }
 
+                    // DELETE BUTTON LOGIC: Show trash can for ALL local items (Private + Pending Sync)
                     let actionBtn = `<button class="action-btn report" title="Report">🚩</button>`;
-                    if (isUser) actionBtn = `<button class="action-btn delete" onclick="deleteCustom('${i.acronym}')">🗑️</button>`;
+                    if (isLocalItem) {
+                        // Pass acronym AND source to delete function safely
+                        actionBtn = `<button class="action-btn delete" onclick="deleteItem('${i.acronym}', '${i.meaning}')">🗑️</button>`;
+                    }
                     
                     let noteHTML = '';
                     if (hasNote) { noteHTML = `<div class="sticky-note-box"><span class="note-icon-small">📝</span> ${hasNote}</div>`; }
@@ -1130,7 +1140,7 @@
                             ${actionBtn}
                         </div>`;
                     
-                    if (!isUser) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
+                    if (!isLocalItem) c.querySelector('.report').addEventListener('click', () => openReportModal(i));
                     c.querySelector('.star').addEventListener('click', () => toggleFavorite(i));
                     c.querySelector('.speak').addEventListener('click', () => { speakText(i.meaning); addToHistory(i); });
                     res.appendChild(c);
@@ -1218,13 +1228,77 @@
         const addModal=document.getElementById('addModal'), addOverlay=document.getElementById('addModalOverlay');
         document.getElementById('addAcronymBtn').addEventListener('click',()=>{addOverlay.style.display='block';addModal.style.display='block';});
         document.getElementById('cancelAddBtn').addEventListener('click',()=>{addOverlay.style.display='none';addModal.style.display='none';});
-        document.getElementById('saveAcronymBtn').addEventListener('click',()=>{
-            const acr = document.getElementById('newAcronym').value.toUpperCase().trim(); const mean = document.getElementById('newMeaning').value.trim(); const cat = document.getElementById('newCategory').value;
-            if(!acr || !mean) { showToast("Fill all fields"); return; }
-            const newItem = { acronym: acr, meaning: mean, category: cat, source: 'USER', group: getGroup(cat) };
-            customData.unshift(newItem); localStorage.setItem('pilotCustomDB', JSON.stringify(customData)); loadData(document.getElementById('dbSource').value); showToast("Saved!"); addOverlay.style.display='none'; addModal.style.display='none'; document.getElementById('newAcronym').value=''; document.getElementById('newMeaning').value='';
+        
+        // 3. Updated Save Logic (Robust Check for Admin Dropdown)
+        document.getElementById('saveAcronymBtn').addEventListener('click', () => {
+            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
+            const mean = document.getElementById('newMeaning').value.trim();
+            const cat = document.getElementById('newCategory').value;
+            
+            // Check if the dropdown is visible on screen
+            const targetDiv = document.getElementById('adminTargetSelect');
+            const isDropdownVisible = targetDiv.style.display !== 'none';
+
+            let target = 'USER';
+            
+            // If Admin Mode is ON OR the dropdown is visible, use the selected value
+            if (isAdminMode || isDropdownVisible) {
+                target = document.getElementById('newTarget').value; 
+            }
+
+            if (!acr || !mean) { showToast("Fill all fields"); return; }
+
+            const newItem = { acronym: acr, meaning: mean, category: cat, source: target, group: getGroup(cat), isLocal: true };
+
+            if (target === 'USER') {
+                customData.unshift(newItem);
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                showToast("Saved to Private (User)");
+            } else {
+                pendingData.unshift(newItem); 
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                showToast(`Saved to Sync Queue (${target})`);
+            }
+
+            // Refresh Data
+            allData.unshift(newItem); 
+            acronymSet.add(newItem.acronym);
+            
+            runSearch(); 
+            updateRankHUD();
+            updateSyncCounts(); // Update the settings badges immediately
+
+            // Close and Reset
+            document.getElementById('addModalOverlay').style.display = 'none';
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('newAcronym').value = '';
+            document.getElementById('newMeaning').value = '';
         });
-        function deleteCustom(acronym){if(confirm("Delete '"+acronym+"'?")){customData=customData.filter(i=>i.acronym!==acronym);localStorage.setItem('pilotCustomDB',JSON.stringify(customData));loadData(document.getElementById('dbSource').value);showToast("Deleted");}}
+
+        // 4. Updated Delete Logic (Handles both Private and Pending Sync items)
+        window.deleteItem = function(acronym, meaning) {
+            if(!confirm(`Delete '${acronym}'? This will remove it from your device.`)) return;
+
+            // Try removing from Private Custom Data
+            const initialCustom = customData.length;
+            customData = customData.filter(i => !(i.acronym === acronym && i.meaning === meaning));
+            if(customData.length < initialCustom) {
+                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+            }
+
+            // Try removing from Pending Sync Data
+            const initialPending = pendingData.length;
+            pendingData = pendingData.filter(i => !(i.acronym === acronym && i.meaning === meaning));
+            if(pendingData.length < initialPending) {
+                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
+                updateSyncCounts(); // Update badge
+            }
+
+            // Refresh UI
+            loadData(document.getElementById('dbSource').value);
+            showToast("Item Deleted");
+        };
+
         function openReportModal(i){currentReportItem=i;document.getElementById('modalTitle').innerText=`Report: ${i.acronym}`;document.getElementById('reportComment').value="";document.getElementById('modalOverlay').style.display='block';document.getElementById('reportModal').style.display='block';}
         document.getElementById('cancelModalBtn').addEventListener('click',()=>{document.getElementById('modalOverlay').style.display='none';document.getElementById('reportModal').style.display='none';});
         document.getElementById('sendEmailBtn').addEventListener('click',()=>{if(!currentReportItem)return;const b=`Error in ${currentReportItem.acronym}\nComment:${document.getElementById('reportComment').value}`;window.open(`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(currentReportItem.acronym)}&body=${encodeURIComponent(b)}`,'_blank');});
@@ -1246,6 +1320,7 @@
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
+        
         /* =========================================
            UPDATED RANK HUD
            ========================================= */
@@ -1257,7 +1332,6 @@
             const rankPct = document.getElementById('rankPct');
         
             // 1. DICTIONARY / GLOBAL MODE (FAA, SOFEMA, or ALL)
-            // We hide mastery for these because they are too big or just reference.
             if (source === 'faa' || source === 'sofema' || source === 'both') {
                 rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
                 rankBadge.style.color = "var(--text)";
@@ -1266,12 +1340,10 @@
             }
         
             // 2. STUDY MODE (EVA, USER)
-            // Show mastery progress for specific study decks.
             masteryContainer.style.display = 'flex'; 
             rankBadge.style.color = "var(--accent)"; 
         
             const totalInView = allData.length;
-            // Count items marked as Level 3 (Green/Mastered)
             const masteredInView = allData.filter(i => (mastery[i.acronym] || 0) === 3).length;
             let p = totalInView === 0 ? 0 : Math.round((masteredInView / totalInView) * 100);
         
@@ -1592,18 +1664,20 @@
         // 1. Admin Toggle Logic
         document.getElementById('toggleAdmin').addEventListener('change', (e) => {
             if (e.target.checked) {
+                // User is trying to turn ON
                 const input = prompt("Enter Admin Password:");
                 if (input === ADMIN_PASSWORD) {
                     isAdminMode = true;
                     document.getElementById('adminControls').style.display = 'block';
                     showToast("🔓 Admin Mode Unlocked");
                 } else {
-                    e.target.checked = false; 
+                    e.target.checked = false; // Reset switch
                     isAdminMode = false;
                     document.getElementById('adminControls').style.display = 'none';
                     alert("Access Denied");
                 }
             } else {
+                // User turning OFF
                 isAdminMode = false;
                 document.getElementById('adminControls').style.display = 'none';
                 showToast("🔒 Admin Mode Locked");
@@ -1619,70 +1693,11 @@
             const targetDiv = document.getElementById('adminTargetSelect');
             if (isAdminMode) {
                 targetDiv.style.display = 'block';
-                // Default to EVA if Admin is on
+                // Force Default to EVA if Admin is on
                 document.getElementById('newTarget').value = 'EVA'; 
             } else {
                 targetDiv.style.display = 'none';
             }
-        });
-        
-        // 3. Save Logic (Handles USER vs MULTIPLE PENDING DATABASES)
-        document.getElementById('saveAcronymBtn').addEventListener('click', () => {
-            const acr = document.getElementById('newAcronym').value.toUpperCase().trim();
-            const mean = document.getElementById('newMeaning').value.trim();
-            const cat = document.getElementById('newCategory').value;
-            
-            // Default to USER
-            let target = 'USER';
-            
-            // Check if dropdown is visible OR Admin Mode is ON
-            const targetDiv = document.getElementById('adminTargetSelect');
-            const isDropdownVisible = targetDiv.style.display !== 'none';
-
-            if (isAdminMode || isDropdownVisible) {
-                target = document.getElementById('newTarget').value; 
-            }
-
-            if (!acr || !mean) { 
-                showToast("Fill all fields"); 
-                return; 
-            }
-
-            // Create the object
-            const newItem = { 
-                acronym: acr, 
-                meaning: mean, 
-                category: cat, 
-                source: target, 
-                group: getGroup(cat) 
-            };
-
-            if (target === 'USER') {
-                // Normal Private User Add
-                customData.unshift(newItem);
-                localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                showToast("Saved to My Acronyms");
-            } else {
-                // ADMIN ADD: Push to pendingData
-                pendingData.unshift(newItem); 
-                localStorage.setItem('pilotPendingDB', JSON.stringify(pendingData));
-                showToast(`Added to ${target} Sync Queue`);
-            }
-
-            // IMPORTANT: Refresh allData so the new item shows up in the list immediately
-            allData.unshift(newItem); 
-            acronymSet.add(newItem.acronym);
-            
-            // Refresh the view & counters
-            runSearch(); 
-            updateRankHUD();
-            updateSyncCounts(); // Update the queue badges
-
-            // Close modal and reset
-            document.getElementById('addModalOverlay').style.display = 'none';
-            document.getElementById('addModal').style.display = 'none';
-            document.getElementById('newAcronym').value = '';
-            document.getElementById('newMeaning').value = '';
         });
         
         // 5. Clear Pending Queue
