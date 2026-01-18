@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
     <title>Aviation Acronym V41</title>
-
+    
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
 
@@ -206,13 +206,10 @@
 
         /* Back to Top Button */
         #scrollTopBtn {
-            /* Position */
             position: fixed;
             bottom: 30px; 
-            left: 20px; /* Left side as requested */
+            left: 20px;
             z-index: 3000;
-            
-            /* Appearance */
             background-color: var(--accent);
             color: white;
             border: none;
@@ -222,21 +219,12 @@
             font-size: 1.5em;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             cursor: pointer;
-            
-            /* Animation State (Hidden by default) */
             opacity: 0; 
             visibility: hidden;
             transition: opacity 0.3s ease, transform 0.2s ease;
         }
-        
-        #scrollTopBtn.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        #scrollTopBtn:active {
-            transform: scale(0.9);
-        }
+        #scrollTopBtn.visible { opacity: 1; visibility: visible; }
+        #scrollTopBtn:active { transform: scale(0.9); }
 
         /* =========================================
            5. MODALS
@@ -543,11 +531,9 @@
         </div>
     </div>
 
-
     <div id="toast">Message</div>
+    
     <button id="scrollTopBtn" title="Go to top">🔝</button>
-
-    <script>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
     <div id="helpModal" class="modal">
@@ -1205,15 +1191,20 @@
            MULTI-DATABASE SYNC FUNCTION
            ========================================= */
         window.copyPendingBySource = function(sourceType) {
+            // 1. Filter the pending list for only the selected database (e.g., 'EVA' or 'WIP')
             const toSync = pendingData.filter(i => i.source === sourceType);
             
+            // 2. Safety Check: If no items exist for this database
             if (toSync.length === 0) {
                 showToast(`No pending items found for ${sourceType}`);
                 return;
             }
             
+            // 3. Format the data for Google Sheets
+            // We use '\t' (Tab) so that when you paste, it fills columns automatically
             let csvContent = toSync.map(i => `${i.acronym}\t${i.meaning}\t${i.category}`).join('\n');
             
+            // 4. Execute Clipboard Copy
             navigator.clipboard.writeText(csvContent).then(() => {
                 showToast(`📋 Copied ${toSync.length} items for ${sourceType}`);
                 playSound('success');
@@ -1299,6 +1290,7 @@
 
             // --- EDIT MODE LOGIC START ---
             if (editingItem) {
+                // If editing, remove old version first
                 removeItemFromDB(editingItem);
             }
             // --- EDIT MODE LOGIC END ---
@@ -1850,27 +1842,6 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
-
-        /* =========================================
-           BACK TO TOP LOGIC
-           ========================================= */
-        const scrollBtn = document.getElementById("scrollTopBtn");
-        
-        window.addEventListener('scroll', () => {
-            // Check vertical scroll amount
-            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-                scrollBtn.style.display = "block";
-            } else {
-                scrollBtn.style.display = "none";
-            }
-        });
-        
-        scrollBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0, 
-                behavior: 'smooth' 
-            });
-        });
         
     </script>
 </body>
