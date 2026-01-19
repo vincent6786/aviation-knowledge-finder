@@ -143,6 +143,8 @@
         .source-tag { font-size: 0.7em; font-weight: bold; color: white; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .source-tag.FAA { background: var(--source-faa); }
         .source-tag.SOFEMA { background: var(--source-sof); }
+        .source-tag.JEPP { background: #8e44ad; } /* Purple for Jeppesen */
+        .source-tag.NOTAM { background: #e74c3c; } /* Red for NOTAMs */
         .source-tag.USER { background: var(--user-color); }
         .source-tag.EVA { background: #00a86b; } 
         .source-tag.WIP { background: #7f8c8d; } 
@@ -558,12 +560,12 @@
 
         <div class="top-row" style="margin-top: 5px;">
             <select id="dbSource" title="Select Database" style="flex-grow: 1;">
-                        <option value="sofema" selected>🇪🇺 SOFEMA</option>
-                        <option value="faa">🇺🇸 FAA</option>
-                        <option value="eva">✈️ EVA Cadet</option>
-                        <option value="building">🏗️ Still Building</option>
-                        <option value="both">🌎 ALL SOURCES</option>
-                    </select>
+                <option value="sofema" selected>🇪🇺 SOFEMA</option>
+                <option value="faa">🇺🇸 FAA</option>
+                <option value="jepp">📖 Jeppesen</option> <option value="notam">⚠️ NOTAM</option>    <option value="eva">✈️ EVA Cadet</option>
+                <option value="building">🏗️ Still Building</option>
+                <option value="both">🌎 ALL SOURCES</option>
+            </select>
             <button class="icon-btn" id="helpBtn" title="User Guide">?</button>
             <button class="icon-btn" id="themeBtn">🌗</button>
         </div>
@@ -1010,6 +1012,14 @@
                 <label class="switch"><input type="checkbox" id="off_WIP" onchange="toggleOfflineDB('WIP')"><span class="slider"></span></label>
             </div>
             <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
+                <span style="font-size:0.9em;">🗺️ Jeppesen</span>
+                <label class="switch"><input type="checkbox" id="off_JEPP" onchange="toggleOfflineDB('JEPP')"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
+                <span style="font-size:0.9em;">⚠️ NOTAM Code</span>
+                <label class="switch"><input type="checkbox" id="off_NOTAM" onchange="toggleOfflineDB('NOTAM')"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
                 <span style="font-size:0.9em;">🇺🇸 FAA Dictionary</span>
                 <label class="switch"><input type="checkbox" id="off_FAA" onchange="toggleOfflineDB('FAA')"><span class="slider"></span></label>
             </div>
@@ -1204,8 +1214,11 @@
             faa: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZQu_pDVoituFYYch_vc9mxKX2KBt4gzY7HHgYmz8x8KrAGDkh4s5KgIxtdVpq_ZuyG_sUNxaA-u0/pub?output=csv", 
             sofema: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAxE1adAbm_uAC9rK1raBK0Fx9m-dhO8wU9yEb2FziL244tYoovtYSNkGVoLt_R1IXHk2KEC-_AjIb/pub?output=csv",
             eva: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsZ9p-Uvp6o12OVVcIet-HjeWekvLZjcTc09pJkXSClYFrRqwrOLpCOsHJg7mcml-iImwQWIaatxA/pub?output=csv",
-            building: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ09AvSLNUUdzxczvtKxvagiUqSIQ836JB_QwewFa4fRmhHHpZHAow3CvwcTWSTO_BHBtffp1vw2XtY/pub?output=csv"
-        };        
+            building: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ09AvSLNUUdzxczvtKxvagiUqSIQ836JB_QwewFa4fRmhHHpZHAow3CvwcTWSTO_BHBtffp1vw2XtY/pub?output=csv",
+            // --- NEW LINKS ---
+            jepp: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRubNpKZskFJkEOA1_UhEbNUY12mYuhANXemM3CzVPH5tivDKDGEUzg_x-RmHURHMjKmLA0TE-FVUvz/pub?output=csv",
+            notam: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdYQqsxvlVosMPZmMm8Wb1U6PnZTToHv1LPjtJlIbp3K-_vXpatwCvXtlH_YDrextjdgbNn9heA2gR/pub?output=csv"
+        };    
         const REPORT_EMAIL = "vincent6176786@gmail.com"; 
         const GROUP_CONFIG = { 
             "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, 
@@ -1288,13 +1301,17 @@
         function loadData() {
             document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
             
+            // Inside function loadData()...
             let p = [
                 fetchSheet(LINKS.faa, 'FAA'),
                 fetchSheet(LINKS.sofema, 'SOFEMA'),
                 fetchSheet(LINKS.eva, 'EVA'),
-                fetchSheet(LINKS.building, 'WIP')
+                fetchSheet(LINKS.building, 'WIP'),
+                // --- NEW FETCH CALLS ---
+                fetchSheet(LINKS.jepp, 'JEPP'),
+                fetchSheet(LINKS.notam, 'NOTAM')
             ];
-        
+            
             // UPDATED: Use allSettled instead of Promise.all
             // This allows the app to load even if "FAA" fails (e.g., offline) but "EVA" succeeds.
             Promise.allSettled(p).then(results => {
@@ -1437,6 +1454,10 @@
             // 0. Filter by Database (Visual Only)
             if (dbSource === 'faa') tf = tf.filter(i => i.source === 'FAA');
             else if (dbSource === 'sofema') tf = tf.filter(i => i.source === 'SOFEMA');
+            // --- NEW ---
+            else if (dbSource === 'jepp') tf = tf.filter(i => i.source === 'JEPP');
+            else if (dbSource === 'notam') tf = tf.filter(i => i.source === 'NOTAM');
+            // -----------
             else if (dbSource === 'eva') tf = tf.filter(i => i.source === 'EVA');
             else if (dbSource === 'building') tf = tf.filter(i => i.source === 'WIP');
             // 'both' keeps everything
@@ -1900,17 +1921,19 @@
             const rankPct = document.getElementById('rankPct');
         
             // 1. Map dropdown values to Data Tags
-            // Dropdown values: 'eva', 'building', 'faa', 'sofema', 'both'
-            // Data tags: 'EVA', 'WIP', 'FAA', 'SOFEMA'
             let targetTag = null;
             if (source === 'eva') targetTag = 'EVA';
             else if (source === 'building') targetTag = 'WIP';
             else if (source === 'faa') targetTag = 'FAA';
             else if (source === 'sofema') targetTag = 'SOFEMA';
-        
+            // --- NEW ---
+            else if (source === 'jepp') targetTag = 'JEPP';
+            else if (source === 'notam') targetTag = 'NOTAM';
+            
             // 2. DICTIONARY MODE (Hide stats for reference libraries)
-            if (source === 'faa' || source === 'sofema' || source === 'both') {
-                rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Acronym Finder";
+            // Add 'jepp' and 'notam' to this list so they don't show "0% Mastery"
+            if (source === 'faa' || source === 'sofema' || source === 'jepp' || source === 'notam' || source === 'both') {
+                rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Dictionary Mode";
                 rankBadge.style.color = "var(--text)";
                 masteryContainer.style.display = 'none'; 
                 return; 
@@ -2046,6 +2069,9 @@
         
             // Update Toggles based on reality
             // We check if the specific Google Sheet URL exists in the cache
+            // Inside checkOfflineStatus()...
+            document.getElementById('off_JEPP').checked = cachedUrls.some(u => u.includes(LINKS.jepp));
+            document.getElementById('off_NOTAM').checked = cachedUrls.some(u => u.includes(LINKS.notam));
             document.getElementById('off_FAA').checked = cachedUrls.some(u => u.includes(LINKS.faa));
             document.getElementById('off_SOFEMA').checked = cachedUrls.some(u => u.includes(LINKS.sofema));
             document.getElementById('off_EVA').checked = cachedUrls.some(u => u.includes(LINKS.eva));
@@ -2065,6 +2091,9 @@
             else if (sourceKey === 'SOFEMA') targetUrl = LINKS.sofema;
             else if (sourceKey === 'EVA') targetUrl = LINKS.eva;
             else if (sourceKey === 'WIP') targetUrl = LINKS.building;
+            else if (sourceKey === 'JEPP') targetUrl = LINKS.jepp;
+            else if (sourceKey === 'NOTAM') targetUrl = LINKS.notam;
+            
 
             const cache = await caches.open(CACHE_NAME);
 
