@@ -2504,7 +2504,16 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
-
+                 /* =========================================
+         OFFLINE MODE (PWA REGISTRATION)
+         ========================================= */
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered ✈️'))
+                    .catch(err => console.log('Service Worker Failed ❌', err));
+            });
+        }
         /* =========================================
            SPLASH SCREEN SAFETY TIMER (Fail-Safe)
            ========================================= */
@@ -2519,16 +2528,7 @@
                 }
             }, 2500); // 2500ms = 2.5 seconds
         });
-                 /* =========================================
-         OFFLINE MODE (PWA REGISTRATION)
-         ========================================= */
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker Registered ✈️'))
-                    .catch(err => console.log('Service Worker Failed ❌', err));
-            });
-        }
+
     </script>
 </body>
 </html>
