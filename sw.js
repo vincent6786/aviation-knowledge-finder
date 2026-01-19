@@ -1,16 +1,14 @@
-const CACHE_NAME = 'flight-bag-v2'; // Updated to v2 to force refresh
+const CACHE_NAME = 'flight-bag-v3'; // Bump to v3 to force update!
 const ASSETS = [
     './',
-    './index.html',
-    './manifest.json', // Added manifest
+    './index.html',      // Matches your new file name
+    './manifest.json',   // Matches your new manifest
     'https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png'
 ];
 
 // 1. INSTALL: Cache static assets
 self.addEventListener('install', (event) => {
-    // Force this SW to become active immediately
-    self.skipWaiting(); 
-    
+    self.skipWaiting(); // Force active immediately
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log(' caching assets...');
@@ -19,7 +17,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// 2. ACTIVATE: Clean up old caches (Crucial for updates)
+// 2. ACTIVATE: Clean up old caches
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -29,24 +27,22 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    // Take control of all pages immediately
     return self.clients.claim(); 
 });
 
-// 3. FETCH: Dynamic Caching (Network First, then Cache)
+// 3. FETCH: Network First strategy
 self.addEventListener('fetch', (event) => {
-    // Only cache GET requests (ignore POST/PUT etc)
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // Check for valid response
+                // Return if invalid
                 if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors') {
                     return response;
                 }
 
-                // Clone and cache (This enables the Offline Toggles to work!)
+                // Cache the fresh copy
                 const resClone = response.clone();
                 caches.open(CACHE_NAME).then((cache) => {
                     cache.put(event.request, resClone);
@@ -55,7 +51,7 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => {
-                // If offline, try to find in cache
+                // If offline, return cached
                 return caches.match(event.request);
             })
     );
