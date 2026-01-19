@@ -363,11 +363,73 @@
             line-height: 1.4; 
             opacity: 0.8;
         }
+
+        /* =========================================
+           8. SPLASH SCREEN (Mobile Polish)
+           ========================================= */
+        .splash-screen {
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--modal-bg); 
+            z-index: 9999;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: opacity 0.6s ease-out, visibility 0.6s;
+        }
+        
+        .splash-content { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 20px; 
+        }
+        
+        .splash-logo { 
+            width: 80px; height: 80px; 
+            border-radius: 18px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            margin-bottom: 10px;
+            animation: floatPlane 3s ease-in-out infinite; 
+        }
+        
+        .splash-text { 
+            font-weight: 800; 
+            color: var(--accent); 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            font-size: 0.85em; 
+            opacity: 0.8;
+        }
+        
+        /* Float Animation for the Icon */
+        @keyframes floatPlane { 
+            0% { transform: translateY(0px); } 
+            50% { transform: translateY(-10px); } 
+            100% { transform: translateY(0px); } 
+        }
+        
+        /* Class to hide it smoothly */
+        .splash-screen.hidden { 
+            opacity: 0; 
+            visibility: hidden; 
+            pointer-events: none;
+        }
         
     </style>
 </head>
 <body class="bg-day">
 
+    <div id="appSplash" class="splash-screen">
+        <div class="splash-content">
+            <img src="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png" class="splash-logo">
+            
+            <div class="radar"></div>
+            
+            <div class="splash-text">Pre-Flight Check...</div>
+        </div>
+    </div>
+    
     <div id="drawerOverlay" class="drawer-overlay"></div>
     <div id="sideDrawer" class="drawer">
         <div class="drawer-header">
@@ -1130,7 +1192,7 @@
             eva: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQsZ9p-Uvp6o12OVVcIet-HjeWekvLZjcTc09pJkXSClYFrRqwrOLpCOsHJg7mcml-iImwQWIaatxA/pub?output=csv",
             building: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ09AvSLNUUdzxczvtKxvagiUqSIQ836JB_QwewFa4fRmhHHpZHAow3CvwcTWSTO_BHBtffp1vw2XtY/pub?output=csv"
         };        
-        const REPORT_EMAIL = "vincent6786@gmail.com"; 
+        const REPORT_EMAIL = "vincent6176786@gmail.com"; 
         const GROUP_CONFIG = { 
             "Operations": { desc: "Nav, Flight Ops, ATC", keywords: ["Navigation", "Flight Op", "Traffic"] }, 
             "Weather": { desc: "Met, Icing, Codes", keywords: ["Weather", "Meteorology"] }, 
@@ -2331,6 +2393,21 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
+
+        /* =========================================
+           SPLASH SCREEN SAFETY TIMER (Fail-Safe)
+           ========================================= */
+        // This ensures the app ALWAYS opens after 2.5 seconds, 
+        // even if the data loading gets stuck or fails.
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('appSplash');
+                if (splash && !splash.classList.contains('hidden')) {
+                    console.log("Forcing App Open (Safety Timer)");
+                    splash.classList.add('hidden');
+                }
+            }, 2500); // 2500ms = 2.5 seconds
+        });
         
     </script>
 </body>
