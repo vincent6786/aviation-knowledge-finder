@@ -1833,7 +1833,13 @@
             const imgEl = document.getElementById('encImage');
             
             if (item.image && item.image.length > 5) {
-                imgEl.src = item.image;       
+                imgEl.src = item.image;
+                
+                // NEW: If image fails to load, hide the container
+                imgEl.onerror = function() { 
+                    this.parentElement.style.display = 'none'; 
+                };
+                
                 imgContainer.style.display = 'block'; 
             } else {
                 imgContainer.style.display = 'none'; 
