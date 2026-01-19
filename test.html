@@ -387,10 +387,11 @@
         }
         
         .splash-logo { 
-            font-size: 80px; /* Big Emoji Size */
+            width: 80px; height: 80px; 
+            border-radius: 18px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
             margin-bottom: 10px;
-            animation: floatPlane 3s ease-in-out infinite;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); /* Cool shadow */
+            animation: floatPlane 3s ease-in-out infinite; 
         }
         
         .splash-text { 
@@ -603,13 +604,13 @@
              </label>
         
              <select id="searchMode" title="Mode" style="width: auto;">
-                <option value="exact">Exact</option>
-                <option value="contains">Include</option>
+                <option value="contains">In</option>
                 <option value="starts">Start</option>
+                <option value="exact">Exact</option>
             </select>
         
             <select id="sortSelect" title="Sort" style="width: auto;">
-                <option value="default">Original order</option>
+                <option value="default">Orig</option>
                 <option value="az">A-Z</option>
                 <option value="za">Z-A</option>
             </select>
@@ -2060,7 +2061,7 @@
             document.getElementById('off_WIP').checked = cachedUrls.some(u => u.includes(LINKS.building));
         }
         
-        // 2. Toggle Logic (Updated for Robust Deletion)
+        // 2. Toggle Logic (Download or Delete)
         async function toggleOfflineDB(sourceKey) {
             if (!('caches' in window)) { showToast("Offline mode not supported"); return; }
             
@@ -2078,10 +2079,6 @@
         
             if (isTurningOn) {
                 showToast(`⬇️ Downloading ${sourceKey}...`);
-                
-                // Disable checkbox while working
-                checkbox.disabled = true;
-                
                 try {
                     await cache.add(targetUrl); // Forces a fetch and save
                     showToast(`✅ ${sourceKey} Saved Offline`);
@@ -2090,36 +2087,14 @@
                     console.error(e);
                     showToast("❌ Download Failed (Check Internet)");
                     checkbox.checked = false; // Revert switch if failed
-                } finally {
-                    checkbox.disabled = false; // Re-enable
                 }
             } else {
-                // ROBUST DELETE LOGIC
+                // Find the request in cache to delete it accurately
                 const keys = await cache.keys();
-                let deletedCount = 0;
-                
-                // We look for ANY key that contains the unique part of the Google Sheet ID
-                // This handles redirects or slight URL changes
-                const uniqueId = targetUrl.split('/d/')[1].split('/')[0]; // Extracts the long ID string
-                
-                for (const request of keys) {
-                    if (request.url.includes(uniqueId)) {
-                        await cache.delete(request);
-                        deletedCount++;
-                    }
-                }
-        
-                if (deletedCount > 0) {
-                    showToast(`🗑️ Removed ${sourceKey}`);
-                } else {
-                    // If we couldn't find it by ID, try exact URL match as fallback
-                    const exactMatch = keys.find(req => req.url === targetUrl);
-                    if(exactMatch) {
-                        await cache.delete(exactMatch);
-                        showToast(`🗑️ Removed ${sourceKey}`);
-                    } else {
-                        console.warn("Could not find file to delete in cache");
-                    }
+                const requestToDelete = keys.find(req => req.url.includes(targetUrl));
+                if (requestToDelete) {
+                    await cache.delete(requestToDelete);
+                    showToast(`🗑️ ${sourceKey} Removed`);
                 }
             }
         }
