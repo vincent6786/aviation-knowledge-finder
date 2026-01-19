@@ -1,39 +1,61 @@
-const CACHE_NAME = 'flight-bag-v1';
+const CACHE_NAME = 'flight-bag-v2'; // Updated to v2 to force refresh
 const ASSETS = [
     './',
     './index.html',
+    './manifest.json', // Added manifest
     'https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png'
 ];
 
-// 1. INSTALL: Cache the static website files immediately
+// 1. INSTALL: Cache static assets
 self.addEventListener('install', (event) => {
+    // Force this SW to become active immediately
+    self.skipWaiting(); 
+    
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
+            console.log(' caching assets...');
             return cache.addAll(ASSETS);
         })
     );
 });
 
-// 2. FETCH: Intercept every request (including Google Sheets)
+// 2. ACTIVATE: Clean up old caches (Crucial for updates)
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.filter((key) => key !== CACHE_NAME)
+                    .map((key) => caches.delete(key))
+            );
+        })
+    );
+    // Take control of all pages immediately
+    return self.clients.claim(); 
+});
+
+// 3. FETCH: Dynamic Caching (Network First, then Cache)
 self.addEventListener('fetch', (event) => {
+    // Only cache GET requests (ignore POST/PUT etc)
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // If we are online and fetch succeeds:
-                // 1. Clone the response (we need one for the browser, one for the cache)
+                // Check for valid response
+                if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors') {
+                    return response;
+                }
+
+                // Clone and cache (This enables the Offline Toggles to work!)
                 const resClone = response.clone();
-                
-                // 2. Open cache and save this new data for later
                 caches.open(CACHE_NAME).then((cache) => {
                     cache.put(event.request, resClone);
                 });
 
-                // 3. Give the data to the user
                 return response;
             })
             .catch(() => {
-                // If we are OFFLINE (fetch failed):
-                // Return the cached version we saved earlier
+                // If offline, try to find in cache
                 return caches.match(event.request);
             })
     );
