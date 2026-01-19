@@ -386,13 +386,6 @@
             gap: 20px; 
         }
         
-        .splash-logo { 
-            width: 80px; height: 80px; 
-            border-radius: 18px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-            margin-bottom: 10px;
-            animation: floatPlane 3s ease-in-out infinite; 
-        }
         
         .splash-text { 
             font-weight: 800; 
@@ -422,14 +415,12 @@
 <body class="bg-day">
 
     <div id="appSplash" class="splash-screen">
-        <div class="splash-content">
-            <img src="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png" class="splash-logo">
-            
-            <div class="radar"></div>
-            
-            <div class="splash-text">Pre-Flight Check...</div>
+            <div class="splash-content">
+                <div class="radar"></div>
+                
+                <div class="splash-text">Pre-Flight Check...</div>
+            </div>
         </div>
-    </div>
     
     <div id="drawerOverlay" class="drawer-overlay"></div>
     <div id="sideDrawer" class="drawer">
@@ -2061,7 +2052,7 @@
             document.getElementById('off_WIP').checked = cachedUrls.some(u => u.includes(LINKS.building));
         }
         
-        // 2. Toggle Logic (Download or Delete)
+        // 2. Toggle Logic (Fixed for "Zombie" Toggles and Redirects)
         async function toggleOfflineDB(sourceKey) {
             if (!('caches' in window)) { showToast("Offline mode not supported"); return; }
             
@@ -2074,9 +2065,12 @@
             else if (sourceKey === 'SOFEMA') targetUrl = LINKS.sofema;
             else if (sourceKey === 'EVA') targetUrl = LINKS.eva;
             else if (sourceKey === 'WIP') targetUrl = LINKS.building;
-        
+
             const cache = await caches.open(CACHE_NAME);
-        
+
+            // FREEZE the switch while processing to prevent glitches
+            checkbox.disabled = true;
+
             if (isTurningOn) {
                 showToast(`⬇️ Downloading ${sourceKey}...`);
                 try {
@@ -2086,16 +2080,40 @@
                 } catch (e) {
                     console.error(e);
                     showToast("❌ Download Failed (Check Internet)");
-                    checkbox.checked = false; // Revert switch if failed
+                    checkbox.checked = false; // Turn it back off if failed
+                } finally {
+                    checkbox.disabled = false; // Unfreeze
                 }
             } else {
-                // Find the request in cache to delete it accurately
+                // --- ROBUST DELETE LOGIC ---
+                // Google Sheets redirects URLs, so the saved URL might be different from targetUrl.
+                // We find the file by matching the unique ID inside the link.
                 const keys = await cache.keys();
-                const requestToDelete = keys.find(req => req.url.includes(targetUrl));
-                if (requestToDelete) {
-                    await cache.delete(requestToDelete);
-                    showToast(`🗑️ ${sourceKey} Removed`);
+                let deletedCount = 0;
+                
+                // Extract the unique ID between '/d/e/' and '/pub'
+                // Example: https://docs.../d/e/[THIS_BIG_ID]/pub...
+                let uniqueId = "";
+                if(targetUrl.includes('/d/e/')) {
+                    uniqueId = targetUrl.split('/d/e/')[1].split('/')[0];
                 }
+
+                for (const request of keys) {
+                    // Check 1: Does the cached URL contain the Unique ID?
+                    // Check 2: Is it an exact match? (Fallback)
+                    if ((uniqueId && request.url.includes(uniqueId)) || request.url === targetUrl) {
+                        await cache.delete(request);
+                        deletedCount++;
+                    }
+                }
+
+                if (deletedCount > 0) {
+                    showToast(`🗑️ Removed ${sourceKey}`);
+                } else {
+                    console.log("File not found in cache (already deleted?)");
+                }
+                
+                checkbox.disabled = false; // Unfreeze
             }
         }
         
