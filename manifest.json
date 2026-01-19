@@ -1,6 +1,6 @@
 {
-  "name": "EVA Flight Bag",
-  "short_name": "FlightBag",
+  "name": "Aviation Acronym",
+  "short_name": "Aviation Acronym",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#2c3e50",
