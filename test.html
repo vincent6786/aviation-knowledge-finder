@@ -1285,6 +1285,15 @@
         /* =========================================
            RESILIENT DATA LOADER (Supports Offline/Partial Loads)
            ========================================= */
+        // This helper function was missing!
+        function fetchSheet(url, s) {
+            return fetch(url)
+                .then(r => r.text())
+                .then(t => {
+                    const r = parseCSV(t);
+                    return r.map(i => ({...i, source: s, group: getGroup(i.category)}));
+                });
+        }
         function loadData() {
             document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
             
