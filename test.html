@@ -11,7 +11,8 @@
     
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
-
+    <link rel="manifest" href="manifest.json">
+    
     <style>
         /* =========================================
            1. THEME VARIABLES & BASICS
@@ -1005,7 +1006,29 @@
                 🗑️ Clear All Pending
             </button>
         </div>
-    
+
+        <div style="background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; margin-top:15px; border-left:3px solid var(--accent);">
+            <p style="font-size:0.8em; font-weight:bold; margin-top:0; margin-bottom:10px; opacity:0.7; text-transform:uppercase;">📡 Offline Databases</p>
+            
+            <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
+                <span style="font-size:0.9em;">✈️ EVA Cadet</span>
+                <label class="switch"><input type="checkbox" id="off_EVA" onchange="toggleOfflineDB('EVA')"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
+                <span style="font-size:0.9em;">🏗️ Still Building (WIP)</span>
+                <label class="switch"><input type="checkbox" id="off_WIP" onchange="toggleOfflineDB('WIP')"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row" style="margin-bottom:8px; border:none; padding:0;">
+                <span style="font-size:0.9em;">🇺🇸 FAA Dictionary</span>
+                <label class="switch"><input type="checkbox" id="off_FAA" onchange="toggleOfflineDB('FAA')"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row" style="margin-bottom:0; border:none; padding:0;">
+                <span style="font-size:0.9em;">🇪🇺 SOFEMA</span>
+                <label class="switch"><input type="checkbox" id="off_SOFEMA" onchange="toggleOfflineDB('SOFEMA')"><span class="slider"></span></label>
+            </div>
+            <p style="font-size:0.7em; opacity:0.5; margin-bottom:0; margin-top:8px; text-align:right;">Green = Downloaded & Ready</p>
+        </div>
+        
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
         <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
@@ -1260,44 +1283,69 @@
         setInterval(updateBackground,60000); updateBackground();
 
         /* =========================================
-           3. DATA LOADING (UPDATED: LOADS EVERYTHING)
+           RESILIENT DATA LOADER (Supports Offline/Partial Loads)
            ========================================= */
-        function fetchSheet(url,s){return fetch(url).then(r=>r.text()).then(t=>{const r=parseCSV(t);return r.map(i=>({...i,source:s,group:getGroup(i.category)}));});}
-        
         function loadData() {
             document.getElementById('results').innerHTML = `<div class="loader-container"><div class="radar"></div></div>`;
             
-            // WE LOAD ALL SOURCES INTO MEMORY AT STARTUP
             let p = [
                 fetchSheet(LINKS.faa, 'FAA'),
                 fetchSheet(LINKS.sofema, 'SOFEMA'),
                 fetchSheet(LINKS.eva, 'EVA'),
                 fetchSheet(LINKS.building, 'WIP')
             ];
-
-            Promise.all(p).then(r => {
-                    let csvData = r.flat();
-                    
-                    // Mark locally stored items so we can allow deletion/editing
-                    const taggedCustom = customData.map(i => ({...i, isLocal: true}));
-                    const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
-                    
-                    // MERGE: Custom (User) + Pending (Waiting for Sheet) + CSV (Real Sheet)
-                    allData = [...taggedCustom, ...taggedPending, ...csvData];
-                    acronymSet = new Set(allData.map(i => i.acronym));
-                    
-                    // Reset filters
-                    activeGroup = 'All'; 
-                    document.getElementById('categorySelect').value = 'All';
-                    
-                    // --- UPDATE UI ELEMENTS ---
-                    updateRankHUD(); 
-                    updateSyncCounts(); 
-                    runSearch(); // Filters based on current dropdown selection
-                    
-                }).catch(e => {
-                document.getElementById('results').innerHTML = 'ERROR LOADING DATA';
-                console.error(e);
+        
+            // UPDATED: Use allSettled instead of Promise.all
+            // This allows the app to load even if "FAA" fails (e.g., offline) but "EVA" succeeds.
+            Promise.allSettled(p).then(results => {
+                let loadedItems = [];
+                let failedCount = 0;
+        
+                results.forEach((res) => {
+                    if (res.status === 'fulfilled') {
+                        loadedItems = loadedItems.concat(res.value);
+                    } else {
+                        failedCount++;
+                        console.warn("Failed to load a source (likely offline or blocked):", res.reason);
+                    }
+                });
+        
+                // 1. Merge Data (User + Pending + Loaded Cloud Data)
+                const taggedCustom = customData.map(i => ({...i, isLocal: true}));
+                const taggedPending = pendingData.map(i => ({...i, isLocal: true}));
+                allData = [...taggedCustom, ...taggedPending, ...loadedItems];
+                acronymSet = new Set(allData.map(i => i.acronym));
+        
+                // 2. UI Updates
+                activeGroup = 'All'; 
+                document.getElementById('categorySelect').value = 'All';
+                updateRankHUD(); 
+                updateSyncCounts(); 
+                runSearch(); 
+        
+                // 3. Splash Screen Logic
+                const splash = document.getElementById('appSplash');
+                if (splash) {
+                    // If completely empty (0 items), warn the user
+                    if (allData.length === 0) {
+                        document.querySelector('.splash-text').innerText = "No Data Available (Offline?)";
+                        document.querySelector('.splash-text').style.color = "var(--error)";
+                        // Still hide splash after delay so they can access Settings to toggle downloads
+                        setTimeout(() => splash.classList.add('hidden'), 2000);
+                    } else {
+                        // Success!
+                        setTimeout(() => splash.classList.add('hidden'), 800);
+                    }
+                }
+                
+                // Optional: Notify user if some DBs are missing (but don't be annoying about it)
+                if (failedCount > 0 && allData.length > 0) {
+                    console.log(`⚠️ Offline Mode: ${failedCount} sources unavailable`);
+                }
+        
+            }).catch(e => {
+                console.error("Critical Error:", e);
+                document.getElementById('results').innerHTML = 'SYSTEM FAILURE';
             });
         }
 
@@ -1977,6 +2025,69 @@
         /* =========================================
            6. SETTINGS (EXPORT/IMPORT)
            ========================================= */
+        /* =========================================
+           OFFLINE DATABASE MANAGER
+           ========================================= */
+        const CACHE_NAME = 'flight-bag-v1'; // This MUST match the name in sw.js
+        
+        // 1. Check what is currently saved (Runs when you open Settings)
+        async function checkOfflineStatus() {
+            if (!('caches' in window)) return;
+            
+            const cache = await caches.open(CACHE_NAME);
+            const keys = await cache.keys();
+            const cachedUrls = keys.map(req => req.url);
+        
+            // Update Toggles based on reality
+            // We check if the specific Google Sheet URL exists in the cache
+            document.getElementById('off_FAA').checked = cachedUrls.some(u => u.includes(LINKS.faa));
+            document.getElementById('off_SOFEMA').checked = cachedUrls.some(u => u.includes(LINKS.sofema));
+            document.getElementById('off_EVA').checked = cachedUrls.some(u => u.includes(LINKS.eva));
+            document.getElementById('off_WIP').checked = cachedUrls.some(u => u.includes(LINKS.building));
+        }
+        
+        // 2. Toggle Logic (Download or Delete)
+        async function toggleOfflineDB(sourceKey) {
+            if (!('caches' in window)) { showToast("Offline mode not supported"); return; }
+            
+            const checkbox = document.getElementById(`off_${sourceKey}`);
+            const isTurningOn = checkbox.checked;
+            
+            // Map key to URL
+            let targetUrl = '';
+            if (sourceKey === 'FAA') targetUrl = LINKS.faa;
+            else if (sourceKey === 'SOFEMA') targetUrl = LINKS.sofema;
+            else if (sourceKey === 'EVA') targetUrl = LINKS.eva;
+            else if (sourceKey === 'WIP') targetUrl = LINKS.building;
+        
+            const cache = await caches.open(CACHE_NAME);
+        
+            if (isTurningOn) {
+                showToast(`⬇️ Downloading ${sourceKey}...`);
+                try {
+                    await cache.add(targetUrl); // Forces a fetch and save
+                    showToast(`✅ ${sourceKey} Saved Offline`);
+                    playSound('success');
+                } catch (e) {
+                    console.error(e);
+                    showToast("❌ Download Failed (Check Internet)");
+                    checkbox.checked = false; // Revert switch if failed
+                }
+            } else {
+                // Find the request in cache to delete it accurately
+                const keys = await cache.keys();
+                const requestToDelete = keys.find(req => req.url.includes(targetUrl));
+                if (requestToDelete) {
+                    await cache.delete(requestToDelete);
+                    showToast(`🗑️ ${sourceKey} Removed`);
+                }
+            }
+        }
+        
+        // Hook this up to the Settings Button so it updates every time you open it
+        // (Find your existing settingsBtn listener and add checkOfflineStatus, or just add this line below it)
+        document.getElementById('settingsBtn').addEventListener('click', checkOfflineStatus);
+
         document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='block';document.getElementById('settingsModal').style.display='block';});
         document.getElementById('closeSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='none';document.getElementById('settingsModal').style.display='none';});
         document.getElementById('weatherSelect').addEventListener('change',(e)=>{settings.weather=e.target.value;localStorage.setItem('pilotSettings',JSON.stringify(settings));updateBackground();});
@@ -2408,7 +2519,16 @@
                 }
             }, 2500); // 2500ms = 2.5 seconds
         });
-        
+                 /* =========================================
+         OFFLINE MODE (PWA REGISTRATION)
+         ========================================= */
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered ✈️'))
+                    .catch(err => console.log('Service Worker Failed ❌', err));
+            });
+        }
     </script>
 </body>
 </html>
