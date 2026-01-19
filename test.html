@@ -2393,6 +2393,21 @@
             if(evaBadge) evaBadge.innerText = evaCount;
             if(wipBadge) wipBadge.innerText = wipCount;
         }
+
+        /* =========================================
+           SPLASH SCREEN SAFETY TIMER (Fail-Safe)
+           ========================================= */
+        // This ensures the app ALWAYS opens after 2.5 seconds, 
+        // even if the data loading gets stuck or fails.
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('appSplash');
+                if (splash && !splash.classList.contains('hidden')) {
+                    console.log("Forcing App Open (Safety Timer)");
+                    splash.classList.add('hidden');
+                }
+            }, 2500); // 2500ms = 2.5 seconds
+        });
         
     </script>
 </body>
