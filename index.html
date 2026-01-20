@@ -1106,6 +1106,17 @@
             <button id="closeDebriefBtn" class="modal-btn send full">Dismiss</button>
     </div>
 
+    <div id="weatherModalOverlay" class="modal-overlay"></div>
+    <div id="weatherModal" class="modal" style="width:95%; height:90%; max-width:none; max-height:none; padding:0; display:none; flex-direction:column; overflow:hidden;">
+        
+        <div style="padding:10px 15px; display:flex; justify-content:space-between; align-items:center; background:var(--glass-bg); border-bottom:1px solid var(--glass-border);">
+            <h3 style="margin:0; font-size:1.1em; color:var(--accent);">🌤️ Advanced Weather</h3>
+            <button id="closeWeatherBtn" class="icon-btn" style="font-size:1.5em; padding:0; color:var(--text);">✕</button>
+        </div>
+    
+        <iframe id="weatherFrame" src="" style="flex:1; width:100%; border:none; background:white;"></iframe>
+    </div>
+    
     <div id="flashcardOverlay" class="modal-overlay">
         <div class="flashcard-wrapper">
             <button id="closeFcTopBtn" style="position:absolute; top:-50px; right:0; background:none; border:none; color:white; font-size:2em; cursor:pointer;">✕</button>
@@ -1671,6 +1682,34 @@
         });
         document.getElementById('deleteNoteBtn').addEventListener('click', () => { delete pilotNotes[currentNoteAcronym]; localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes)); noteOverlay.style.display='none'; noteModal.style.display='none'; runSearch(); showToast("Note Deleted"); });
         document.getElementById('closeNoteBtn').addEventListener('click', () => { noteOverlay.style.display='none'; noteModal.style.display='none'; });
+
+        /* =========================================
+           WEATHER TOOL (In-App Embed)
+           ========================================= */
+        const weatherOverlay = document.getElementById('weatherModalOverlay');
+        const weatherModal = document.getElementById('weatherModal');
+        const weatherFrame = document.getElementById('weatherFrame');
+        
+        // Open Logic
+        document.getElementById('weatherToolBtn').addEventListener('click', () => {
+            // 1. Load the URL inside the iframe
+            weatherFrame.src = "https://vincent6786.github.io/Notion_metar_advanced/metarv46.html";
+            
+            // 2. Show the Modal
+            weatherOverlay.style.display = 'block';
+            weatherModal.style.display = 'flex'; // Use flex to ensure full height
+        });
+        
+        // Close Logic
+        function closeWeather() {
+            weatherOverlay.style.display = 'none';
+            weatherModal.style.display = 'none';
+            weatherFrame.src = ""; // Clear source to stop it from using data in background
+        }
+        
+        document.getElementById('closeWeatherBtn').addEventListener('click', closeWeather);
+        weatherOverlay.addEventListener('click', closeWeather);
+        
         /* =========================================
            UI HELPERS (Reset Form)
            ========================================= */
@@ -2049,7 +2088,6 @@
             const qnh = raw.match(/Q(\d{4})/); if(qnh) decoded.push(`⚖️ QNH: ${qnh[1]} hPa`);
             document.getElementById('metarResult').innerText = decoded.length > 0 ? decoded.join('\n') : "...";
         });
-        document.getElementById('weatherToolBtn').addEventListener('click', () => { window.open('https://vincent6786.github.io/Notion_metar_advanced/metarv46.html', '_blank'); });
 
         /* =========================================
            6. SETTINGS (EXPORT/IMPORT)
