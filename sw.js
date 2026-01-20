@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flight-bag-v5'; // Bump to v3 to force update!
+const CACHE_NAME = 'flight-bag-v6'; // Bump to v3 to force update!
 const ASSETS = [
     './',
     './index.html',      // Matches your new file name
