@@ -1538,7 +1538,13 @@
                     
                     // See Also Logic
                     let seeAlsoHTML = '';
-                    const related = allData.filter(x => x.category === i.category && x.acronym !== i.acronym && x.acronym.charAt(0) === i.acronym.charAt(0)).slice(0, 3);
+                    // Optimized "See Also" Logic (Source-Locked)
+                    const related = allData.filter(x => 
+                        x.source === i.source &&                 // 1. MUST be from the same database (e.g., EVA)
+                        x.category === i.category &&             // 2. Must be same Category
+                        x.acronym !== i.acronym &&               // 3. Must not be itself
+                        x.acronym.charAt(0) === i.acronym.charAt(0) // 4. Must start with same letter
+                    ).slice(0, 3);
                     if (related.length > 0) {
                         seeAlsoHTML = `<div class="see-also" style="margin-top:12px; padding-top:8px; border-top:1px dashed rgba(150,150,150,0.2); font-size:0.8em; opacity:0.8;">
                                 <span style="font-weight:bold; color:var(--accent);">See Also:</span> 
