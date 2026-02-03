@@ -1501,7 +1501,7 @@
             // 4. Render Results
             if (tf.length > 0) {
                 tf.slice(0, 50).forEach((i, idx) => {
-                    const isFav = favorites.includes(i.acronym);
+                    const isFav = favorites.includes(i.acronym + "|" + i.meaning);
                     const hasNote = pilotNotes[i.acronym];
                     const isLocalItem = i.isLocal === true;
                     const confidence = mastery[i.acronym] || 0; 
@@ -2014,7 +2014,26 @@
             rankPct.innerText = `${p}% (${masteredInView}/${totalInView})`;
         }
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
-        function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
+        // Updated Toggle Logic (Uses Acronym + Meaning for uniqueness)
+        function toggleFavorite(i) {
+            // Create a unique "fingerprint" for this specific item
+            const uniqueID = i.acronym + "|" + i.meaning;
+            
+            const idx = favorites.indexOf(uniqueID);
+            
+            if (idx === -1) {
+                favorites.push(uniqueID);
+                showToast("Added");
+            } else {
+                favorites.splice(idx, 1);
+                showToast("Removed");
+            }
+            
+            localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
+            addToHistory(i);
+            playSound('click');
+            runSearch(); // Refresh UI
+        }
         
         // Confidence & Priority Logic
         window.setConfidence = function(acr, level) { mastery[acr] = level; localStorage.setItem('pilotMastery', JSON.stringify(mastery)); runSearch(); if(level === 3) playSound('success'); else playSound('click'); };
