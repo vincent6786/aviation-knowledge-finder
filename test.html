@@ -560,8 +560,8 @@
 
         <div class="top-row" style="margin-top: 5px;">
             <select id="dbSource" title="Select Database" style="flex-grow: 1;">
-                <option value="sofema" selected>🇪🇺 SOFEMA</option>
-                <option value="faa">🇺🇸 FAA</option>
+                <option value="sofema">🇪🇺 SOFEMA</option>
+                <option value="faa" selected>🇺🇸 FAA</option>
                 <option value="jepp">📖 Jeppesen</option> <option value="notam">⚠️ NOTAM</option>    <option value="eva">✈️ EVA Cadet</option>
                 <option value="building">🏗️ Still Building</option>
                 <option value="both">🌎 ALL SOURCES</option>
@@ -621,7 +621,8 @@
             <button class="fab-mini" id="addAcronymBtn" data-label="Add Acronym">✏️</button>
             <button class="fab-mini" onclick="startExam()" data-label="Exam Mode">📝</button>
             <button class="fab-mini" onclick="openLogbook()" data-label="Pilot Logbook">📊</button>
-            <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather">🌤️</button> <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
+            <button class="fab-mini" id="weatherToolBtn" data-label="Adv. Weather" style="display:none">🌤️</button>
+            <button class="fab-mini" id="randomBtn" data-label="Flashcards">🎲</button>
             <button class="fab-mini" id="openDrawerBtn" data-label="Flight Bag">👜</button>
             <button class="fab-mini" id="settingsBtn" data-label="Settings">⚙️</button>
         </div>
@@ -1500,7 +1501,7 @@
             // 4. Render Results
             if (tf.length > 0) {
                 tf.slice(0, 50).forEach((i, idx) => {
-                    const isFav = favorites.includes(i.acronym);
+                    const isFav = favorites.includes(i.acronym + "|" + i.meaning);
                     const hasNote = pilotNotes[i.acronym];
                     const isLocalItem = i.isLocal === true;
                     const confidence = mastery[i.acronym] || 0; 
@@ -2013,7 +2014,26 @@
             rankPct.innerText = `${p}% (${masteredInView}/${totalInView})`;
         }
         function addToHistory(i){historyLog=historyLog.filter(x=>x.acronym!==i.acronym);historyLog.unshift(i);if(historyLog.length>50)historyLog.pop();localStorage.setItem('pilotHistory',JSON.stringify(historyLog));if(activeGroup==='History')runSearch();}
-        function toggleFavorite(i){const idx=favorites.indexOf(i.acronym);if(idx===-1){favorites.push(i.acronym);showToast("Added");}else{favorites.splice(idx,1);showToast("Removed");}localStorage.setItem('pilotFavorites',JSON.stringify(favorites));addToHistory(i);playSound('click');runSearch();}
+        // Updated Toggle Logic (Uses Acronym + Meaning for uniqueness)
+        function toggleFavorite(i) {
+            // Create a unique "fingerprint" for this specific item
+            const uniqueID = i.acronym + "|" + i.meaning;
+            
+            const idx = favorites.indexOf(uniqueID);
+            
+            if (idx === -1) {
+                favorites.push(uniqueID);
+                showToast("Added");
+            } else {
+                favorites.splice(idx, 1);
+                showToast("Removed");
+            }
+            
+            localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
+            addToHistory(i);
+            playSound('click');
+            runSearch(); // Refresh UI
+        }
         
         // Confidence & Priority Logic
         window.setConfidence = function(acr, level) { mastery[acr] = level; localStorage.setItem('pilotMastery', JSON.stringify(mastery)); runSearch(); if(level === 3) playSound('success'); else playSound('click'); };
