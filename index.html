@@ -145,6 +145,7 @@
         .source-tag.SOFEMA { background: var(--source-sof); }
         .source-tag.JEPP { background: #8e44ad; } /* Purple for Jeppesen */
         .source-tag.NOTAM { background: #e74c3c; } /* Red for NOTAMs */
+        .source-tag.G1000 { background: #1a6fa8; } /* Blue for G1000 */
         .source-tag.USER { background: var(--user-color); }
         .source-tag.EVA { background: #00a86b; } 
         .source-tag.WIP { background: #7f8c8d; } 
@@ -562,7 +563,8 @@
             <select id="dbSource" title="Select Database" style="flex-grow: 1;">
                 <option value="sofema">🇪🇺 SOFEMA</option>
                 <option value="faa" selected>🇺🇸 FAA</option>
-                <option value="jepp">📖 Jeppesen</option> <option value="notam">⚠️ NOTAM</option>    <option value="eva">✈️ EVA Cadet</option>
+                <option value="jepp">📖 Jeppesen</option> <option value="notam">⚠️ NOTAM</option>    <option value="g1000">🖥️ G1000</option>
+                <option value="eva">✈️ EVA Cadet</option>
                 <option value="building">🏗️ Still Building</option>
                 <option value="both">🌎 ALL SOURCES</option>
             </select>
@@ -1028,6 +1030,10 @@
                 <span style="font-size:0.9em;">🇪🇺 SOFEMA</span>
                 <label class="switch"><input type="checkbox" id="off_SOFEMA" onchange="toggleOfflineDB('SOFEMA')"><span class="slider"></span></label>
             </div>
+            <div class="toggle-row" style="margin-bottom:0; border:none; padding:0; margin-top:8px;">
+                <span style="font-size:0.9em;">🖥️ G1000</span>
+                <label class="switch"><input type="checkbox" id="off_G1000" onchange="toggleOfflineDB('G1000')"><span class="slider"></span></label>
+            </div>
             <p style="font-size:0.7em; opacity:0.5; margin-bottom:0; margin-top:8px; text-align:right;">Green = Downloaded & Ready</p>
         </div>
         
@@ -1229,7 +1235,8 @@
             building: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ09AvSLNUUdzxczvtKxvagiUqSIQ836JB_QwewFa4fRmhHHpZHAow3CvwcTWSTO_BHBtffp1vw2XtY/pub?output=csv",
             // --- NEW LINKS ---
             jepp: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRubNpKZskFJkEOA1_UhEbNUY12mYuhANXemM3CzVPH5tivDKDGEUzg_x-RmHURHMjKmLA0TE-FVUvz/pub?output=csv",
-            notam: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdYQqsxvlVosMPZmMm8Wb1U6PnZTToHv1LPjtJlIbp3K-_vXpatwCvXtlH_YDrextjdgbNn9heA2gR/pub?output=csv"
+            notam: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdYQqsxvlVosMPZmMm8Wb1U6PnZTToHv1LPjtJlIbp3K-_vXpatwCvXtlH_YDrextjdgbNn9heA2gR/pub?output=csv",
+            g1000: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvvDiyd4kJ9BYpogwiNcJv9j9UE1zrCUZL7oJhXRDkFsEw_nR6AhKtoKXfwfRTZcMGCJw3ktz8qa14/pub?output=csv"
         };    
         const REPORT_EMAIL = "vincent6176786@gmail.com"; 
         const GROUP_CONFIG = { 
@@ -1321,7 +1328,8 @@
                 fetchSheet(LINKS.building, 'WIP'),
                 // --- NEW FETCH CALLS ---
                 fetchSheet(LINKS.jepp, 'JEPP'),
-                fetchSheet(LINKS.notam, 'NOTAM')
+                fetchSheet(LINKS.notam, 'NOTAM'),
+                fetchSheet(LINKS.g1000, 'G1000')
             ];
             
             // UPDATED: Use allSettled instead of Promise.all
@@ -1975,10 +1983,11 @@
             // --- NEW ---
             else if (source === 'jepp') targetTag = 'JEPP';
             else if (source === 'notam') targetTag = 'NOTAM';
+            else if (source === 'g1000') targetTag = 'G1000';
             
             // 2. DICTIONARY MODE (Hide stats for reference libraries)
             // Add 'jepp' and 'notam' to this list so they don't show "0% Mastery"
-            if (source === 'faa' || source === 'sofema' || source === 'jepp' || source === 'notam' || source === 'both') {
+            if (source === 'faa' || source === 'sofema' || source === 'jepp' || source === 'notam' || source === 'g1000' || source === 'both') {
                 rankBadge.innerText = source === 'both' ? "🌐 Master Database" : "📚 Dictionary Mode";
                 rankBadge.style.color = "var(--text)";
                 masteryContainer.style.display = 'none'; 
@@ -2140,6 +2149,7 @@
             document.getElementById('off_SOFEMA').checked = cachedUrls.some(u => u.includes(LINKS.sofema));
             document.getElementById('off_EVA').checked = cachedUrls.some(u => u.includes(LINKS.eva));
             document.getElementById('off_WIP').checked = cachedUrls.some(u => u.includes(LINKS.building));
+            document.getElementById('off_G1000').checked = cachedUrls.some(u => u.includes(LINKS.g1000));
         }
         
         // 2. Toggle Logic (Fixed for "Zombie" Toggles and Redirects)
@@ -2157,6 +2167,7 @@
             else if (sourceKey === 'WIP') targetUrl = LINKS.building;
             else if (sourceKey === 'JEPP') targetUrl = LINKS.jepp;
             else if (sourceKey === 'NOTAM') targetUrl = LINKS.notam;
+            else if (sourceKey === 'G1000') targetUrl = LINKS.g1000;
             
 
             const cache = await caches.open(CACHE_NAME);
