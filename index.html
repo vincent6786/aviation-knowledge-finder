@@ -649,55 +649,87 @@
     <button id="scrollTopBtn" title="Go to top">🔝</button>
 
     <div id="helpModalOverlay" class="modal-overlay"></div>
-    <div id="helpModal" class="modal">
+    <div id="helpModal" class="modal" style="max-height:85vh; overflow-y:auto;">
         <h3>Flight Manual 📘</h3>
         <div class="help-content">
             
             <div style="background:var(--note-bg); color:var(--note-text); padding:10px; border-radius:8px; margin-bottom:15px; border-left:4px solid var(--accent);">
                 <h4 style="margin-top:0; margin-bottom:5px;">👋 Captain's Welcome</h4>
                 <p style="margin:0; font-size:0.9em;">
-                    Hi, I'm <strong>Vincent</strong>! <br>
-                    I built this tool to help us study smarter for ground school. Whether you are memorizing V-Speeds or decoding METARs, I hope this helps you ace your exams. 
+                    Hi, I'm <strong>Vincent</strong>!<br>
+                    I built this tool to help us study smarter for ground school. Six databases, smart search, offline mode, and AI lookup — all in one place.
                     <br><br>
                     <em>Fly safe and study hard! ✈️</em>
                 </p>
             </div>
-    
-            <h4>📡 Offline Mode (New!)</h4>
+
+            <h4>🗄️ Databases</h4>
             <ul>
-                <li><strong>Go Anywhere:</strong> You can now use this app without internet!</li>
-                <li><strong>Manage Storage:</strong> Go to <strong>Settings > Offline Databases</strong> to choose which decks to download to your device.</li>
-                <li><strong>Resilient Loading:</strong> If you lose signal, the app will automatically load whatever data you have saved.</li>
+                <li><strong>FAA</strong> — US Federal Aviation Administration reference</li>
+                <li><strong>SOFEMA</strong> — European aviation maintenance standards</li>
+                <li><strong>Jeppesen</strong> — Charts & procedure terminology</li>
+                <li><strong>NOTAM</strong> — Notice to Air Missions codes</li>
+                <li><strong>G1000</strong> — Garmin G1000 glass cockpit terms</li>
+                <li><strong>EVA Cadet</strong> — Our team's curated study deck</li>
+                <li><strong>🌎 ALL SOURCES</strong> — Search everything at once</li>
             </ul>
-    
-            <h4>📚 Smart Encyclopedia</h4>
+
+            <h4>🔍 Searching</h4>
             <ul>
-                <li><strong>Tap for Details:</strong> Cards with a 📷 or 📖 badge have hidden info. <strong>Tap the card</strong> to open the full Encyclopedia view with images, mnemonics, and context notes.</li>
-                <li><strong>Global Search:</strong> The search bar checks <em>all</em> databases. Use the top dropdown to filter by source (e.g., EVA vs FAA).</li>
-                <li><strong>Confidence Rating:</strong> Rate items (🔴🟡🟢) to track your mastery.</li>
+                <li><strong>Search Modes:</strong> <em>Starts With</em> (fastest), <em>Contains</em> (broadest), <em>Exact</em> (precise). Set your default in Settings.</li>
+                <li><strong>Def Only:</strong> Toggle to search inside definitions instead of acronym names.</li>
+                <li><strong>Recent Searches:</strong> Tap the search box to see your last 10 searches as quick-tap chips.</li>
+                <li><strong>Category Filter:</strong> The category dropdown auto-updates to only show categories present in the selected database.</li>
+                <li><strong>Result Count:</strong> A count appears above results. In ALL SOURCES mode, a color-coded source breakdown shows how many hits came from each database.</li>
             </ul>
-    
-            <h4>📊 Logbook & Stats</h4>
+
+            <h4>🃏 Cards</h4>
             <ul>
-                <li><strong>Track Progress:</strong> Tap the 📊 button to see your "Knowledge Status."</li>
-                <li><strong>Smart Filters:</strong> You can filter your stats to show only your "EVA" progress or your personal "User" collection.</li>
-                <li><strong>Weakness Detector:</strong> The logbook automatically identifies which Category (e.g., Weather) is your weakest link.</li>
+                <li><strong>Encyclopedia:</strong> Cards with 📷 or 📖 badges have extra detail — tap the card to open images, context notes, and mnemonics.</li>
+                <li><strong>Confidence Dots:</strong> Rate each card 🔴🟡🟢 to track your mastery. Used in Exam Mode and Logbook.</li>
+                <li><strong>⭐ Favourite:</strong> Save cards to your Favourites for quick access.</li>
+                <li><strong>📝 Note:</strong> Add a personal study note to any card.</li>
+                <li><strong>🔊 Speak:</strong> Hear the definition read aloud.</li>
+                <li><strong>🌐 Google / 🤖 AI:</strong> Look up the term in Google or your default AI (ChatGPT, Claude, Gemini, Perplexity). Set your preferred AI in Settings.</li>
+                <li><strong>See Also:</strong> Related terms from the same database appear at the bottom of each card.</li>
             </ul>
-    
-            <h4>🎓 Exam Mode</h4>
+
+            <h4>📡 Offline Mode</h4>
             <ul>
-                <li><strong>Independent Decks:</strong> You can select specific databases (e.g., "EVA Only") for your exam, regardless of what is on your home screen.</li>
-                <li><strong>Scoring:</strong> Your history is saved locally. Aim for an 'S' Grade (90%+).</li>
+                <li><strong>Download Databases:</strong> Go to <strong>Settings → Offline Databases</strong> and toggle on any database to save it to your device.</li>
+                <li><strong>Works Anywhere:</strong> Once downloaded, the app works without internet — on a plane, in a hangar, anywhere.</li>
+                <li><strong>Resilient Loading:</strong> If a source fails to load, the rest still load normally.</li>
             </ul>
-    
-            <h4>⚙️ Admin & Sync (5-Column)</h4>
+
+            <h4>⚙️ Settings</h4>
             <ul>
-                <li><strong>New Structure:</strong> The system now supports 5 columns: <em>Acronym, Meaning, Category, Image Link, Context</em>.</li>
-                <li><strong>Sync Queue:</strong> Items added in Admin Mode go to the "Sync Queue." Click <strong>Copy for EVA</strong> to get the formatted text, then paste it directly into your Google Sheet.</li>
+                <li><strong>Default Database:</strong> Choose which database opens on startup.</li>
+                <li><strong>Default Search Mode:</strong> Set Starts / Contains / Exact as your default.</li>
+                <li><strong>Default AI:</strong> Choose ChatGPT, Claude, Gemini, or Perplexity for the 🤖 button.</li>
+                <li><strong>Weather Background:</strong> Auto-changes with time of day, or lock it manually.</li>
+            </ul>
+
+            <h4>💾 Backup & Sharing</h4>
+            <ul>
+                <li><strong>Full Backup:</strong> Saves all your data including favourites, mastery, notes, custom acronyms, and settings.</li>
+                <li><strong>Share Setup:</strong> Exports only your custom acronyms and notes — clean file to send a colleague without your personal study progress.</li>
+                <li><strong>Smart Import:</strong> When importing a full backup, choose <em>Full Restore</em> (replaces everything) or <em>Merge</em> (adds new acronyms without touching your own progress).</li>
+            </ul>
+
+            <h4>🎓 Exam & Logbook</h4>
+            <ul>
+                <li><strong>Exam Mode:</strong> Tap 📝 to start a quiz. Confidence ratings influence which cards appear first.</li>
+                <li><strong>Logbook:</strong> Tap 📊 to see your mastery breakdown, weakest category, and last 5 exam scores.</li>
+            </ul>
+
+            <h4>✏️ Adding Acronyms</h4>
+            <ul>
+                <li>Tap <strong>＋ → ✏️</strong> to add a private acronym. Supports definition, category, image URL, and context notes.</li>
+                <li>Private entries are stored only on your device and show a 👤 badge.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
-            <button id="closeHelpBtn" class="modal-btn send full">Roger that!</button>
+            <button id="closeHelpBtn" class="modal-btn send full">Roger that! ✈️</button>
         </div>
     </div>
     
@@ -1707,11 +1739,11 @@
                             ${noteHTML}
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn" onclick="event.stopPropagation(); openAiSearch('${i.acronym}')" title="Ask AI">🤖</button>
                             <button class="action-btn star ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${i.acronym}')">⭐</button>
                             <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="event.stopPropagation(); openNoteModal('${i.acronym}')">📝</button>
                             <button class="action-btn speak" onclick="event.stopPropagation(); speakText('${i.meaning.replace(/'/g, "\\'")}')">🔊</button>
-                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn" onclick="event.stopPropagation();">🌐</a>
+                            <a href="https://www.google.com/search?q=aviation+definition+${encodeURIComponent(i.acronym)}" target="_blank" class="action-btn" onclick="event.stopPropagation();" title="Google">🌐</a>
+                            <button class="action-btn" onclick="event.stopPropagation(); openAiSearch('${i.acronym}')" title="Ask AI">🤖</button>
                             ${actionBtn}
                         </div>`;
                     
