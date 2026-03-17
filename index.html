@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-title" content="Aviation Acronym">
-    <title>Aviation Acronym V41</title>
+    <title>Aviation Acronym V42</title>
     
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/vincent6786/aviation-knowledge-finder/main/Appicon.png">
@@ -1043,14 +1043,36 @@
         </div>
 
         <div style="background:rgba(0,168,255,0.08); border:1px solid rgba(0,168,255,0.25); border-radius:12px; padding:12px; margin-bottom:15px;">
-            <div style="font-size:0.8em; font-weight:bold; color:var(--accent); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">🔵 Gemini AI — Card Insights</div>
-            <p style="font-size:0.78em; opacity:0.7; margin:0 0 10px;">When you tap a card, Gemini gives a plain-English aviation explanation. Free key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com</a></p>
+            <div style="font-size:0.8em; font-weight:bold; color:var(--accent); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">🔵 Gemini AI — Card Insights</div>
+            
+            <div style="font-size:0.8em; line-height:1.6; opacity:0.85; margin-bottom:12px;">
+                When you tap any card, Gemini loads a plain-English aviation explanation in the background — what it means in practice, when a pilot encounters it, and a real-world tip.
+            </div>
+
+            <div style="background:rgba(0,0,0,0.06); border-radius:8px; padding:10px; margin-bottom:12px; font-size:0.78em; line-height:1.7;">
+                <div style="font-weight:bold; margin-bottom:6px; opacity:0.8;">📋 Setup (takes 2 minutes, free)</div>
+                <div>1️⃣ Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent); font-weight:600;">aistudio.google.com/apikey</a></div>
+                <div>2️⃣ Sign in with your Google account</div>
+                <div>3️⃣ Click <b>"Create API key"</b> → select any project</div>
+                <div>4️⃣ Copy the key and paste it below</div>
+                <div style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(150,150,150,0.2); opacity:0.7;">
+                    🔒 Your key is stored <b>only on this device</b> — never shared.<br>
+                    👥 Each person should create their own key for their own quota.
+                </div>
+            </div>
+
             <div style="display:flex; gap:8px; align-items:center;">
-                <input type="password" id="geminiApiKeyInput" placeholder="Paste your Gemini API key..." autocomplete="off"
+                <input type="password" id="geminiApiKeyInput" placeholder="Paste your Gemini API key (AIza...)" autocomplete="off"
                     style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid rgba(150,150,150,0.3); background:rgba(0,0,0,0.05); color:var(--text); font-size:0.9em; outline:none;">
                 <button id="saveGeminiKeyBtn" class="modal-btn send" style="padding:8px 14px; font-size:0.85em; white-space:nowrap;">Save</button>
             </div>
             <div id="geminiKeyStatus" style="font-size:0.75em; margin-top:6px; opacity:0.7;"></div>
+
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(150,150,150,0.15); font-size:0.72em; opacity:0.6; line-height:1.6;">
+                📊 <b>Free quota (Gemini 2.5 Flash-Lite):</b> 1,000 requests/day · 15 req/min<br>
+                Limits are <b>per Google account</b> — each teammate's key has their own full quota.<br>
+                Quota resets daily at midnight Pacific Time.
+            </div>
         </div>
         <div class="toggle-row">
             <span>Default Search Mode</span>
@@ -1610,7 +1632,7 @@
             }
 
             // 1. Filter by Category
-            if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
+            if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym + "|" + i.meaning));
             else if (activeGroup === 'History') tf = historyLog;
             else if (activeGroup === 'My Acronyms') tf = customData;
             else if (activeGroup !== 'All') tf = tf.filter(i => i.group === activeGroup);
@@ -1671,8 +1693,7 @@
                     const isFav = favorites.includes(i.acronym + "|" + i.meaning);
                     const hasNote = pilotNotes[i.acronym];
                     const isLocalItem = i.isLocal === true;
-                    const confidence = mastery[i.acronym] || 0; 
-                    const isPriority = priorityList.includes(i.acronym);
+                    const confidence = mastery[i.acronym] || 0;
                 
                     // 1. CHECK FOR EXTRA INFO (Encyclopedia Data)
                     // Ensure we don't treat a short accident string as a valid image URL
@@ -1686,7 +1707,7 @@
                     if (hasContext) infoBadge += ' 📖'; // Book icon if notes exist
                 
                     const c = document.createElement('div');
-                    c.className = `card ${isPriority ? 'priority-high' : ''}`;
+                    c.className = 'card';
                     c.style.animationDelay = `${idx * 0.05}s`;
                     
                     // Make the WHOLE card clickable to open details, but we handle button clicks separately
@@ -2084,7 +2105,7 @@
             const prompt = `You are an aviation instructor. Explain the aviation term "${acronym}" (${meaning}) in the category "${category}" in 3–5 clear sentences. Cover: what it means in practice, when a pilot encounters it, and one memorable tip or real-world example. Keep it plain English, no bullet points, no headers.`;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2441,7 +2462,7 @@
         /* =========================================
            OFFLINE DATABASE MANAGER
            ========================================= */
-        const CACHE_NAME = 'flight-bag-v1'; // This MUST match the name in sw.js
+        const CACHE_NAME = 'flight-bag-v6'; // Must match sw.js
         
         // 1. Check what is currently saved (Runs when you open Settings)
         async function checkOfflineStatus() {
@@ -2572,20 +2593,63 @@
             showToast(`AI set to ${e.target.options[e.target.selectedIndex].text}`);
         });
 
-        // Gemini API Key Save
-        document.getElementById('saveGeminiKeyBtn').addEventListener('click', () => {
+        // Gemini API Key Save + Live Test
+        document.getElementById('saveGeminiKeyBtn').addEventListener('click', async () => {
             const key = document.getElementById('geminiApiKeyInput').value.trim();
+            const statusEl = document.getElementById('geminiKeyStatus');
+            const btn = document.getElementById('saveGeminiKeyBtn');
+
             if (!key) {
                 localStorage.removeItem('geminiApiKey');
-                document.getElementById('geminiKeyStatus').innerText = '🗑️ Key removed';
-                geminiCache = {}; // Clear cache
+                geminiCache = {};
+                statusEl.style.color = '';
+                statusEl.innerText = '🗑️ Key removed';
                 showToast('Gemini key removed');
-            } else {
-                localStorage.setItem('geminiApiKey', key);
-                document.getElementById('geminiApiKeyInput').value = '';
-                document.getElementById('geminiKeyStatus').innerText = '✅ Key saved — stored on this device only';
-                geminiCache = {}; // Clear cache so new key is used
-                showToast('✅ Gemini key saved');
+                return;
+            }
+
+            // Save immediately, then test
+            localStorage.setItem('geminiApiKey', key);
+            geminiCache = {};
+            document.getElementById('geminiApiKeyInput').value = '';
+            btn.disabled = true;
+            btn.innerText = '...';
+            statusEl.style.color = 'var(--accent)';
+            statusEl.innerText = '🔄 Testing key...';
+
+            try {
+                const res = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${key}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: 'Reply with only the word OK.' }] }],
+                            generationConfig: { maxOutputTokens: 5 }
+                        })
+                    }
+                );
+
+                if (res.ok) {
+                    statusEl.style.color = 'var(--success)';
+                    statusEl.innerText = '✅ Key works! Gemini insights are now active.';
+                    showToast('✅ Gemini key verified');
+                } else {
+                    const err = await res.json();
+                    const msg = err?.error?.message || `Error ${res.status}`;
+                    localStorage.removeItem('geminiApiKey'); // Remove bad key
+                    statusEl.style.color = 'var(--error)';
+                    statusEl.innerText = `❌ Invalid key — ${msg}`;
+                    showToast('❌ Key rejected by Gemini');
+                }
+            } catch (e) {
+                // Network error — key saved but can't verify right now
+                statusEl.style.color = '';
+                statusEl.innerText = '⚠️ Saved but could not verify — check your connection';
+                showToast('⚠️ Key saved, verification failed');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save';
             }
         });
 
@@ -2622,7 +2686,9 @@
                 settings: {
                     weather: settings.weather,
                     sfx: settings.sfx,
-                    defaultDb: localStorage.getItem('defaultDb') || 'faa'
+                    defaultDb: localStorage.getItem('defaultDb') || 'faa',
+                    defaultAi: localStorage.getItem('defaultAi') || 'chatgpt',
+                    defaultSearchMode: localStorage.getItem('defaultSearchMode') || 'starts'
                 }
             };
             const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
@@ -2708,6 +2774,13 @@
                                     localStorage.setItem('defaultDb', d.settings.defaultDb);
                                     document.getElementById('dbSource').value = d.settings.defaultDb;
                                     document.getElementById('defaultDbSelect').value = d.settings.defaultDb;
+                                }
+                                if (d.settings.defaultAi) {
+                                    localStorage.setItem('defaultAi', d.settings.defaultAi);
+                                }
+                                if (d.settings.defaultSearchMode) {
+                                    localStorage.setItem('defaultSearchMode', d.settings.defaultSearchMode);
+                                    document.getElementById('searchMode').value = d.settings.defaultSearchMode;
                                 }
                             }
                             localStorage.setItem('pilotHistory', JSON.stringify(historyLog));
