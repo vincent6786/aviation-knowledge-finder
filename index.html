@@ -368,6 +368,14 @@
             opacity: 0.8;
         }
 
+        .suggestion-chip { 
+            font-size: 0.78em; padding: 4px 10px; border-radius: 20px; 
+            background: rgba(150,150,150,0.15); border: 1px solid rgba(150,150,150,0.3); 
+            cursor: pointer; color: var(--text); white-space: nowrap;
+            transition: background 0.15s;
+        }
+        .suggestion-chip:active { background: var(--accent); color: white; border-color: var(--accent); }
+
         /* =========================================
            8. SPLASH SCREEN (Mobile Polish)
            ========================================= */
@@ -578,6 +586,7 @@
             <button id="clearBtn">✕</button>
             <button id="searchBtn">🔍</button>
         </div>
+        <div id="searchSuggestions" style="display:none; flex-wrap:wrap; gap:6px; padding: 6px 2px 0;"></div>
         
         <div class="filter-row" style="margin-top:10px;">
              <select id="categorySelect" title="Category">
@@ -611,6 +620,11 @@
             </select>
         </div>
         <div id="groupDesc" class="group-desc" style="margin-top:5px;">Searching entire database.</div>
+    </div>
+
+    <div id="resultMeta" style="display:none; padding: 6px 4px 2px; font-size:0.78em; opacity:0.7; display:flex; flex-direction:column; gap:4px;">
+        <div id="resultCount" style="font-weight:600;"></div>
+        <div id="sourceSummary" style="display:none; display:flex; gap:6px; flex-wrap:wrap;"></div>
     </div>
 
     <div id="results">
@@ -962,7 +976,7 @@
     </div>
 
     <div id="settingsOverlay" class="modal-overlay"></div>
-    <div id="settingsModal" class="modal">
+    <div id="settingsModal" class="modal" style="max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)); overflow-y: auto; top: calc(50% + var(--safe-top) / 2);">
         <h3>System Settings</h3>
         
         <div class="toggle-row">
@@ -976,6 +990,14 @@
                 <option value="eva">✈️ EVA Cadet</option>
                 <option value="building">🏗️ Still Building</option>
                 <option value="both">🌎 ALL SOURCES</option>
+            </select>
+        </div>
+        <div class="toggle-row">
+            <span>Default Search Mode</span>
+            <select id="defaultSearchMode" style="width:auto; padding:4px;">
+                <option value="starts">Starts With</option>
+                <option value="contains">Contains</option>
+                <option value="exact">Exact</option>
             </select>
         </div>
         <div class="toggle-row">
@@ -1308,6 +1330,9 @@
         // Apply saved default database
         const savedDefaultDb = localStorage.getItem('defaultDb');
         if (savedDefaultDb) document.getElementById('dbSource').value = savedDefaultDb;
+        // Apply saved default search mode
+        const savedSearchMode = localStorage.getItem('defaultSearchMode');
+        if (savedSearchMode) document.getElementById('searchMode').value = savedSearchMode;
         loadData(); // Load all data immediately
 
         // Weather Background Logic
@@ -1388,7 +1413,10 @@
                         setTimeout(() => splash.classList.add('hidden'), 2000);
                     } else {
                         // Success!
-                        setTimeout(() => splash.classList.add('hidden'), 500);
+                        setTimeout(() => {
+                            splash.classList.add('hidden');
+                            document.getElementById('searchBox').focus();
+                        }, 500);
                     }
                 }
                 
@@ -1500,6 +1528,27 @@
             else if (dbSource === 'building') tf = tf.filter(i => i.source === 'WIP');
             // 'both' keeps everything
 
+            // AUTO-HIDE CATEGORIES: rebuild dropdown based on what's in current DB
+            const catSelect = document.getElementById('categorySelect');
+            const currentCatVal = catSelect.value;
+            const presentGroups = new Set(tf.map(i => i.group).filter(Boolean));
+            const staticOpts = ['All', 'Favorites', 'History', 'My Acronyms'];
+            const groupOrder = ['Operations', 'Weather', 'Systems', 'Regulations', 'Business', 'Other'];
+            catSelect.innerHTML = [
+                `<option value="All">All Categories</option>`,
+                `<option value="Favorites">⭐ Favorites</option>`,
+                `<option value="History">🕒 History</option>`,
+                `<option value="My Acronyms">👤 My Acronyms</option>`,
+                ...groupOrder.filter(g => presentGroups.has(g)).map(g => `<option value="${g}">${g}</option>`)
+            ].join('');
+            // Restore selection if still valid, else reset to All
+            if ([...catSelect.options].some(o => o.value === currentCatVal)) {
+                catSelect.value = currentCatVal;
+            } else {
+                catSelect.value = 'All';
+                activeGroup = 'All';
+            }
+
             // 1. Filter by Category
             if (activeGroup === 'Favorites') tf = tf.filter(i => favorites.includes(i.acronym));
             else if (activeGroup === 'History') tf = historyLog;
@@ -1525,6 +1574,38 @@
             else if (sort === 'za') tf.sort((a, b) => b.acronym.localeCompare(a.acronym));
 
             // 4. Render Results
+            const totalMatches = tf.length;
+            const displayCount = Math.min(50, totalMatches);
+
+            // Result count bar
+            const resultMeta = document.getElementById('resultMeta');
+            const resultCountEl = document.getElementById('resultCount');
+            const sourceSummaryEl = document.getElementById('sourceSummary');
+
+            if (totalMatches > 0) {
+                resultMeta.style.display = 'flex';
+                resultCountEl.innerText = totalMatches > 50
+                    ? `Showing 50 of ${totalMatches} results`
+                    : `${totalMatches} result${totalMatches !== 1 ? 's' : ''}`;
+
+                // Source breakdown — only show in ALL SOURCES mode
+                if (dbSource === 'both') {
+                    const sourceCounts = {};
+                    tf.forEach(i => { sourceCounts[i.source] = (sourceCounts[i.source] || 0) + 1; });
+                    const sourceColors = { FAA:'#2980b9', SOFEMA:'#e67e22', JEPP:'#8e44ad', NOTAM:'#e74c3c', G1000:'#1a6fa8', EVA:'#00a86b', WIP:'#7f8c8d', USER:'#9b59b6' };
+                    sourceSummaryEl.style.display = 'flex';
+                    sourceSummaryEl.innerHTML = Object.entries(sourceCounts)
+                        .sort((a,b) => b[1]-a[1])
+                        .map(([src, cnt]) => `<span style="background:${sourceColors[src]||'#555'}; color:white; padding:2px 7px; border-radius:10px; font-size:0.85em; font-weight:600;">${src} ${cnt}</span>`)
+                        .join('');
+                } else {
+                    sourceSummaryEl.style.display = 'none';
+                    sourceSummaryEl.innerHTML = '';
+                }
+            } else {
+                resultMeta.style.display = 'none';
+            }
+
             if (tf.length > 0) {
                 tf.slice(0, 50).forEach((i, idx) => {
                     const isFav = favorites.includes(i.acronym + "|" + i.meaning);
@@ -1640,7 +1721,14 @@
                 });
             } else {
                 if (rawTerm) {
-                    res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;"><a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send">🌐 Search Google</a></div>`;
+                    res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;">
+                        <div style="font-size:2em; margin-bottom:10px;">🔍</div>
+                        <div style="opacity:0.6; margin-bottom:20px; font-size:0.95em;">No results for "<b>${rawTerm}</b>"</div>
+                        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                            <a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send" style="text-decoration:none; display:flex; align-items:center; gap:6px;">🌐 Google</a>
+                            <a href="https://chatgpt.com/?q=${encodeURIComponent('What does ' + rawTerm + ' mean in aviation?')}" target="_blank" class="modal-btn send" style="text-decoration:none; display:flex; align-items:center; gap:6px; background:#10a37f;">🤖 Ask ChatGPT</a>
+                        </div>
+                    </div>`;
                 } else {
                     res.innerHTML = '<div style="text-align:center;margin-top:40px;opacity:0.6;">NO TARGETS</div>';
                 }
@@ -1975,10 +2063,68 @@
         window.filterByFamily = function(groupName) { activeGroup = groupName; document.getElementById('categorySelect').value = groupName; document.getElementById('searchBox').value = ''; runSearch(); showToast(`Showing ${groupName} Family`); };
 
         // Search Box Logic
+        let recentSearchTerms = JSON.parse(localStorage.getItem('recentSearchTerms') || '[]');
+
+        function saveSearchTerm(term) {
+            if (!term || term.length < 2) return;
+            recentSearchTerms = recentSearchTerms.filter(t => t !== term);
+            recentSearchTerms.unshift(term);
+            if (recentSearchTerms.length > 10) recentSearchTerms.pop();
+            localStorage.setItem('recentSearchTerms', JSON.stringify(recentSearchTerms));
+        }
+
+        function renderSuggestions() {
+            const box = document.getElementById('searchSuggestions');
+            if (recentSearchTerms.length === 0) { box.style.display = 'none'; return; }
+            box.style.display = 'flex';
+            box.innerHTML = recentSearchTerms.map(t =>
+                `<span class="suggestion-chip" data-term="${t}">🕐 ${t}</span>`
+            ).join('');
+            box.querySelectorAll('.suggestion-chip').forEach(chip => {
+                chip.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // prevent blur before click fires
+                    const term = chip.dataset.term;
+                    document.getElementById('searchBox').value = term;
+                    document.getElementById('clearBtn').style.display = 'block';
+                    box.style.display = 'none';
+                    runSearch();
+                    playSound('click');
+                });
+            });
+        }
+
+        document.getElementById('searchBox').addEventListener('focus', renderSuggestions);
+        document.getElementById('searchBox').addEventListener('blur', () => {
+            setTimeout(() => { document.getElementById('searchSuggestions').style.display = 'none'; }, 200);
+        });
+
         document.getElementById('dbSource').addEventListener('change', () => { runSearch(); updateRankHUD(); });
-        document.getElementById('searchBox').addEventListener('input',()=>{document.getElementById('clearBtn').style.display='block';if(activeGroup==='Favorites'||activeGroup==='History')activeGroup='All';runSearch();});
-        document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('searchBox').value='';runSearch();});
-        document.getElementById('searchMode').addEventListener('change',runSearch); document.getElementById('sortSelect').addEventListener('change',runSearch);
+        document.getElementById('searchBox').addEventListener('input', () => {
+            document.getElementById('clearBtn').style.display = 'block';
+            document.getElementById('searchSuggestions').style.display = 'none';
+            if (activeGroup === 'Favorites' || activeGroup === 'History') activeGroup = 'All';
+            runSearch();
+        });
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('searchBox').value = '';
+            document.getElementById('searchSuggestions').style.display = 'none';
+            runSearch();
+        });
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const term = document.getElementById('searchBox').value.trim();
+            saveSearchTerm(term);
+            document.getElementById('searchSuggestions').style.display = 'none';
+            document.getElementById('searchBox').blur();
+        });
+        document.getElementById('searchBox').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                saveSearchTerm(document.getElementById('searchBox').value.trim());
+                document.getElementById('searchSuggestions').style.display = 'none';
+                document.getElementById('searchBox').blur();
+            }
+        });
+        document.getElementById('searchMode').addEventListener('change', runSearch);
+        document.getElementById('sortSelect').addEventListener('change', runSearch);
 
         // General UI Helpers
         function showToast(m){const t=document.getElementById("toast");t.textContent=m;t.className="show";setTimeout(()=>{t.className=t.className.replace("show","");},3000);}
@@ -2249,6 +2395,9 @@
             // Sync the default DB dropdown to current selection
             const savedDefaultDb = localStorage.getItem('defaultDb') || 'faa';
             document.getElementById('defaultDbSelect').value = savedDefaultDb;
+            // Sync the default search mode dropdown
+            const savedSearchMode = localStorage.getItem('defaultSearchMode') || 'starts';
+            document.getElementById('defaultSearchMode').value = savedSearchMode;
         });
         document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultDb', e.target.value);
@@ -2259,6 +2408,11 @@
         document.getElementById('closeSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='none';document.getElementById('settingsModal').style.display='none';});
         document.getElementById('weatherSelect').addEventListener('change',(e)=>{settings.weather=e.target.value;localStorage.setItem('pilotSettings',JSON.stringify(settings));updateBackground();});
         document.getElementById('toggleSfx').addEventListener('change',(e)=>{settings.sfx=e.target.checked;localStorage.setItem('pilotSettings',JSON.stringify(settings));});
+        document.getElementById('defaultSearchMode').addEventListener('change',(e)=>{
+            localStorage.setItem('defaultSearchMode', e.target.value);
+            document.getElementById('searchMode').value = e.target.value;
+            showToast(`Default search: ${e.target.options[e.target.selectedIndex].text}`);
+        });
 
         // FULL BACKUP — includes everything + settings
         document.getElementById('exportBtn').addEventListener('click', () => {
