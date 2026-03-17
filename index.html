@@ -657,8 +657,7 @@
                 <h4 style="margin-top:0; margin-bottom:5px;">👋 Captain's Welcome</h4>
                 <p style="margin:0; font-size:0.9em;">
                     Hi, I'm <strong>Vincent</strong>!<br>
-                    I built this tool to help us study smarter for ground school. Six databases, smart search, offline mode, and AI lookup — all in one place.
-                    <br><br>
+                    I built this tool to help us study smarter for ground school. Six databases, smart search, offline mode, and live AI insights — all in one place.<br><br>
                     <em>Fly safe and study hard! ✈️</em>
                 </p>
             </div>
@@ -671,54 +670,66 @@
                 <li><strong>NOTAM</strong> — Notice to Air Missions codes</li>
                 <li><strong>G1000</strong> — Garmin G1000 glass cockpit terms</li>
                 <li><strong>EVA Cadet</strong> — Our team's curated study deck</li>
-                <li><strong>🌎 ALL SOURCES</strong> — Search everything at once</li>
+                <li><strong>🌎 ALL SOURCES</strong> — Search all databases at once. A color-coded breakdown shows how many hits came from each source.</li>
             </ul>
 
             <h4>🔍 Searching</h4>
             <ul>
-                <li><strong>Search Modes:</strong> <em>Starts With</em> (fastest), <em>Contains</em> (broadest), <em>Exact</em> (precise). Set your default in Settings.</li>
-                <li><strong>Def Only:</strong> Toggle to search inside definitions instead of acronym names.</li>
+                <li><strong>Search Modes:</strong> <em>Starts With</em> (fastest), <em>Contains</em> (broadest), <em>Exact</em> (precise). Set your default in Settings so it persists across sessions.</li>
+                <li><strong>Def Only:</strong> Toggle on to search inside definitions instead of acronym names.</li>
                 <li><strong>Recent Searches:</strong> Tap the search box to see your last 10 searches as quick-tap chips.</li>
-                <li><strong>Category Filter:</strong> The category dropdown auto-updates to only show categories present in the selected database.</li>
-                <li><strong>Result Count:</strong> A count appears above results. In ALL SOURCES mode, a color-coded source breakdown shows how many hits came from each database.</li>
+                <li><strong>Category Filter:</strong> Auto-updates to show only categories present in the currently selected database.</li>
+                <li><strong>Result Count:</strong> Shows total results above the list. Capped at 50 per page.</li>
             </ul>
 
             <h4>🃏 Cards</h4>
             <ul>
-                <li><strong>Encyclopedia:</strong> Cards with 📷 or 📖 badges have extra detail — tap the card to open images, context notes, and mnemonics.</li>
-                <li><strong>Confidence Dots:</strong> Rate each card 🔴🟡🟢 to track your mastery. Used in Exam Mode and Logbook.</li>
-                <li><strong>⭐ Favourite:</strong> Save cards to your Favourites for quick access.</li>
+                <li><strong>Tap any card</strong> to open the full detail view — every card is tappable.</li>
+                <li><strong>🔵 Gemini Insight:</strong> The detail view automatically fetches a plain-English aviation explanation from Gemini AI. Requires a free API key — set it up in <strong>Settings → Gemini AI</strong>.</li>
+                <li><strong>Extra Detail:</strong> Cards marked <em>Tap for Details 📷📖</em> also contain images, context notes, or mnemonics from the database.</li>
+                <li><strong>Confidence Dots:</strong> Rate each card 🔴🟡🟢 to track mastery. Used in Exam Mode and Logbook.</li>
+                <li><strong>⭐ Favourite:</strong> Save cards for quick access via the Favourites filter.</li>
                 <li><strong>📝 Note:</strong> Add a personal study note to any card.</li>
                 <li><strong>🔊 Speak:</strong> Hear the definition read aloud.</li>
-                <li><strong>🌐 Google / 🤖 AI:</strong> Look up the term in Google or your default AI (ChatGPT, Claude, Gemini, Perplexity). Set your preferred AI in Settings.</li>
+                <li><strong>🌐 Google / 🤖 AI:</strong> Look up the term externally. The 🤖 button opens your default AI assistant with the query pre-filled. Set your preferred AI in Settings.</li>
                 <li><strong>See Also:</strong> Related terms from the same database appear at the bottom of each card.</li>
+            </ul>
+
+            <h4>🔵 Gemini AI Setup</h4>
+            <ul>
+                <li>Go to <strong>Settings → Gemini AI — Card Insights</strong> (tap to expand).</li>
+                <li>Get a free key at <strong>aistudio.google.com/apikey</strong> — sign in with Google, click Create API key, paste it in.</li>
+                <li>The app tests your key immediately on save and confirms it works.</li>
+                <li><strong>Each person needs their own key</strong> — it's free and gives you your own 1,000 requests/day quota.</li>
+                <li>Your key is stored only on your device and is never shared.</li>
             </ul>
 
             <h4>📡 Offline Mode</h4>
             <ul>
-                <li><strong>Download Databases:</strong> Go to <strong>Settings → Offline Databases</strong> and toggle on any database to save it to your device.</li>
-                <li><strong>Works Anywhere:</strong> Once downloaded, the app works without internet — on a plane, in a hangar, anywhere.</li>
-                <li><strong>Resilient Loading:</strong> If a source fails to load, the rest still load normally.</li>
+                <li>Go to <strong>Settings → Offline Databases</strong> and toggle on any database to download it.</li>
+                <li>Once downloaded, that database loads from your device — no internet needed.</li>
+                <li>If a source fails to load online, the rest still load normally.</li>
             </ul>
 
             <h4>⚙️ Settings</h4>
             <ul>
-                <li><strong>Default Database:</strong> Choose which database opens on startup.</li>
-                <li><strong>Default Search Mode:</strong> Set Starts / Contains / Exact as your default.</li>
-                <li><strong>Default AI:</strong> Choose ChatGPT, Claude, Gemini, or Perplexity for the 🤖 button.</li>
-                <li><strong>Weather Background:</strong> Auto-changes with time of day, or lock it manually.</li>
+                <li><strong>Default Database:</strong> Which database opens on startup.</li>
+                <li><strong>Default AI Assistant:</strong> ChatGPT, Claude, Gemini, or Perplexity for the 🤖 button.</li>
+                <li><strong>Default Search Mode:</strong> Persists Starts / Contains / Exact across sessions.</li>
+                <li><strong>Gemini AI:</strong> Paste your free API key to enable AI card insights.</li>
+                <li><strong>Weather Background:</strong> Auto-changes by time of day, or lock it manually.</li>
             </ul>
 
             <h4>💾 Backup & Sharing</h4>
             <ul>
-                <li><strong>Full Backup:</strong> Saves all your data including favourites, mastery, notes, custom acronyms, and settings.</li>
-                <li><strong>Share Setup:</strong> Exports only your custom acronyms and notes — clean file to send a colleague without your personal study progress.</li>
-                <li><strong>Smart Import:</strong> When importing a full backup, choose <em>Full Restore</em> (replaces everything) or <em>Merge</em> (adds new acronyms without touching your own progress).</li>
+                <li><strong>📤 Full Backup:</strong> Saves everything — favourites, mastery, notes, custom acronyms, scratchpad, and all settings. Date-stamped.</li>
+                <li><strong>🤝 Share Setup:</strong> Exports only your custom acronyms and notes. Send this to a colleague — they get your additions without your personal study progress.</li>
+                <li><strong>📥 Restore / Import:</strong> Detects the file type automatically. Full backup gives you a choice: <em>Full Restore</em> (replaces everything) or <em>Merge</em> (adds new entries without touching your own data). Share files always merge silently.</li>
             </ul>
 
             <h4>🎓 Exam & Logbook</h4>
             <ul>
-                <li><strong>Exam Mode:</strong> Tap 📝 to start a quiz. Confidence ratings influence which cards appear first.</li>
+                <li><strong>Exam Mode:</strong> Tap 📝 in the menu. Confidence ratings influence which cards appear first — weak items come up more.</li>
                 <li><strong>Logbook:</strong> Tap 📊 to see your mastery breakdown, weakest category, and last 5 exam scores.</li>
             </ul>
 
@@ -726,6 +737,7 @@
             <ul>
                 <li>Tap <strong>＋ → ✏️</strong> to add a private acronym. Supports definition, category, image URL, and context notes.</li>
                 <li>Private entries are stored only on your device and show a 👤 badge.</li>
+                <li>Admin mode allows adding entries directly to the shared EVA Cadet or Still Building databases via the sync queue.</li>
             </ul>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
@@ -1075,10 +1087,18 @@
             </div>
             <div id="geminiKeyStatus" style="font-size:0.75em; margin-top:6px; opacity:0.7;"></div>
 
-            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(150,150,150,0.15); font-size:0.72em; opacity:0.6; line-height:1.6;">
-                📊 <b>Free quota (Gemini 2.5 Flash-Lite):</b> 1,000 requests/day · 15 req/min<br>
-                Limits are <b>per Google account</b> — each teammate's key has their own full quota.<br>
-                Quota resets daily at midnight Pacific Time.
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(150,150,150,0.15); line-height:1.6;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:0.72em; opacity:0.6;">Today's usage</span>
+                    <span id="geminiUsageLabel" style="font-size:0.78em; font-weight:bold; color:var(--accent);">— / 1,000</span>
+                </div>
+                <div style="height:6px; background:rgba(150,150,150,0.2); border-radius:3px; overflow:hidden;">
+                    <div id="geminiUsageBar" style="height:100%; width:0%; background:var(--success); border-radius:3px; transition:width 0.4s;"></div>
+                </div>
+                <div style="font-size:0.7em; opacity:0.5; margin-top:6px; line-height:1.5;">
+                    Free quota: 1,000 req/day · 15 req/min · per Google account<br>
+                    Resets at midnight Pacific Time.
+                </div>
             </div>
             </div>
         </div>
@@ -2071,6 +2091,43 @@
            GEMINI INSIGHT ENGINE
            ========================================= */
         let geminiCache = {}; // Cache results per acronym so we don't re-fetch on reopen
+        const GEMINI_DAILY_LIMIT = 1000;
+
+        // Usage tracking — resets at midnight Pacific Time
+        function getGeminiUsage() {
+            const stored = JSON.parse(localStorage.getItem('geminiUsage') || '{"date":"","count":0}');
+            // Get today's date in Pacific Time
+            const pacificDate = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
+            if (stored.date !== pacificDate) {
+                // New day — reset
+                const fresh = { date: pacificDate, count: 0 };
+                localStorage.setItem('geminiUsage', JSON.stringify(fresh));
+                return fresh;
+            }
+            return stored;
+        }
+
+        function incrementGeminiUsage() {
+            const usage = getGeminiUsage();
+            usage.count++;
+            localStorage.setItem('geminiUsage', JSON.stringify(usage));
+            return usage.count;
+        }
+
+        function updateGeminiUsageUI() {
+            const usage = getGeminiUsage();
+            const count = usage.count;
+            const pct = Math.min(100, (count / GEMINI_DAILY_LIMIT) * 100);
+            const label = document.getElementById('geminiUsageLabel');
+            const bar = document.getElementById('geminiUsageBar');
+            if (!label || !bar) return;
+            label.innerText = `${count} / ${GEMINI_DAILY_LIMIT}`;
+            bar.style.width = `${pct}%`;
+            // Colour the bar based on usage level
+            if (pct >= 90) { bar.style.background = 'var(--error)'; label.style.color = 'var(--error)'; }
+            else if (pct >= 70) { bar.style.background = '#f39c12'; label.style.color = '#f39c12'; }
+            else { bar.style.background = 'var(--success)'; label.style.color = 'var(--accent)'; }
+        }
 
         async function fetchGeminiInsight(acronym, meaning, category) {
             const apiKey = localStorage.getItem('geminiApiKey');
@@ -2082,6 +2139,15 @@
                 box.style.display = 'block';
                 text.innerHTML = `<span style="opacity:0.6; font-size:0.9em;">No Gemini API key set. Add one in <b>⚙️ Settings</b> to enable AI insights.</span>`;
                 dots.innerText = '';
+                return;
+            }
+
+            // Check if approaching daily limit before fetching
+            const usageNow = getGeminiUsage();
+            if (usageNow.count >= GEMINI_DAILY_LIMIT) {
+                box.style.display = 'block';
+                dots.innerText = '⛔ Limit reached';
+                text.innerHTML = `<span style="font-size:0.9em; color:var(--error);">Daily quota of 1,000 requests reached. Resets at midnight Pacific Time.</span>`;
                 return;
             }
 
@@ -2136,6 +2202,15 @@
                 geminiCache[acronym] = html;
                 dots.innerText = '✓ Gemini';
                 text.innerHTML = html;
+
+                // Increment usage and warn if approaching limit
+                const newCount = incrementGeminiUsage();
+                const remaining = GEMINI_DAILY_LIMIT - newCount;
+                if (remaining <= 50 && remaining > 0) {
+                    text.innerHTML += `<p style="margin:8px 0 0; font-size:0.78em; color:#f39c12; opacity:0.9;">⚠️ ${remaining} Gemini requests remaining today.</p>`;
+                } else if (remaining <= 0) {
+                    dots.innerText = '⛔ Limit reached';
+                }
 
             } catch (e) {
                 clearInterval(loadingInterval);
@@ -2577,6 +2652,8 @@
             // Auto-expand panel if key is set, collapse if not
             document.getElementById('geminiPanelBody').style.display = hasKey ? 'block' : 'none';
             document.getElementById('geminiChevron').innerText = hasKey ? '⌄' : '›';
+            // Update usage counter
+            updateGeminiUsageUI();
         });
         document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultDb', e.target.value);
