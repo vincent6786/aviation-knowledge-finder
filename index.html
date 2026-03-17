@@ -953,11 +953,19 @@
     
         <div id="encContextContainer" style="display:none; background:rgba(150,150,150,0.1); padding:15px; border-radius:12px;">
             <div style="font-weight:bold; font-size:0.8em; opacity:0.7; margin-bottom:5px; text-transform:uppercase;">💡 Did You Know?</div>
-            <div id="encContext" style="font-size:0.95em; line-height:1.6; opacity:0.9;">
-                </div>
+            <div id="encContext" style="font-size:0.95em; line-height:1.6; opacity:0.9;"></div>
+        </div>
+
+        <div id="geminiInsightBox" style="margin-top:15px; border-radius:12px; overflow:hidden; border:1px solid rgba(66,133,244,0.3); display:none;">
+            <div style="background:linear-gradient(135deg,rgba(66,133,244,0.15),rgba(52,168,83,0.1)); padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(66,133,244,0.2);">
+                <span style="font-size:1.1em;">🔵</span>
+                <span style="font-size:0.8em; font-weight:bold; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Gemini Insight</span>
+                <span id="geminiLoadingDots" style="font-size:0.75em; opacity:0.6; margin-left:auto;"></span>
+            </div>
+            <div id="geminiInsightText" style="padding:12px 14px; font-size:0.92em; line-height:1.65; color:var(--text);"></div>
         </div>
     
-        <div style="margin-top:20px; display:flex; gap:10px;">
+        <div style="margin-top:15px; display:flex; gap:10px;">
             <button id="encGoogleBtn" class="modal-btn" style="flex:1; border:1px solid rgba(150,150,150,0.3);">🌐 Google It</button>
         </div>
     </div>
@@ -1032,6 +1040,17 @@
                 <option value="gemini">🔵 Gemini</option>
                 <option value="perplexity">🟣 Perplexity</option>
             </select>
+        </div>
+
+        <div style="background:rgba(0,168,255,0.08); border:1px solid rgba(0,168,255,0.25); border-radius:12px; padding:12px; margin-bottom:15px;">
+            <div style="font-size:0.8em; font-weight:bold; color:var(--accent); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">🔵 Gemini AI — Card Insights</div>
+            <p style="font-size:0.78em; opacity:0.7; margin:0 0 10px;">When you tap a card, Gemini gives a plain-English aviation explanation. Free key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com</a></p>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="password" id="geminiApiKeyInput" placeholder="Paste your Gemini API key..." autocomplete="off"
+                    style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid rgba(150,150,150,0.3); background:rgba(0,0,0,0.05); color:var(--text); font-size:0.9em; outline:none;">
+                <button id="saveGeminiKeyBtn" class="modal-btn send" style="padding:8px 14px; font-size:0.85em; white-space:nowrap;">Save</button>
+            </div>
+            <div id="geminiKeyStatus" style="font-size:0.75em; margin-top:6px; opacity:0.7;"></div>
         </div>
         <div class="toggle-row">
             <span>Default Search Mode</span>
@@ -2026,6 +2045,84 @@
         /* =========================================
            ENCYCLOPEDIA MODAL LOGIC (Updated Search)
            ========================================= */
+        /* =========================================
+           GEMINI INSIGHT ENGINE
+           ========================================= */
+        let geminiCache = {}; // Cache results per acronym so we don't re-fetch on reopen
+
+        async function fetchGeminiInsight(acronym, meaning, category) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            const box = document.getElementById('geminiInsightBox');
+            const text = document.getElementById('geminiInsightText');
+            const dots = document.getElementById('geminiLoadingDots');
+
+            if (!apiKey) {
+                box.style.display = 'block';
+                text.innerHTML = `<span style="opacity:0.6; font-size:0.9em;">No Gemini API key set. Add one in <b>⚙️ Settings</b> to enable AI insights.</span>`;
+                dots.innerText = '';
+                return;
+            }
+
+            // Show box immediately with loading state
+            box.style.display = 'block';
+            text.innerHTML = '';
+            dots.innerText = 'Loading...';
+            let dotCount = 0;
+            const loadingInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                dots.innerText = 'Loading' + '.'.repeat(dotCount);
+            }, 400);
+
+            // Use cache if available
+            if (geminiCache[acronym]) {
+                clearInterval(loadingInterval);
+                dots.innerText = '✓ Gemini';
+                text.innerHTML = geminiCache[acronym];
+                return;
+            }
+
+            const prompt = `You are an aviation instructor. Explain the aviation term "${acronym}" (${meaning}) in the category "${category}" in 3–5 clear sentences. Cover: what it means in practice, when a pilot encounters it, and one memorable tip or real-world example. Keep it plain English, no bullet points, no headers.`;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+                    })
+                });
+
+                clearInterval(loadingInterval);
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    const msg = err?.error?.message || `API error ${res.status}`;
+                    dots.innerText = '⚠️ Error';
+                    text.innerHTML = `<span style="opacity:0.6; font-size:0.9em; color:var(--error);">${msg}</span>`;
+                    return;
+                }
+
+                const data = await res.json();
+                const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                if (!raw) throw new Error('Empty response');
+
+                // Light formatting — preserve paragraph breaks
+                const formatted = raw.trim().replace(/\n\n/g, '</p><p style="margin:8px 0 0;">').replace(/\n/g, ' ');
+                const html = `<p style="margin:0;">${formatted}</p>`;
+
+                geminiCache[acronym] = html;
+                dots.innerText = '✓ Gemini';
+                text.innerHTML = html;
+
+            } catch (e) {
+                clearInterval(loadingInterval);
+                dots.innerText = '⚠️ Failed';
+                text.innerHTML = `<span style="opacity:0.6; font-size:0.9em; color:var(--error);">Could not load insight. Check your API key in Settings.</span>`;
+                console.error('Gemini error:', e);
+            }
+        }
+
         function openEncyclopediaModal(acronymTarget) {
             // 1. Get ALL matches for this acronym (Local AND Cloud)
             const candidates = allData.filter(i => i.acronym === acronymTarget);
@@ -2071,13 +2168,20 @@
                 ctxContainer.style.display = 'none';      
             }
         
-            // 6. Setup Google Button (UPDATED HERE)
+            // 6. Setup Google Button
             document.getElementById('encGoogleBtn').onclick = () => {
-                // Search query: aviation term "ACRONYM"
                 window.open(`https://www.google.com/search?q=aviation+term+"${encodeURIComponent(item.acronym)}"`, '_blank');
             };
         
-            // 7. Show Modal
+            // 7. Gemini Insight — reset and fetch
+            const geminiBox = document.getElementById('geminiInsightBox');
+            geminiBox.style.display = 'none';
+            document.getElementById('geminiInsightText').innerHTML = '';
+            document.getElementById('geminiLoadingDots').innerText = '';
+            // Small delay so modal renders before fetch starts
+            setTimeout(() => fetchGeminiInsight(item.acronym, item.meaning, item.category), 150);
+
+            // 8. Show Modal
             document.getElementById('encycloModalOverlay').style.display = 'block';
             document.getElementById('encycloModal').style.display = 'block';
         }
@@ -2444,6 +2548,10 @@
             // Sync the default AI dropdown
             const savedAi = localStorage.getItem('defaultAi') || 'chatgpt';
             document.getElementById('defaultAiSelect').value = savedAi;
+            // Show Gemini key status
+            const hasKey = !!localStorage.getItem('geminiApiKey');
+            document.getElementById('geminiKeyStatus').innerText = hasKey ? '✅ Key saved — stored on this device only' : '⚠️ No key set yet';
+            document.getElementById('geminiApiKeyInput').value = '';
         });
         document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultDb', e.target.value);
@@ -2462,6 +2570,23 @@
         document.getElementById('defaultAiSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultAi', e.target.value);
             showToast(`AI set to ${e.target.options[e.target.selectedIndex].text}`);
+        });
+
+        // Gemini API Key Save
+        document.getElementById('saveGeminiKeyBtn').addEventListener('click', () => {
+            const key = document.getElementById('geminiApiKeyInput').value.trim();
+            if (!key) {
+                localStorage.removeItem('geminiApiKey');
+                document.getElementById('geminiKeyStatus').innerText = '🗑️ Key removed';
+                geminiCache = {}; // Clear cache
+                showToast('Gemini key removed');
+            } else {
+                localStorage.setItem('geminiApiKey', key);
+                document.getElementById('geminiApiKeyInput').value = '';
+                document.getElementById('geminiKeyStatus').innerText = '✅ Key saved — stored on this device only';
+                geminiCache = {}; // Clear cache so new key is used
+                showToast('✅ Gemini key saved');
+            }
         });
 
         // AI Model Helpers
