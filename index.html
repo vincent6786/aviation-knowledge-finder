@@ -966,6 +966,19 @@
         <h3>System Settings</h3>
         
         <div class="toggle-row">
+            <span>Default Database</span>
+            <select id="defaultDbSelect" style="width:auto; padding:4px;">
+                <option value="faa">🇺🇸 FAA</option>
+                <option value="sofema">🇪🇺 SOFEMA</option>
+                <option value="jepp">📖 Jeppesen</option>
+                <option value="notam">⚠️ NOTAM</option>
+                <option value="g1000">🖥️ G1000</option>
+                <option value="eva">✈️ EVA Cadet</option>
+                <option value="building">🏗️ Still Building</option>
+                <option value="both">🌎 ALL SOURCES</option>
+            </select>
+        </div>
+        <div class="toggle-row">
             <span>Weather Background</span>
             <select id="weatherSelect" style="width:auto; padding:4px;">
                 <option value="auto">Auto</option>
@@ -1038,8 +1051,9 @@
         </div>
         
         <p style="margin-top:20px; font-weight:bold; color:var(--accent);">Data Management</p>
-        <button id="exportBtn" class="modal-btn send modal-btn full">📤 Export Backup</button>
-        <button id="importBtn" class="modal-btn cancel modal-btn full">📥 Restore Data</button>
+        <button id="exportBtn" class="modal-btn send modal-btn full">📤 Full Backup (My Data)</button>
+        <button id="exportShareBtn" class="modal-btn full" style="background:#8e44ad; color:white; margin-top:6px;">🤝 Share Setup (Acronyms + Notes)</button>
+        <button id="importBtn" class="modal-btn cancel modal-btn full" style="margin-top:6px;">📥 Restore / Import</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
         
         <div style="margin-top:15px; text-align:right;">
@@ -1291,6 +1305,9 @@
         document.getElementById('scratchpad').value=scratchpadText;
         document.getElementById('weatherSelect').value=settings.weather||'auto';
         document.getElementById('toggleSfx').checked=settings.sfx;
+        // Apply saved default database
+        const savedDefaultDb = localStorage.getItem('defaultDb');
+        if (savedDefaultDb) document.getElementById('dbSource').value = savedDefaultDb;
         loadData(); // Load all data immediately
 
         // Weather Background Logic
@@ -1371,7 +1388,7 @@
                         setTimeout(() => splash.classList.add('hidden'), 2000);
                     } else {
                         // Success!
-                        setTimeout(() => splash.classList.add('hidden'), 800);
+                        setTimeout(() => splash.classList.add('hidden'), 500);
                     }
                 }
                 
@@ -2226,42 +2243,158 @@
         // (Find your existing settingsBtn listener and add checkOfflineStatus, or just add this line below it)
         document.getElementById('settingsBtn').addEventListener('click', checkOfflineStatus);
 
-        document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='block';document.getElementById('settingsModal').style.display='block';});
+        document.getElementById('settingsBtn').addEventListener('click',()=>{
+            document.getElementById('settingsOverlay').style.display='block';
+            document.getElementById('settingsModal').style.display='block';
+            // Sync the default DB dropdown to current selection
+            const savedDefaultDb = localStorage.getItem('defaultDb') || 'faa';
+            document.getElementById('defaultDbSelect').value = savedDefaultDb;
+        });
+        document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
+            localStorage.setItem('defaultDb', e.target.value);
+            document.getElementById('dbSource').value = e.target.value;
+            runSearch();
+            showToast(`Default DB set to ${e.target.options[e.target.selectedIndex].text}`);
+        });
         document.getElementById('closeSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsOverlay').style.display='none';document.getElementById('settingsModal').style.display='none';});
         document.getElementById('weatherSelect').addEventListener('change',(e)=>{settings.weather=e.target.value;localStorage.setItem('pilotSettings',JSON.stringify(settings));updateBackground();});
         document.getElementById('toggleSfx').addEventListener('change',(e)=>{settings.sfx=e.target.checked;localStorage.setItem('pilotSettings',JSON.stringify(settings));});
 
+        // FULL BACKUP — includes everything + settings
         document.getElementById('exportBtn').addEventListener('click', () => {
-            const data = { history: historyLog, favorites: favorites, mastery: mastery, priority: priorityList, notes: pilotNotes, custom: customData, scratchpad: document.getElementById('scratchpad').value };
+            const data = {
+                _type: 'full',
+                history: historyLog,
+                favorites: favorites,
+                mastery: mastery,
+                priority: priorityList,
+                notes: pilotNotes,
+                custom: customData,
+                scratchpad: document.getElementById('scratchpad').value,
+                settings: {
+                    weather: settings.weather,
+                    sfx: settings.sfx,
+                    defaultDb: localStorage.getItem('defaultDb') || 'faa'
+                }
+            };
             const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `EVA_Cadet_Study_Backup.json`; a.click();
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AviationApp_FullBackup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            showToast("✅ Full backup downloaded");
         });
+
+        // SHARE SETUP — only custom acronyms + notes, nothing personal
+        document.getElementById('exportShareBtn').addEventListener('click', () => {
+            if (customData.length === 0 && Object.keys(pilotNotes).length === 0) {
+                showToast("No custom acronyms or notes to share"); return;
+            }
+            const data = {
+                _type: 'share',
+                custom: customData,
+                notes: pilotNotes
+            };
+            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AviationApp_SharedSetup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            showToast(`🤝 Shared ${customData.length} acronyms + notes`);
+        });
+
+        // SMART IMPORT — detects file type and prompts accordingly
         document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const r = new FileReader();
             r.onload = (x) => {
                 try {
                     const d = JSON.parse(x.target.result);
-                    if (d.history) historyLog = d.history;
-                    if (d.favorites) favorites = d.favorites;
-                    if (d.mastery) mastery = d.mastery; 
-                    if (d.custom) customData = d.custom;
-                    if (d.notes) pilotNotes = d.notes;
-                    if (d.priority) priorityList = d.priority; 
-                    if (d.scratchpad) document.getElementById('scratchpad').value = d.scratchpad;
-                    localStorage.setItem('pilotHistory', JSON.stringify(historyLog));
-                    localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
-                    localStorage.setItem('pilotMastery', JSON.stringify(mastery));
-                    localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
-                    localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
-                    localStorage.setItem('pilotPriority', JSON.stringify(priorityList)); 
-                    localStorage.setItem('pilotScratchpad', d.scratchpad || "");
-                    loadData();
-                    showToast("Restored Successfully!");
-                } catch (z) { console.error(z); showToast("Error: Invalid Backup File"); }
+                    const fileType = d._type || 'full'; // legacy backups default to full
+
+                    if (fileType === 'share') {
+                        // Share file — always merge, no choice needed
+                        const newAcr = (d.custom || []).filter(incoming =>
+                            !customData.some(existing => existing.acronym === incoming.acronym && existing.meaning === incoming.meaning)
+                        );
+                        customData = [...customData, ...newAcr];
+                        localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+
+                        if (d.notes) {
+                            // Merge notes — don't overwrite existing ones
+                            Object.entries(d.notes).forEach(([key, val]) => {
+                                if (!pilotNotes[key]) pilotNotes[key] = val;
+                            });
+                            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+                        }
+
+                        loadData();
+                        showToast(`✅ Merged ${newAcr.length} new acronyms`);
+
+                    } else {
+                        // Full backup — ask: full restore or merge only?
+                        const choice = confirm(
+                            "What would you like to do?\n\n" +
+                            "OK  →  Full Restore (replaces everything)\n" +
+                            "Cancel  →  Merge only (adds acronyms + notes, keeps your study progress)"
+                        );
+
+                        if (choice) {
+                            // Full restore
+                            if (d.history) historyLog = d.history;
+                            if (d.favorites) favorites = d.favorites;
+                            if (d.mastery) mastery = d.mastery;
+                            if (d.custom) customData = d.custom;
+                            if (d.notes) pilotNotes = d.notes;
+                            if (d.priority) priorityList = d.priority;
+                            if (d.scratchpad) document.getElementById('scratchpad').value = d.scratchpad;
+                            // Restore settings too
+                            if (d.settings) {
+                                settings.weather = d.settings.weather || 'auto';
+                                settings.sfx = d.settings.sfx || false;
+                                document.getElementById('weatherSelect').value = settings.weather;
+                                document.getElementById('toggleSfx').checked = settings.sfx;
+                                if (d.settings.defaultDb) {
+                                    localStorage.setItem('defaultDb', d.settings.defaultDb);
+                                    document.getElementById('dbSource').value = d.settings.defaultDb;
+                                    document.getElementById('defaultDbSelect').value = d.settings.defaultDb;
+                                }
+                            }
+                            localStorage.setItem('pilotHistory', JSON.stringify(historyLog));
+                            localStorage.setItem('pilotFavorites', JSON.stringify(favorites));
+                            localStorage.setItem('pilotMastery', JSON.stringify(mastery));
+                            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+                            localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+                            localStorage.setItem('pilotPriority', JSON.stringify(priorityList));
+                            localStorage.setItem('pilotScratchpad', d.scratchpad || "");
+                            localStorage.setItem('pilotSettings', JSON.stringify(settings));
+                            loadData();
+                            showToast("✅ Full restore complete");
+                        } else {
+                            // Merge only
+                            const newAcr = (d.custom || []).filter(incoming =>
+                                !customData.some(existing => existing.acronym === incoming.acronym && existing.meaning === incoming.meaning)
+                            );
+                            customData = [...customData, ...newAcr];
+                            localStorage.setItem('pilotCustomDB', JSON.stringify(customData));
+
+                            if (d.notes) {
+                                Object.entries(d.notes).forEach(([key, val]) => {
+                                    if (!pilotNotes[key]) pilotNotes[key] = val;
+                                });
+                                localStorage.setItem('pilotNotes', JSON.stringify(pilotNotes));
+                            }
+                            loadData();
+                            showToast(`✅ Merged ${newAcr.length} new acronyms`);
+                        }
+                    }
+                } catch (z) { console.error(z); showToast("❌ Error: Invalid file"); }
             };
             r.readAsText(e.target.files[0]);
+            // Reset so same file can be imported again if needed
+            e.target.value = '';
         });
 
         /* =========================================
@@ -2655,7 +2788,7 @@
         /* =========================================
            SPLASH SCREEN SAFETY TIMER (Fail-Safe)
            ========================================= */
-        // This ensures the app ALWAYS opens after 2.5 seconds, 
+        // This ensures the app ALWAYS opens after 2 seconds, 
         // even if the data loading gets stuck or fails.
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -2664,7 +2797,7 @@
                     console.log("Forcing App Open (Safety Timer)");
                     splash.classList.add('hidden');
                 }
-            }, 2500); // 2500ms = 2.5 seconds
+            }, 2000); // 2000ms = 2 seconds
         });
 
     </script>
