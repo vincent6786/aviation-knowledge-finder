@@ -993,6 +993,15 @@
             </select>
         </div>
         <div class="toggle-row">
+            <span>Default AI Assistant</span>
+            <select id="defaultAiSelect" style="width:auto; padding:4px;">
+                <option value="chatgpt">🤖 ChatGPT</option>
+                <option value="claude">🟠 Claude</option>
+                <option value="gemini">🔵 Gemini</option>
+                <option value="perplexity">🟣 Perplexity</option>
+            </select>
+        </div>
+        <div class="toggle-row">
             <span>Default Search Mode</span>
             <select id="defaultSearchMode" style="width:auto; padding:4px;">
                 <option value="starts">Starts With</option>
@@ -1698,7 +1707,7 @@
                             ${noteHTML}
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn" onclick="event.stopPropagation(); togglePriority('${i.acronym}')" title="High Priority">${isPriority ? '🔥' : '🕯️'}</button>
+                            <button class="action-btn" onclick="event.stopPropagation(); openAiSearch('${i.acronym}')" title="Ask AI">🤖</button>
                             <button class="action-btn star ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${i.acronym}')">⭐</button>
                             <button class="action-btn note ${hasNote ? 'active' : ''}" onclick="event.stopPropagation(); openNoteModal('${i.acronym}')">📝</button>
                             <button class="action-btn speak" onclick="event.stopPropagation(); speakText('${i.meaning.replace(/'/g, "\\'")}')">🔊</button>
@@ -1721,12 +1730,14 @@
                 });
             } else {
                 if (rawTerm) {
+                    const aiUrl = getAiUrl(rawTerm);
+                    const aiLabel = getAiLabel();
                     res.innerHTML = `<div style="text-align:center; margin-top:40px; padding:20px;">
                         <div style="font-size:2em; margin-bottom:10px;">🔍</div>
                         <div style="opacity:0.6; margin-bottom:20px; font-size:0.95em;">No results for "<b>${rawTerm}</b>"</div>
                         <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
                             <a href="https://www.google.com/search?q=aviation+meaning+${encodeURIComponent(rawTerm)}" target="_blank" class="modal-btn send" style="text-decoration:none; display:flex; align-items:center; gap:6px;">🌐 Google</a>
-                            <a href="https://chatgpt.com/?q=${encodeURIComponent('What does ' + rawTerm + ' mean in aviation?')}" target="_blank" class="modal-btn send" style="text-decoration:none; display:flex; align-items:center; gap:6px; background:#10a37f;">🤖 Ask ChatGPT</a>
+                            <a href="${aiUrl}" target="_blank" class="modal-btn send" style="text-decoration:none; display:flex; align-items:center; gap:6px; background:#10a37f;">🤖 ${aiLabel}</a>
                         </div>
                     </div>`;
                 } else {
@@ -2398,6 +2409,9 @@
             // Sync the default search mode dropdown
             const savedSearchMode = localStorage.getItem('defaultSearchMode') || 'starts';
             document.getElementById('defaultSearchMode').value = savedSearchMode;
+            // Sync the default AI dropdown
+            const savedAi = localStorage.getItem('defaultAi') || 'chatgpt';
+            document.getElementById('defaultAiSelect').value = savedAi;
         });
         document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultDb', e.target.value);
@@ -2413,6 +2427,29 @@
             document.getElementById('searchMode').value = e.target.value;
             showToast(`Default search: ${e.target.options[e.target.selectedIndex].text}`);
         });
+        document.getElementById('defaultAiSelect').addEventListener('change',(e)=>{
+            localStorage.setItem('defaultAi', e.target.value);
+            showToast(`AI set to ${e.target.options[e.target.selectedIndex].text}`);
+        });
+
+        // AI Model Helpers
+        function getAiUrl(term) {
+            const ai = localStorage.getItem('defaultAi') || 'chatgpt';
+            const q = encodeURIComponent('What does ' + term + ' mean in aviation?');
+            if (ai === 'chatgpt')    return `https://chatgpt.com/?q=${q}`;
+            if (ai === 'claude')     return `https://claude.ai/new?q=${q}`;
+            if (ai === 'gemini')     return `https://gemini.google.com/app?q=${q}`;
+            if (ai === 'perplexity') return `https://www.perplexity.ai/search?q=${q}`;
+            return `https://chatgpt.com/?q=${q}`;
+        }
+        function getAiLabel() {
+            const ai = localStorage.getItem('defaultAi') || 'chatgpt';
+            const labels = { chatgpt: 'Ask ChatGPT', claude: 'Ask Claude', gemini: 'Ask Gemini', perplexity: 'Ask Perplexity' };
+            return labels[ai] || 'Ask AI';
+        }
+        window.openAiSearch = function(acronym) {
+            window.open(getAiUrl(acronym), '_blank');
+        };
 
         // FULL BACKUP — includes everything + settings
         document.getElementById('exportBtn').addEventListener('click', () => {
