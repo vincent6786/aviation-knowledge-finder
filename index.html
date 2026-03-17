@@ -1017,7 +1017,10 @@
 
     <div id="settingsOverlay" class="modal-overlay"></div>
     <div id="settingsModal" class="modal" style="max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)); overflow-y: auto; top: calc(50% + var(--safe-top) / 2);">
-        <h3>System Settings</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; position:sticky; top:0; background:var(--modal-bg); padding-bottom:10px; border-bottom:1px solid rgba(150,150,150,0.15); z-index:1;">
+            <h3 style="margin:0;">⚙️ Settings</h3>
+            <button id="closeSettingsBtn" class="icon-btn" style="font-size:1.4em; padding:4px 8px;">✕</button>
+        </div>
         
         <div class="toggle-row">
             <span>Default Database</span>
@@ -1042,9 +1045,13 @@
             </select>
         </div>
 
-        <div style="background:rgba(0,168,255,0.08); border:1px solid rgba(0,168,255,0.25); border-radius:12px; padding:12px; margin-bottom:15px;">
-            <div style="font-size:0.8em; font-weight:bold; color:var(--accent); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">🔵 Gemini AI — Card Insights</div>
-            
+        <div style="border:1px solid rgba(0,168,255,0.25); border-radius:12px; margin-bottom:15px; overflow:hidden;">
+            <div id="geminiPanelHeader" onclick="document.getElementById('geminiPanelBody').style.display = document.getElementById('geminiPanelBody').style.display === 'none' ? 'block' : 'none'; document.getElementById('geminiChevron').innerText = document.getElementById('geminiPanelBody').style.display === 'none' ? '›' : '⌄';"
+                style="background:rgba(0,168,255,0.08); padding:12px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
+                <div style="font-size:0.8em; font-weight:bold; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">🔵 Gemini AI — Card Insights</div>
+                <span id="geminiChevron" style="font-size:1.3em; color:var(--accent); line-height:1;">›</span>
+            </div>
+            <div id="geminiPanelBody" style="display:none; padding:12px 14px;">
             <div style="font-size:0.8em; line-height:1.6; opacity:0.85; margin-bottom:12px;">
                 When you tap any card, Gemini loads a plain-English aviation explanation in the background — what it means in practice, when a pilot encounters it, and a real-world tip.
             </div>
@@ -1072,6 +1079,7 @@
                 📊 <b>Free quota (Gemini 2.5 Flash-Lite):</b> 1,000 requests/day · 15 req/min<br>
                 Limits are <b>per Google account</b> — each teammate's key has their own full quota.<br>
                 Quota resets daily at midnight Pacific Time.
+            </div>
             </div>
         </div>
         <div class="toggle-row">
@@ -1159,10 +1167,6 @@
         <button id="exportShareBtn" class="modal-btn full" style="background:#8e44ad; color:white; margin-top:6px;">🤝 Share Setup (Acronyms + Notes)</button>
         <button id="importBtn" class="modal-btn cancel modal-btn full" style="margin-top:6px;">📥 Restore / Import</button>
         <input type="file" id="fileInput" style="display:none" accept=".json">
-        
-        <div style="margin-top:15px; text-align:right;">
-            <button id="closeSettingsBtn" class="modal-btn cancel">Close</button>
-        </div>
     </div>
 
     <div id="statsModalOverlay" class="modal-overlay"></div>
@@ -1709,16 +1713,11 @@
                     const c = document.createElement('div');
                     c.className = 'card';
                     c.style.animationDelay = `${idx * 0.05}s`;
-                    
-                    // Make the WHOLE card clickable to open details, but we handle button clicks separately
-                    if (hasExtra) {
-                        c.style.cursor = "pointer";
-                        c.onclick = (e) => {
-                            // Prevent opening if they clicked a button or the confidence dots
-                            if (e.target.closest('.action-btn') || e.target.closest('.conf-dot')) return;
-                            openEncyclopediaModal(i.acronym);
-                        };
-                    }
+                    c.style.cursor = "pointer";
+                    c.onclick = (e) => {
+                        if (e.target.closest('.action-btn') || e.target.closest('.conf-dot') || e.target.closest('.term-link')) return;
+                        openEncyclopediaModal(i.acronym);
+                    };
                     
                     let dm = i.meaning;
                     if (term && (mode === 'contains' || searchDefs)) {
@@ -1766,7 +1765,9 @@
                             
                             <div class="meaning">
                                 ${autoLink(dm)}
-                                ${hasExtra ? `<div style="margin-top:5px; font-size:0.75em; color:var(--accent); font-weight:bold; border:1px solid var(--accent); display:inline-block; padding:2px 6px; border-radius:10px;">Tap for Details ${infoBadge}</div>` : ''}
+                                <div style="margin-top:5px; font-size:0.75em; color:var(--accent); font-weight:bold; border:1px solid var(--accent); display:inline-block; padding:2px 6px; border-radius:10px; opacity:0.7;">
+                                    ${hasExtra ? `Tap for Details ${infoBadge}` : 'Tap for AI Insight 🔵'}
+                                </div>
                             </div>
                             
                             <div class="conf-bar">
@@ -2105,7 +2106,7 @@
             const prompt = `You are an aviation instructor. Explain the aviation term "${acronym}" (${meaning}) in the category "${category}" in 3–5 clear sentences. Cover: what it means in practice, when a pilot encounters it, and one memorable tip or real-world example. Keep it plain English, no bullet points, no headers.`;
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2573,6 +2574,9 @@
             const hasKey = !!localStorage.getItem('geminiApiKey');
             document.getElementById('geminiKeyStatus').innerText = hasKey ? '✅ Key saved — stored on this device only' : '⚠️ No key set yet';
             document.getElementById('geminiApiKeyInput').value = '';
+            // Auto-expand panel if key is set, collapse if not
+            document.getElementById('geminiPanelBody').style.display = hasKey ? 'block' : 'none';
+            document.getElementById('geminiChevron').innerText = hasKey ? '⌄' : '›';
         });
         document.getElementById('defaultDbSelect').addEventListener('change',(e)=>{
             localStorage.setItem('defaultDb', e.target.value);
@@ -2619,7 +2623,7 @@
 
             try {
                 const res = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${key}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
